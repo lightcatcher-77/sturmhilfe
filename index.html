@@ -151,6 +151,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .del { border: 1px solid var(--line); background: var(--surface); border-radius: 14px; color: var(--muted); }
 .row { display: flex; gap: 8px; }
 .row input { flex: 1; min-width: 0; }
+.status { margin-top: 22px; gap: 10px; }
+.status p { color: var(--fg); font-family: var(--display); font-size: 20px; line-height: 1.3; }
+.week { display: flex; gap: 8px; min-height: 12px; }
+.week i { width: 12px; height: 12px; border-radius: 50%; background: var(--line); }
+.week i.good { background: var(--accent); }
+.week i.hard { background: var(--warm); }
 .toast { color: var(--accent); font-size: 14px; min-height: 20px; }
 @media (prefers-reduced-motion: reduce) { .wave, .blob, .track .fill { transition: none; } }
 </style>
@@ -205,7 +211,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   } catch (e) {}
 
   /* ---------- Notion (Meine Recovery Zone) ---------- */
-  var N = { ds: 'collection://1080de9a-5751-46bd-ae0b-c1087d8047b9', mcp: null, row: null, text: '', note: '' };
+  var N = { ds: 'collection://1080de9a-5751-46bd-ae0b-c1087d8047b9', mcp: null, note: '' };
   var ZONE = ['Bilder', 'Edging', 'Pornografie', 'Masturbation', 'Lüstern', 'Scrollen', 'Fantasien', 'Chaos in mir', 'Zeit mit Gott', 'Lesen', 'Zeit draußen'];
   function todayISO() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function nErr(e) {
@@ -219,19 +225,6 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       filter: { type: 'group', operator: 'and', filters: [{ type: 'property', property: 'Datum', propertyType: 'date', operator: 'date_is', value: { type: 'exact', value: todayISO() } }] } } }, { cache: false })
       .then(function (r) { var p = r.payload; if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) {} } return p && p.results && p.results[0] || null; });
   }
-  function nRefresh() {
-    if (!N.mcp) return;
-    nToday().then(function (row) {
-      N.row = row;
-      if (!row) N.text = 'Für heute gibt es in Notion noch keine Zeile.';
-      else {
-        var ok = 0, bad = 0;
-        ZONE.forEach(function (k) { if (/✅/.test(row[k] || '')) ok++; else if (/❌/.test(row[k] || '')) bad++; });
-        N.text = 'Recovery Zone heute: ' + ok + ' geschafft' + (bad ? ', ' + bad + ' Rückschlag' + (bad > 1 ? 'e' : '') : '') + ' (von ' + ZONE.length + ')';
-      }
-      if (cur === 'home') render();
-    }, function (e) { N.text = nErr(e); if (cur === 'home') render(); });
-  }
   // Hängt eine Zeile an das Feld "Notiz" der heutigen Zeile an.
   function nLog(line) {
     if (!N.mcp) return;
@@ -240,7 +233,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       if (!row) throw { code: 'no_row' };
       var old = (row['Notiz'] || '').trim();
       return N.mcp.callTool('Notion', 'notion-update-page', { page_id: row.url, command: 'update_properties', properties: { 'Notiz': old ? old + '\n' + line : line } }, { cache: false });
-    }).then(function () { N.note = 'In Notion gespeichert.'; nRefresh(); if (cur === 'end') render(); },
+    }).then(function () { N.note = 'In Notion gespeichert.'; nLoadHist(); if (cur === 'end') render(); },
       function (e) { N.note = e && e.code === 'no_row' ? 'Für heute gibt es in Notion keine Zeile. Nur auf diesem Gerät gespeichert.' : nErr(e) + ' Nur auf diesem Gerät gespeichert.'; if (cur === 'end') render(); });
   }
   // Letzte 30 Tage bis heute aus der Recovery Zone, neueste zuerst.
@@ -257,12 +250,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
           ZONE.forEach(function (k) { if (/✅/.test(row[k] || '')) ok++; else if (/❌/.test(row[k] || '')) bad++; });
           return { date: row['date:Datum:start'], tag: row['Tag'], note: (row['Notiz'] || '').trim(), ok: ok, bad: bad };
         });
-        if (cur === 'hist') render();
+        if (cur === 'hist' || cur === 'home') render();
       }, function (e) { N.histErr = nErr(e); if (cur === 'hist') render(); });
   }
   function nDaysSince(iso) { return Math.max(0, Math.round((new Date(todayISO()) - new Date(iso)) / 86400000)); }
   function hhmm() { return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
-  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nRefresh(); } }, function () {}); } catch (e) {}
+  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); } }, function () {}); } catch (e) {}
 
   var D = {};           // Daten dieses Durchlaufs
   var stack = [];       // Verlauf für Zurück
@@ -306,12 +299,32 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   /* ---------- Screens ---------- */
   var S = {};
 
+  // Ermutigende Anzeige: sieben Tage als Punkte (grün = Gutes getan, bernstein = schwerer Tag) und ein Satz, der nur Positives zählt.
+  function isoMinus(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function encourage() {
+    var held = heldCount(), by = {}, good = 0, dots = '', todayRow = null;
+    (N.hist || []).forEach(function (h) { by[h.date] = h; });
+    for (var k = 6; k >= 0; k--) {
+      var h = by[isoMinus(k)], cls = '';
+      if (h && h.ok + h.bad > 0) { cls = h.bad ? 'hard' : 'good'; if (h.ok) good++; }
+      dots += '<i class="' + cls + '" title="' + esc(h ? h.tag || '' : '') + '"></i>';
+    }
+    todayRow = by[isoMinus(0)];
+    var lines = [];
+    if (N.hist && good) lines.push('An ' + good + ' von 7 Tagen hast du etwas Gutes für dich getan.');
+    if (held) lines.push(held === 1 ? 'Du hast schon einen Sturm ausgehalten.' : 'Du hast schon ' + held + ' Stürme ausgehalten.');
+    if (N.hist && !lines.length) lines.push('Heute ist ein guter Tag, um neu anzufangen.');
+    if (!lines.length) return '';
+    return '<div class="card stack status"><div class="week" aria-hidden="true">' + (N.hist ? dots : '') + '</div><p>' + esc(lines.join(' ')) + '</p></div>';
+  }
+
   S.home = function () {
     var n = heldCount();
     return '<div class="grow stack" style="align-content:start;padding-top:28px">' +
       '<p class="kicker">Im Sturm der Lust</p>' +
       '<h1>Der Sturm geht vorbei.</h1>' +
       '<p class="lead">Du musst ihn nicht bekämpfen. Du musst ihn nur durchstehen, Schritt für Schritt.</p>' +
+      encourage() +
       '</div>' +
       '<div class="foot">' +
       '<button class="btn" data-act="start">Ich spüre einen Urge</button>' +

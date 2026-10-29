@@ -223,16 +223,26 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   var N = { ds: 'collection://1080de9a-5751-46bd-ae0b-c1087d8047b9', mcp: null, note: '' };
   var ZONE = ['Bilder', 'Edging', 'Pornografie', 'Masturbation', 'Lüstern', 'Scrollen', 'Fantasien', 'Chaos in mir', 'Zeit mit Gott', 'Lesen', 'Zeit draußen'];
   function todayISO() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  // Liefert den Ergebnis-Inhalt eines Notion-Aufrufs als Objekt, egal ob payload, structuredContent oder Text.
+  function nData(r) {
+    var p = r && (r.payload !== undefined ? r.payload : r.structuredContent);
+    if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) {} }
+    if ((!p || typeof p !== 'object') && r && r.content) {
+      var t = r.content.filter(function (c) { return c.type === 'text'; }).map(function (c) { return c.text; }).join('\n');
+      try { p = JSON.parse(t); } catch (e) { p = { text: t }; }
+    }
+    return p;
+  }
   function nErr(e) {
     var c = e && e.code;
     if (c === 'needs_reauth' || c === 'server_not_connected') return 'Notion ist nicht verbunden. Verbinde es in claude.ai unter Einstellungen, Konnektoren.';
     if (c === 'not_in_manifest' || c === 'approval_required' || c === 'consent_required') return 'Zugriff auf Notion wurde nicht erlaubt.';
-    return 'Notion hat gerade nicht geantwortet.';
+    return 'Notion hat gerade nicht geantwortet' + (c ? ' (' + c + ')' : '') + '.';
   }
   function nToday(iso) {
     return N.mcp.callTool('Notion', 'notion-query-data-sources', { data: { mode: 'rows', data_source_url: N.ds, limit: 1,
       filter: { type: 'group', operator: 'and', filters: [{ type: 'property', property: 'Datum', propertyType: 'date', operator: 'date_is', value: { type: 'exact', value: iso || todayISO() } }] } } }, { cache: false })
-      .then(function (r) { var p = r.payload; if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) {} } return p && p.results && p.results[0] || null; });
+      .then(function (r) { var p = nData(r); return p && p.results && p.results[0] || null; });
   }
   // Hängt eine Zeile an das Feld "Notiz" der heutigen Zeile an.
   function nLog(line) {
@@ -248,7 +258,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   /* ---------- Mein Warum und Mein Plan in Notion ---------- */
   var WP = { page: '4088dc05-3cb0-8190-8454-c4d7f589541a', timer: null, busy: false, again: false };
   function wpParse(r) {
-    var p = r.payload; if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) {} }
+    var p = nData(r);
     var t = (p && p.text) || (typeof p === 'string' ? p : '');
     var m = t.match(/<content>([\s\S]*?)<\/content>/); if (m) t = m[1];
     var iw = t.indexOf('## Mein Warum'), ip = t.indexOf('## Mein Plan');
@@ -292,7 +302,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       sort: [{ property: 'Datum', direction: 'descending' }],
       filter: { type: 'group', operator: 'and', filters: [{ type: 'property', property: 'Datum', propertyType: 'date', operator: 'date_is_on_or_before', value: { type: 'exact', value: todayISO() } }] } } }, { cache: false })
       .then(function (r) {
-        var p = r.payload; if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) {} }
+        var p = nData(r);
         N.hist = (p && p.results || []).map(function (row) {
           var ok = 0, bad = 0;
           ZONE.forEach(function (k) { if (/✅/.test(row[k] || '')) ok++; else if (/❌/.test(row[k] || '')) bad++; });
@@ -300,7 +310,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
           return { date: row['date:Datum:start'], tag: row['Tag'], note: (row['Notiz'] || '').trim(), ok: ok, bad: bad, fall: fall };
         });
         if (cur === 'hist' || cur === 'home') render();
-      }, function (e) { N.histErr = nErr(e); if (cur === 'hist') render(); });
+      }, function (e) { N.histErr = nErr(e); if (cur === 'hist' || cur === 'home') render(); });
   }
   function nDaysSince(iso) { return Math.max(0, Math.round((new Date(todayISO()) - new Date(iso)) / 86400000)); }
   var S = {};
@@ -358,7 +368,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   };
 
   function hhmm() { return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
-  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); wpLoad(); } }, function () {}); } catch (e) {}
+  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); wpLoad(); } else { N.off = true; if (cur === 'home') render(); } }, function () {}); } catch (e) {}
 
   var D = {};           // Daten dieses Durchlaufs
   var stack = [];       // Verlauf für Zurück
@@ -432,6 +442,9 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (N.hist && good) lines.push('An ' + good + ' von 7 Tagen hast du etwas Gutes für dich getan.');
     if (held) lines.push(held === 1 ? 'Du hast schon einen Sturm ausgehalten.' : 'Du hast schon ' + held + ' Stürme ausgehalten.');
     if (N.hist && !lines.length) lines.push('Heute ist ein guter Tag, um neu anzufangen.');
+    if (N.histErr) return '<div class="card stack status"><p class="note">' + esc(N.histErr) + '</p><button class="btn ghost small" data-act="nRetry" style="width:auto">Erneut versuchen</button></div>';
+    if (N.off) return '<div class="card stack status"><p class="note">Notion ist in dieser Ansicht nicht verfügbar. Öffne die App über den Artifact-Link in Claude.</p></div>';
+    if (N.hist && !N.hist.length) return '<div class="card stack status"><p class="note">Aus Notion kamen keine Tage zurück.</p></div>';
     if (!lines.length) return '';
     return '<div class="card stack status"><div class="week" aria-hidden="true">' + (N.hist ? dots : '') + '</div><p>' + esc(lines.join(' ')) + '</p></div>';
   }
@@ -771,6 +784,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       stack = []; cur = 'end'; render();
     },
     zoneSave: zSave,
+    nRetry: function () { N.histErr = ''; nLoadHist(); wpLoad(); render(); },
     fallSave: function () { DB.log.push({ t: Date.now(), outcome: 'fell' }); save(); nLog(hhmm() + ' Rückfall'); home(); }
   };
   function history_pop() { cur = stack.pop() || 'connect'; render(); }

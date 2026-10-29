@@ -118,7 +118,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .breath .count { font-family: var(--sans); font-weight: 600; font-size: 88px; margin-top: 28px; color: #bff0de; font-variant-numeric: tabular-nums; }
 .wave { position: absolute; left: -10%; right: -10%; bottom: 0; height: 10%; background: linear-gradient(#58c4a6, #2f8f78); border-radius: 50% 50% 0 0 / 28px 28px 0 0; transition: height 4s ease-in-out; }
 
-/* Wellen-Timer */
+/* Wellen-Anzeige */
+.sea { position: relative; height: 150px; overflow: hidden; border-radius: 16px; background: var(--surface2); }
+.sea i { position: absolute; left: -20%; right: -20%; bottom: 0; height: 40%; border-radius: 50% 50% 0 0 / 30px 30px 0 0; background: linear-gradient(#58c4a6, #2f8f78); opacity: .6; animation: swell 10s ease-in-out infinite; }
+.sea i + i { opacity: .9; height: 28%; animation-duration: 13s; animation-direction: reverse; }
+@keyframes swell { 0%, 100% { transform: translateY(45%); } 50% { transform: translateY(-60%); } }
+@media (prefers-reduced-motion: reduce) { .sea i { animation: none; } }
+/* alter Timer */
 .timer { font-family: var(--sans); font-weight: 600; font-size: 72px; font-variant-numeric: tabular-nums; text-align: center; letter-spacing: -.02em; }
 .track { position: relative; height: 10px; border-radius: 6px; background: var(--surface2); margin: 26px 0 30px; }
 .track .fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 6px; width: 0; transition: width 1s linear; }
@@ -126,6 +132,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .track .mark::before { content: ""; position: absolute; left: 50%; top: -22px; width: 2px; height: 10px; background: var(--muted); }
 
 /* Kreuz */
+.jesus { width: 100%; max-height: 48vh; object-fit: cover; object-position: 50% 30%; border-radius: 18px; border: 1px solid var(--line); display: block; }
 .cross { text-align: center; display: grid; gap: 18px; justify-items: center; padding-top: 8px; }
 .cross svg { width: 70px; height: 96px; stroke: var(--warm); stroke-width: 3; fill: none; stroke-linecap: round; }
 .dots { display: flex; gap: 8px; justify-content: center; }
@@ -183,7 +190,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 (function () {
   var K = 'sturmhilfe.v1';
   var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
-  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, places: [], lies: [], truths: {}, cbi: ['', '', '', ''] };
+  var FALL_MSG = 'Ich bin gefallen. Ich verstecke mich nicht und sage dir deshalb Bescheid. Bitte bete für mich und frag später nach, wie es mir geht.';
+  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], lies: [], truths: {}, cbi: ['', '', '', ''] };
   try { var raw = localStorage.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
   function save() { DB.ts = Date.now(); try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {} cloudSave(); }
 
@@ -200,7 +208,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var seen = {}, log = [];
     (DB.log || []).concat(rem.log || []).forEach(function (e) { if (e && !seen[e.t]) { seen[e.t] = 1; log.push(e); } });
     log.sort(function (a, b) { return a.t - b.t; });
-    if ((rem.ts || 0) > (DB.ts || 0)) { DB.why = rem.why || ''; DB.plan = rem.plan || DB.plan; DB.msg = rem.msg || DB.msg; DB.cbi = rem.cbi || DB.cbi; DB.ts = rem.ts; }
+    if ((rem.ts || 0) > (DB.ts || 0)) { DB.why = rem.why || ''; DB.plan = rem.plan || DB.plan; DB.msg = rem.msg || DB.msg; DB.fmsg = rem.fmsg || DB.fmsg; DB.cbi = rem.cbi || DB.cbi; DB.ts = rem.ts; }
     DB.log = log;
     var ll = (DB.lies || []).slice(); (rem.lies || []).forEach(function (x) { if (ll.indexOf(x) < 0) ll.push(x); }); DB.lies = ll;
     DB.truths = Object.assign({}, rem.truths || {}, DB.truths || {});
@@ -397,8 +405,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function heldCount() { return DB.log.filter(function (e) { return e.outcome === 'held'; }).length; }
 
   var PHASES = ['Erkennen', 'Verbinden', 'Antworten'];
-  var PHASE_OF = { strength: 0, place: 0, biochem: 0, svn: 0, state: 0, breathpick: 1, breath: 1, wave: 1, connect: 1, love: 1, cross: 1, why: 1, lies: 1, cost: 1, plan: 2, flag: 2, done: 2, end: 2 };
-  var FLOW = ['strength', 'place', 'biochem', 'svn', 'state', 'breathpick', 'wave', 'connect', 'plan', 'flag', 'done', 'end'];
+  var PHASE_OF = { breathpick: 0, strength: 0, place: 0, biochem: 0, svn: 0, state: 0, breath: 0, wave: 1, connect: 1, love: 1, cross: 1, why: 1, lies: 1, cost: 1, plan: 2, flag: 2, done: 2, end: 2 };
+  var FLOW = ['breathpick', 'strength', 'place', 'biochem', 'svn', 'state', 'wave', 'connect', 'plan', 'flag', 'done', 'end'];
 
   function go(name, noPush) {
     stopTimer();
@@ -511,7 +519,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><h2>Gut erkannt. Jetzt prüfen wir die Lage.</h2>' +
       '<p class="lead" style="margin:0">Wo bist du gerade? Sei so genau wie möglich.</p>' +
       '<div class="chips" id="places">' + allPlaces().map(function (p) { return '<button class="chip' + (D.place === p ? ' sel' : '') + '" data-place="' + esc(p) + '">' + esc(p) + '</button>'; }).join('') + '</div>' +
-      (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen, z. B. Bei Oma" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40"><p class="note">Wird gespeichert, damit du ihn beim nächsten Mal direkt auswählen kannst.</p>' : '') +
+      (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen, z. B. Bei Oma" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40">' : '') +
       '<p style="margin-top:10px;font-weight:600">Bist du gerade allein?</p>' +
       '<div class="seg"><button class="chip' + (D.alone === true ? ' sel' : '') + '" data-alone="1">Ja</button><button class="chip' + (D.alone === false ? ' sel' : '') + '" data-alone="0">Nein</button></div>' +
       '</div><div class="grow"></div>' +
@@ -547,7 +555,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   S.state = function () {
     var out = '';
     if (D.mode === 'dorsal') {
-      out = '<div class="card stack"><b>Dorsal: Atmen, Beten, Sätze, dann das Passende tun</b><ul class="list"><li>Atmen</li><li>Beten und Gott suchen</li><li>Sätze laut sagen</li><li>Sanfte Bewegung, Tageslicht</li><li>Raum und Farben wahrnehmen</li><li>Einen Skill üben</li><li>Gemeinschaft suchen</li></ul></div>';
+      out = '<div class="card stack"><b>Dorsal: Atmen, Beten, Sätze, dann das Passende tun</b><ul class="list"><li>Atmen</li><li>Beten und Gott suchen</li><li>Sätze laut sagen</li><li>Sanfte Bewegung, Tageslicht</li><li>Raum und Farben wahrnehmen</li><li>Skill nutzen</li><li>Gemeinschaft suchen</li></ul></div>';
     } else if (D.mode === 'fight') {
       out = '<div class="card stack"><b>Fight Mode: Atmen, aussprechen, beten, schnell bewegen</b><ul class="list"><li>Atmen</li><li>Aussprechen, was mich gerade stresst</li><li>Beten</li><li>Sätze laut sagen</li><li>Mich möglichst schnell bewegen</li></ul></div>';
     }
@@ -556,15 +564,14 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<button class="choice' + (D.mode === 'dorsal' ? ' sel' : '') + '" data-mode="dorsal"><b>Dorsal</b><span>Rückzug, schwer, leer, abgeschaltet</span></button>' +
       '<button class="choice' + (D.mode === 'fight' ? ' sel' : '') + '" data-mode="fight"><b>Fight Mode</b><span>Unter Strom, gestresst, Druck, Wut</span></button>' +
       out + sents +
-      '<p class="note">Das Modell stammt aus der Polyvagal-Theorie und ist ein Bild und Werkzeug, keine gesicherte Tatsache. Wenn du es nicht sicher weißt, wähle das, was näher dran ist. Atmen und Beten passen immer.</p>' +
       '</div><div class="grow"></div>' +
-      '<div class="foot"><button class="btn" data-act="next">Weiter zum Atmen</button></div>';
+      '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
   };
 
   S.breathpick = function () {
     return '<div class="stack"><p class="kicker">Reconnect</p><h2>Atme. Wie viele Minuten?</h2>' +
       '<p class="lead" style="margin:0">Vier Sekunden ein, sechs Sekunden aus. Das senkt das Adrenalin.</p>' +
-      [1, 3, 5, 10].map(function (m) { return '<button class="choice" data-min="' + m + '"><b>' + m + (m === 1 ? ' Minute' : ' Minuten') + '</b></button>'; }).join('') +
+      [0.5, 1, 2, 3].map(function (m) { return '<button class="choice" data-min="' + m + '"><b>' + (m === 0.5 ? '30 Sekunden' : m + (m === 1 ? ' Minute' : ' Minuten')) + '</b></button>'; }).join('') +
       '</div><div class="grow"></div>' +
       '<div class="foot"><button class="link muted" data-act="next">Überspringen</button></div>';
   };
@@ -577,7 +584,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   };
   function runBreath() {
     keepAwake();
-    var total = (D.mins || 1) * 60, t = 0;
+    var total = Math.round((D.mins || 1) * 60), t = 0;
     var wave = document.getElementById('wave'), msg = document.getElementById('bmsg'), cnt = document.getElementById('bcount'), bt = document.getElementById('bt');
     function tick() {
       var s = t % 10;
@@ -585,7 +592,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       if (s === 4) { wave.style.transitionDuration = '6s'; wave.style.height = '10%'; msg.textContent = 'Jetzt atme aus…'; }
       cnt.textContent = s < 4 ? 4 - s : 10 - s;
       var left = total - t; bt.textContent = Math.floor(left / 60) + ':' + ('0' + (left % 60)).slice(-2);
-      if (t >= total) { stopTimer(); stack.pop(); go('wave', true); return; }
+      if (t >= total) { stopTimer(); go('strength', true); return; }
       t++;
     }
     setTimeout(tick, 60);
@@ -596,8 +603,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><p class="kicker">Die Welle reiten</p><h2>Kämpf nicht dagegen an.</h2>' +
       '<p class="lead" style="margin:0" id="wtxt"></p></div>' +
       '<div class="grow" style="display:grid;align-content:center">' +
-      '<div class="timer" id="wtime">0:00</div>' +
-      '<div class="track"><div class="fill" id="wfill"></div><span class="mark" style="left:' + (20 / 30 * 100) + '%">20 min</span><span class="mark" style="left:100%;transform:translateX(-100%)">30 min</span></div>' +
+      '<div class="sea" aria-hidden="true"><i></i><i></i></div>' +
       '</div>' +
       '<p class="note" style="margin-bottom:6px">Verdränge nichts. Betrachte die Empfindungen nur als Entladung im Körper. Die Dynorphin-Welle ist nach höchstens 20 bis 30 Minuten vorbei.</p>' +
       '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
@@ -605,11 +611,9 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function runWave() {
     keepAwake();
     if (!D.waveStart) D.waveStart = Date.now();
-    var tm = document.getElementById('wtime'), fl = document.getElementById('wfill'), tx = document.getElementById('wtxt');
+    var tx = document.getElementById('wtxt');
     function tick() {
       var sec = Math.floor((Date.now() - D.waveStart) / 1000);
-      tm.textContent = Math.floor(sec / 60) + ':' + ('0' + (sec % 60)).slice(-2);
-      fl.style.width = Math.min(100, sec / 1800 * 100) + '%';
       tx.textContent = sec < 1200 ? 'Die Welle steigt und fällt von allein. Du musst nichts tun, nur da bleiben.' : sec < 1800 ? 'Du bist im letzten Stück. Das Ende ist nah.' : 'Die Welle ist durch. Du hast sie ausgehalten.';
     }
     tick(); timer = setInterval(tick, 1000);
@@ -620,7 +624,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><p class="kicker">Reconnect</p><h2>Verbinde dich neu.</h2>' +
       '<p class="lead" style="margin:0">Wähle einen oder mehrere Wege.</p>' +
       '<button class="choice' + (c.love ? ' done' : '') + '" data-go="love"><b>Zu einem Menschen, den ich liebe</b><span>Meine zukünftige Partnerin vor Augen holen</span></button>' +
-      '<button class="choice' + (c.cross ? ' done' : '') + '" data-go="cross"><b>Zum Kreuz</b><span>Franz von Sales: die Versuchung entmachten</span></button>' +
+      '<button class="choice' + (c.cross ? ' done' : '') + '" data-go="cross"><b>Das Kreuz</b><span>Die Versuchung entmachten</span></button>' +
       '<button class="choice' + (c.lies ? ' done' : '') + '" data-go="lies"><b>Lügen erkennen</b><span>Was redet mir mein Gehirn gerade ein, und was ist wahr?</span></button>' +
       '<button class="choice' + (c.cost ? ' done' : '') + '" data-go="cost"><b>Kosten und Nutzen</b><span>Nachgeben oder standhaft bleiben: was bringt es, was kostet es?</span></button>' +
       '<button class="choice' + (c.why ? ' done' : '') + '" data-go="why"><b>Mein Warum</b><span>' + (DB.why ? 'Meine Gründe lesen und erneuern' : 'Meine Gründe aufschreiben') + '</span></button>' +
@@ -688,7 +692,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       (N.liesBusy && !N.lies ? '<p class="note">Lade deine Gedanken aus Notion …</p>' : '') + (N.liesErr ? '<p class="note">' + esc(N.liesErr) + '</p>' : '') +
       '<div class="chips">' + list.map(function (l) { return '<button class="chip' + (sel.indexOf(l) >= 0 ? ' sel' : '') + '" data-lie="' + esc(l) + '">' + esc(l) + '</button>'; }).join('') + '</div>' +
       '<div class="row"><input type="text" id="newlie" placeholder="Neue Lüge hinzufügen" aria-label="Neue Lüge" maxlength="120"><button class="btn small" data-act="addLie" style="width:auto">Hinzufügen</button></div>' +
-      (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '<p class="note">Neue Lügen werden dauerhaft gespeichert, auch in Notion (Gedanken-Statistik).</p>') +
+      (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '') +
       '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="liesNext"' + (sel.length ? '' : ' disabled') + '>Weiter</button><button class="link muted" data-act="liesSkip">Zurück zu den Wegen</button></div>';
   };
 
@@ -705,7 +709,6 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><p class="kicker">Kosten und Nutzen</p><h2>' + q[0] + q[1] + q[2] + '</h2>' +
       '<p class="lead" style="margin:0">' + q[3] + '</p>' +
       '<textarea id="cbtxt" style="min-height:170px" placeholder="' + esc(q[4]) + '" aria-label="' + esc(q[0].replace(/, $/, '')) + '">' + esc(DB.cbi[i]) + '</textarea>' +
-      '<p class="note">Deine Antworten bleiben gespeichert, nur du siehst sie. Beim nächsten Mal kannst du sie lesen und ergänzen.</p>' +
       '<div class="dots" style="justify-content:flex-start">' + CB.map(function (_, j) { return '<i class="' + (j <= i ? 'on' : '') + '"></i>'; }).join('') + '</div></div>' +
       '<div class="grow"></div><div class="foot">' + (last ? '<button class="btn" data-act="connDone" data-k="cost">Fertig</button>' : '<button class="btn" data-act="cbNext">Weiter</button>') + '</div>';
   };
@@ -728,7 +731,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   ];
   S.cross = function () {
     var i = D.cx || 0, c = CROSS[i];
-    return '<div class="cross"><p class="tag">Franz von Sales</p>' +
+    return '<div class="cross">' +
       '<svg viewBox="0 0 60 80" aria-hidden="true"><path d="M30 4v72M12 24h36"/></svg>' +
       '<h2 style="color:var(--warm)">' + esc(c[0]) + '</h2>' +
       '<p class="lead" style="margin:0">' + esc(c[1]) + '</p>' +
@@ -742,7 +745,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><p class="kicker">Mein Warum</p><h2>Wofür kämpfe ich?</h2>' +
       '<p class="lead" style="margin:0">Schreib deine Gründe auf, große und kleine. Heute Abend, morgen früh, für die Beziehung, die du dir wünschst.</p>' +
       '<textarea id="whytxt" placeholder="Ich will bleibende Freude statt kurzer Erleichterung …">' + esc(DB.why) + '</textarea>' +
-      '<p class="note">' + (N.mcp ? 'Gespeichert in deinem Konto und in Notion (Seite „Sturmhilfe: Mein Warum und Mein Plan“).' : 'Gespeichert in deinem Konto, nur du siehst es.') + '</p></div>' +
+      '</div>' +
       '<div class="grow"></div><div class="foot">' +
       (D.standalone ? '<button class="btn" data-act="home">Speichern und schließen</button>' : '<button class="btn" data-act="connDone" data-k="why">Fertig</button>') + '</div>';
   };
@@ -758,8 +761,9 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       (D.standalone ? '<button class="btn" data-act="home">Fertig</button>' : '<button class="btn" data-act="next">Weiter</button>') + '</div>';
   };
 
-  function msgBox() {
-    return '<textarea id="msg" style="min-height:130px" aria-label="Nachricht an Rechenschaftspartner">' + esc(DB.msg) + '</textarea>' +
+  function msgBox(key) {
+    key = key || 'msg';
+    return '<textarea id="msg" data-key="' + key + '" style="min-height:130px" aria-label="Nachricht an Rechenschaftspartner">' + esc(DB[key] || (key === 'fmsg' ? FALL_MSG : DEFAULT_MSG)) + '</textarea>' +
       '<div class="row" style="align-items:center"><button class="btn small" data-act="copy">Nachricht kopieren</button><span class="toast" id="toast" role="status"></span></div>';
   }
   S.flag = function () {
@@ -794,7 +798,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="lead">Das war dein ' + n + '. ausgehaltener Sturm. Jedes Mal, wenn du ihn aushältst, wird der alte Kreislauf schwächer.</p>' +
       (D.next ? '<div class="card"><p class="note" style="margin-bottom:4px">Als Nächstes</p><p class="serif" style="font-size:22px">' + esc(D.next) + '</p></div>' : '') +
       (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') +
-      '<p class="note">Langfristig baut verdientes Dopamin (Beziehungen, Ziele, Glaube, echte Anstrengung) die Baseline Stufe um Stufe auf. Bildschirme, Social Media und Binge-Watching senken sie.</p></div>' +
+      '</div>' +
       '<div class="foot"><button class="btn" data-act="home">Fertig</button></div>';
   };
 
@@ -806,7 +810,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   ];
   S.fall = function () {
     var i = D.fx || 0, f = FALL[i], extra = '';
-    if (i === 2) extra = msgBox();
+    if (i === 1) extra = '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">';
+    if (i === 2) extra = msgBox('fmsg');
     if (i === 3) extra = '<div>' + ['Dies ist ein Augenblick des Leidens.', 'Leid gehört zum Leben.', 'Möge ich mir geben, was ich brauche.'].map(function (s) { return '<div class="sentence">' + s + '</div>'; }).join('') + '</div>';
     var last = i === FALL.length - 1;
     return '<div class="stack"><p class="kicker">Wenn ich gefallen bin</p><h2>' + esc(f[0]) + '</h2><p class="lead" style="margin:0">' + esc(f[1]) + '</p>' + extra +
@@ -870,16 +875,16 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var zn = document.getElementById('znote');
     if (zn) zn.addEventListener('input', function () { Z.note = zn.value; });
     var m = document.getElementById('msg');
-    if (m) m.addEventListener('input', function () { DB.msg = m.value; save(); });
+    if (m) m.addEventListener('input', function () { DB[m.getAttribute('data-key') || 'msg'] = m.value; save(); });
   }
 
   var ACT = {
-    start: function () { D = {}; stack = []; cur = 'home'; go('strength'); },
+    start: function () { D = {}; stack = []; cur = 'home'; go('breathpick'); },
     next: function () { if (cur === 'place') commitPlace(); next(); },
     home: home,
     whyHome: function () { D = { standalone: true }; go('why'); },
     planHome: function () { D = { standalone: true }; go('plan'); },
-    breathSkip: function () { stack.pop(); go('wave', true); },
+    breathSkip: function () { go('strength', true); },
     crossNext: function () { D.cx = (D.cx || 0) + 1; render(); },
     fallNext: function () { D.fx = (D.fx || 0) + 1; render(); },
     cbNext: function () { D.cbx = (D.cbx || 0) + 1; render(); window.scrollTo(0, 0); },
@@ -940,3 +945,4 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 
 </body>
 </html>
+

@@ -1,0 +1,330 @@
+<title>Sturmhilfe Ablauf</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout: Ablauf-Reihen (Lanes) mit Wireframe-Karten von links nach rechts; unter der Reihe der Editor für den gewählten Schritt. */
+:root {
+  --bg: #f1f2ee;
+  --paper: #fbfbf8;
+  --ink: #1d2623;
+  --muted: #667570;
+  --line: #c9d0cb;
+  --sk: #d9dfda;
+  --sk2: #c3ccc6;
+  --accent: #1f7a63;
+  --accent-ink: #ffffff;
+  --blue: #3a5fa8;
+  --amber: #b5701a;
+  --sel: #e3f0ea;
+  --sans: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101816; --paper: #172321; --ink: #e6efe9; --muted: #92a8a0; --line: #2f4540; --sk: #243632; --sk2: #33494300;
+    --sk2: #35504a; --accent: #4cc9a4; --accent-ink: #06201a; --blue: #8fb0ee; --amber: #e8b86d; --sel: #1f332e; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101816; --paper: #172321; --ink: #e6efe9; --muted: #92a8a0; --line: #2f4540; --sk: #243632;
+  --sk2: #35504a; --accent: #4cc9a4; --accent-ink: #06201a; --blue: #8fb0ee; --amber: #e8b86d; --sel: #1f332e; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font-family: var(--sans); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 60px;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1200px; margin: 0 auto; }
+
+header.top { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between; margin-bottom: 22px; }
+h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -.01em; text-wrap: balance; }
+.sub { color: var(--muted); margin: 4px 0 0; max-width: 46em; }
+.tools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.status { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.b { border: 1px solid var(--line); background: var(--paper); border-radius: 8px; padding: 8px 12px; min-height: 40px; }
+.b:hover { border-color: var(--accent); }
+.b.pri { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+
+.lane { margin: 0 0 26px; }
+.lane-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.lane-head input.t { font-size: 18px; font-weight: 600; background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 4px 6px; min-width: 0; flex: 1 1 220px; }
+.lane-head input.t:hover, .lane-head input.t:focus { border-color: var(--line); background: var(--paper); }
+.lane-head .b { min-height: 34px; padding: 4px 10px; font-size: 13px; }
+.lane-note { color: var(--muted); font-size: 13px; margin: 0 0 8px 6px; }
+.rail { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding: 6px 2px 14px; border-top: 1px dashed var(--line); }
+
+.step { flex: none; width: 176px; display: flex; flex-direction: column; gap: 8px; text-align: left; background: transparent; border: 0; padding: 0; position: relative; }
+.card { border: 1.5px solid var(--line); background: var(--paper); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; height: 100%; }
+.step.sel .card { border-color: var(--accent); background: var(--sel); box-shadow: 0 0 0 2px var(--accent) inset; }
+.meta { display: flex; justify-content: space-between; gap: 6px; align-items: baseline; }
+.num { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.tag { font-family: var(--mono); font-size: 10.5px; padding: 1px 6px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.tag.e { color: var(--accent); border-color: var(--accent); }
+.tag.v { color: var(--blue); border-color: var(--blue); }
+.tag.a { color: var(--amber); border-color: var(--amber); }
+.nm { font-weight: 600; font-size: 14px; line-height: 1.2; text-wrap: balance; }
+.ds { font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+.bt { font-family: var(--mono); font-size: 11px; border-top: 1px solid var(--line); padding-top: 6px; color: var(--ink); margin-top: auto; }
+.bt::before { content: "▸ "; color: var(--accent); }
+
+.arrow { flex: none; width: 34px; display: grid; place-items: center; color: var(--sk2); position: relative; }
+.arrow button { width: 26px; height: 26px; border-radius: 50%; border: 1px dashed var(--sk2); background: transparent; color: var(--muted); display: grid; place-items: center; font-size: 15px; line-height: 1; padding: 0; opacity: .55; }
+.arrow button:hover, .arrow button:focus-visible { opacity: 1; border-color: var(--accent); color: var(--accent); }
+.arrow::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1.5px solid var(--sk2); z-index: 0; }
+.arrow button { position: relative; z-index: 1; background: var(--bg); }
+
+/* Mini-Wireframe */
+.wf { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 7px; height: 118px; display: flex; flex-direction: column; gap: 5px; overflow: hidden; }
+.wf i { display: block; background: var(--sk); border-radius: 3px; }
+.wf .bar { height: 3px; background: var(--sk2); width: 100%; }
+.wf .h { height: 8px; width: 70%; background: var(--sk2); }
+.wf .l { height: 5px; }
+.wf .l.s { width: 55%; }
+.wf .grow { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+.wf .btn { height: 13px; border-radius: 5px; background: var(--accent); opacity: .85; margin-top: auto; }
+.wf .btn2 { height: 11px; border-radius: 5px; background: transparent; border: 1px solid var(--sk2); }
+.wf .circ { width: 34px; height: 34px; border-radius: 50%; margin: 0 auto; background: var(--sk2); }
+.wf .rng { height: 4px; margin: 2px 0; }
+.wf .chips { display: flex; gap: 3px; flex-wrap: wrap; }
+.wf .chips i { width: 24px; height: 9px; border-radius: 99px; }
+.wf .row { height: 13px; border: 1px solid var(--sk2); background: transparent; }
+.wf .big { height: 22px; width: 60%; margin: 0 auto; background: var(--sk2); }
+.wf .wave { height: 14px; margin-top: auto; background: var(--accent); opacity: .35; border-radius: 8px 8px 0 0; }
+.wf .dots { display: flex; gap: 3px; justify-content: center; } .wf .dots i { width: 5px; height: 5px; border-radius: 50%; }
+.wf .ta { height: 28px; border: 1px solid var(--sk2); background: transparent; }
+
+.editor { position: sticky; bottom: max(8px, env(safe-area-inset-bottom, 0px)); z-index: 5; margin-top: 8px; background: var(--paper); border: 1.5px solid var(--accent); border-radius: 14px; padding: 14px; display: grid; gap: 10px; box-shadow: 0 8px 28px rgba(0,0,0,.18); }
+.editor[hidden] { display: none; }
+.erow { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+.editor label { display: grid; gap: 3px; font-family: var(--mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.editor input, .editor select, .editor textarea { font-family: var(--sans); font-size: 15px; text-transform: none; letter-spacing: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%; min-height: 40px; color: var(--ink); }
+.editor textarea { min-height: 64px; resize: vertical; }
+.eactions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.eactions .sp { flex: 1; }
+.b.del { color: #b4402e; }
+.tip { color: var(--muted); font-size: 13px; }
+.toast { font-family: var(--mono); font-size: 12px; color: var(--accent); min-height: 18px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Sturmhilfe Ablauf</h1>
+      <p class="sub">Alle Screens der App in der Reihenfolge, wie sie jetzt laufen. Tippe auf einen Schritt, um ihn zu ändern, zu verschieben oder zu löschen. Mit dem + zwischen zwei Karten fügst du einen Schritt ein.</p>
+    </div>
+    <div class="tools">
+      <span class="status" id="status" role="status"></span>
+      <button class="b" id="copy">Als Text kopieren</button>
+      <button class="b" id="reset">Auf App-Stand zurücksetzen</button>
+    </div>
+  </header>
+  <main id="lanes"></main>
+  <button class="b pri" id="addLane">+ Neuen Ablauf</button>
+  <p class="toast" id="toast" role="status"></p>
+  <section class="editor" id="editor" hidden aria-label="Schritt bearbeiten"></section>
+</div>
+
+<script>
+(function () {
+  var KINDS = { slider: 'Regler', chips: 'Auswahl-Chips', choices: 'Große Auswahl', list: 'Liste', text: 'Text', input: 'Eingabefeld', timer: 'Timer', done: 'Abschluss', home: 'Startseite', zones: 'Zonen-Liste' };
+  var PH = ['', 'Erkennen', 'Verbinden', 'Antworten'];
+  function uid() { return Math.random().toString(36).slice(2, 8); }
+  function S(name, desc, btn, kind, phase, tag) { return { id: uid(), name: name, desc: desc, btn: btn, kind: kind, phase: phase || '', tag: tag || '' }; }
+
+  // Stand der App (index.html), Stand 29.10.2026.
+  function defaults() {
+    return [
+      { id: uid(), title: 'Ich spüre einen Urge', note: 'Hauptablauf in drei Phasen. Ein Zurück-Pfeil führt einen Schritt zurück, das X bricht ab.', steps: [
+        S('Stärke', 'Wie stark ist der Urge? Blob und Regler 1 bis 10.', 'Weiter', 'slider', 'Erkennen'),
+        S('Ort', 'Wo bist du? Chips für den Ort, dazu: allein ja oder nein.', 'Weiter', 'chips', 'Erkennen'),
+        S('Biochemie', 'Dopamin, Dynorphin, Willenskraft: drei kurze Punkte.', 'Weiter', 'list', 'Erkennen'),
+        S('Sehen, Wollen, Nehmen', 'Drei Stufen wählen. Darunter erscheint die passende Antwort.', 'Weiter', 'choices', 'Erkennen'),
+        S('Zustand', 'Dorsal oder Fight Mode. Danach passende Schritte und die drei Sätze.', 'Weiter zum Atmen', 'choices', 'Erkennen'),
+        S('Atem wählen', '1, 3, 5 oder 10 Minuten.', 'Überspringen', 'choices', 'Verbinden'),
+        S('Atmen', 'Vollbild. Vier Sekunden ein, sechs aus, Welle und Countdown.', 'Überspringen', 'timer', 'Verbinden', 'Vollbild'),
+        S('Welle reiten', 'Timer bis 30 Minuten, Marken bei 20 und 30.', 'Weiter', 'timer', 'Verbinden'),
+        S('Verbinden', 'Drei Wege: Mensch, Kreuz, Warum. Erledigte sind markiert.', 'Weiter', 'choices', 'Verbinden'),
+        S('Mensch, den ich liebe', 'Zukünftige Partnerin vor Augen holen.', 'Fertig', 'text', 'Verbinden', 'Abzweig'),
+        S('Zum Kreuz', 'Vier Schritte nach Franz von Sales, mit Punkten.', 'Weiter / Fertig', 'text', 'Verbinden', 'Abzweig'),
+        S('Mein Warum', 'Textfeld mit den eigenen Gründen.', 'Fertig', 'input', 'Verbinden', 'Abzweig'),
+        S('Plan', 'Was tust du jetzt danach? Punkt wählen oder neuen anlegen.', 'Weiter', 'list', 'Antworten'),
+        S('Bescheid geben', 'Nachricht an den Rechenschaftspartner zum Kopieren.', 'Weiter / Das möchte ich gerade nicht', 'input', 'Antworten'),
+        S('Stärke danach', 'Wie stark ist der Urge jetzt? Vorher-Wert wird gezeigt.', 'Speichern', 'slider', 'Antworten', 'schreibt Notiz'),
+        S('Geschafft', 'Zähler der ausgehaltenen Stürme und der nächste Schritt aus dem Plan.', 'Fertig', 'done', 'Antworten')
+      ] },
+      { id: uid(), title: 'Ich bin gefallen', note: 'Vier ruhige Schritte ohne Scham. Der Rückfall wird nur auf Wunsch gespeichert.', steps: [
+        S('Die Scham ist die Falle', 'Kurzer Text, glaub der Stimme nicht.', 'Weiter', 'text'),
+        S('Geh zu Christus', 'Er wendet sich nicht ab.', 'Weiter', 'text'),
+        S('Sag jemandem Bescheid', 'Nachricht zum Kopieren.', 'Weiter', 'input'),
+        S('Mitgefühl', 'Die drei Sätze langsam sagen.', 'Als Rückfall speichern / Nicht speichern', 'text', '', 'schreibt Notiz')
+      ] },
+      { id: uid(), title: 'Recovery Zone eintragen', note: 'Heute oder gestern, direkt in die Notion-Datenbank.', steps: [
+        S('Tag wählen', 'Heute oder Gestern. Die Zeile wird aus Notion geladen.', '', 'chips', '', 'liest Notion'),
+        S('Punkte', 'Drei Zonen mit zusammen 11 Punkten. Jeder Punkt: offen, geschafft, Rückschlag. Pro Zone „Alle ✅“.', '', 'zones', '', 'liest Notion'),
+        S('Notiz', 'Freitext zum Tag, enthält auch die automatischen Zeilen.', 'In Notion speichern', 'input', '', 'schreibt Notion')
+      ] },
+      { id: uid(), title: 'Startseite und weitere Screens', note: 'Von der Startseite aus erreichbar.', steps: [
+        S('Startseite', 'Titel, Ermutigungskarte mit Wochenpunkten und einem Satz, fünf Buttons.', 'Ich spüre einen Urge', 'home', '', 'liest Notion'),
+        S('Verlauf', 'Kacheln (ausgehalten, Tage seit Rückfall, Schnitt), Orte, Notion-Tage, Liste der Einträge.', 'Zurück', 'list', '', 'liest Notion'),
+        S('Mein Warum', 'Eigenständig geöffnet. Textfeld, wird automatisch gespeichert.', 'Speichern und schließen', 'input', '', 'Notion-Seite'),
+        S('Mein Plan', 'Liste pflegen: Punkte hinzufügen oder entfernen.', 'Fertig', 'list', '', 'Notion-Seite')
+      ] }
+    ];
+  }
+
+  var state = { lanes: null, sel: null };
+  var db = null, doc = null, timer = null, busy = false, again = false, loaded = false;
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function say(t) { $('status').textContent = t; }
+
+  /* ---------- Speichern (db) ---------- */
+  function push() {
+    if (!doc) return;
+    if (busy) { again = true; return; }
+    busy = true; say('Speichere …');
+    doc.set({ lanes: JSON.parse(JSON.stringify(state.lanes)), rev: Date.now() })
+      .then(function () { say('Gespeichert'); }, function () { say('Speichern nicht möglich'); })
+      .then(function () { busy = false; if (again) { again = false; push(); } });
+  }
+  function changed() { render(); if (!doc) { say(loaded ? 'Nur in dieser Ansicht' : ''); return; } clearTimeout(timer); say('Ungespeichert …'); timer = setTimeout(push, 700); }
+
+  /* ---------- Rendering ---------- */
+  function wf(kind) {
+    var top = '<i class="bar"></i><i class="h"></i>', end = '<i class="btn"></i>';
+    var body = {
+      slider: '<div class="grow"><i class="circ"></i><i class="rng"></i></div>',
+      chips: '<div class="chips"><i></i><i></i><i></i><i></i><i></i><i></i></div><i class="l s"></i><div class="chips"><i></i><i></i></div>',
+      choices: '<i class="row"></i><i class="row"></i><i class="row"></i>',
+      list: '<i class="l"></i><i class="l s"></i><i class="l"></i><i class="l s"></i>',
+      text: '<i class="l"></i><i class="l"></i><i class="l s"></i><div class="dots"><i></i><i></i><i></i></div>',
+      input: '<i class="l s"></i><i class="ta"></i>',
+      timer: '<div class="grow"><i class="big"></i></div><i class="wave"></i>',
+      done: '<div class="grow"><i class="h"></i><i class="l"></i><i class="l s"></i></div>',
+      home: '<i class="l"></i><i class="ta"></i><i class="btn2"></i>',
+      zones: '<i class="row"></i><i class="row"></i><i class="row"></i><i class="row"></i>'
+    };
+    return '<div class="wf" aria-hidden="true">' + top + (body[kind] || body.text) + end + '</div>';
+  }
+  function tagCls(t) { return /schreibt/.test(t) ? 'a' : /liest|Notion/.test(t) ? 'v' : 'e'; }
+  function render() {
+    var out = '';
+    state.lanes.forEach(function (ln, li) {
+      out += '<section class="lane" data-lane="' + li + '"><div class="lane-head"><input class="t" data-lt="' + li + '" value="' + esc(ln.title) + '" aria-label="Name des Ablaufs">' +
+        '<button class="b" data-add="' + li + '|' + ln.steps.length + '">+ Schritt am Ende</button>' +
+        (state.lanes.length > 1 ? '<button class="b del" data-dellane="' + li + '">Ablauf löschen</button>' : '') + '</div>' +
+        '<p class="lane-note">' + esc(ln.note || '') + '</p><div class="rail">';
+      ln.steps.forEach(function (st, si) {
+        var sel = state.sel === st.id;
+        out += (si === 0 ? '' : '<div class="arrow"><button data-add="' + li + '|' + si + '" aria-label="Schritt hier einfügen" title="Schritt hier einfügen">+</button></div>');
+        out += '<button class="step' + (sel ? ' sel' : '') + '" data-sel="' + st.id + '"><div class="card">' +
+          '<div class="meta"><span class="num">' + (li + 1) + '.' + (si + 1) + '</span>' + (st.phase ? '<span class="tag ' + (st.phase === 'Erkennen' ? 'e' : st.phase === 'Verbinden' ? 'v' : 'a') + '">' + esc(st.phase) + '</span>' : '') + '</div>' +
+          wf(st.kind) + '<div class="nm">' + esc(st.name) + '</div><div class="ds">' + esc(st.desc) + '</div>' +
+          (st.tag ? '<div><span class="tag ' + tagCls(st.tag) + '">' + esc(st.tag) + '</span></div>' : '') +
+          (st.btn ? '<div class="bt">' + esc(st.btn) + '</div>' : '') + '</div></button>';
+      });
+      out += '</div></section>';
+    });
+    $('lanes').innerHTML = out;
+    renderEditor();
+  }
+  function find(id) { for (var l = 0; l < state.lanes.length; l++) for (var s = 0; s < state.lanes[l].steps.length; s++) if (state.lanes[l].steps[s].id === id) return { l: l, s: s, st: state.lanes[l].steps[s] }; return null; }
+  function renderEditor() {
+    var f = state.sel && find(state.sel), ed = $('editor');
+    if (!f) { ed.hidden = true; ed.innerHTML = ''; return; }
+    var st = f.st;
+    ed.hidden = false;
+    ed.innerHTML = '<div class="erow"><label>Name<input id="e-name" value="' + esc(st.name) + '"></label>' +
+      '<label>Hauptbutton<input id="e-btn" value="' + esc(st.btn) + '" placeholder="z. B. Weiter"></label>' +
+      '<label>Aussehen<select id="e-kind">' + Object.keys(KINDS).map(function (k) { return '<option value="' + k + '"' + (k === st.kind ? ' selected' : '') + '>' + KINDS[k] + '</option>'; }).join('') + '</select></label>' +
+      '<label>Phase<select id="e-phase">' + PH.map(function (p) { return '<option value="' + p + '"' + (p === st.phase ? ' selected' : '') + '>' + (p || 'keine') + '</option>'; }).join('') + '</select></label>' +
+      '<label>Notiz-Tag<input id="e-tag" value="' + esc(st.tag) + '" placeholder="z. B. liest Notion"></label></div>' +
+      '<label>Was ist auf dem Screen?<textarea id="e-desc">' + esc(st.desc) + '</textarea></label>' +
+      '<div class="eactions"><button class="b" data-mv="-1"' + (f.s === 0 ? ' disabled' : '') + '>← Nach links</button><button class="b" data-mv="1"' + (f.s === state.lanes[f.l].steps.length - 1 ? ' disabled' : '') + '>Nach rechts →</button>' +
+      '<button class="b" data-dup="1">Duplizieren</button><button class="b del" data-del="1">Schritt löschen</button><span class="sp"></span><button class="b pri" data-close="1">Fertig</button></div>';
+    [['e-name', 'name'], ['e-btn', 'btn'], ['e-tag', 'tag'], ['e-desc', 'desc']].forEach(function (p) {
+      $(p[0]).addEventListener('input', function () { st[p[1]] = this.value; softUpdate(); });
+    });
+    [['e-kind', 'kind'], ['e-phase', 'phase']].forEach(function (p) {
+      $(p[0]).addEventListener('change', function () { st[p[1]] = this.value; changed(); });
+    });
+  }
+  // Während des Tippens nur die Karte aktualisieren, damit das Eingabefeld den Fokus behält.
+  function softUpdate() {
+    var f = find(state.sel); if (!f) return;
+    var el = document.querySelector('[data-sel="' + state.sel + '"]'); if (!el) return;
+    var tmp = document.createElement('div'); tmp.innerHTML = renderCard(f); el.innerHTML = tmp.firstChild.innerHTML;
+    if (!doc) { say(loaded ? 'Nur in dieser Ansicht' : ''); return; }
+    clearTimeout(timer); say('Ungespeichert …'); timer = setTimeout(push, 700);
+  }
+  function renderCard(f) {
+    var st = f.st;
+    return '<div class="card"><div class="meta"><span class="num">' + (f.l + 1) + '.' + (f.s + 1) + '</span>' + (st.phase ? '<span class="tag ' + (st.phase === 'Erkennen' ? 'e' : st.phase === 'Verbinden' ? 'v' : 'a') + '">' + esc(st.phase) + '</span>' : '') + '</div>' +
+      wf(st.kind) + '<div class="nm">' + esc(st.name) + '</div><div class="ds">' + esc(st.desc) + '</div>' + (st.tag ? '<div><span class="tag ' + tagCls(st.tag) + '">' + esc(st.tag) + '</span></div>' : '') + (st.btn ? '<div class="bt">' + esc(st.btn) + '</div>' : '') + '</div>';
+  }
+
+  /* ---------- Aktionen ---------- */
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('button'); if (!t) return;
+    var d = t.dataset;
+    if (d.sel) { state.sel = state.sel === d.sel ? null : d.sel; render(); if (state.sel) $('editor').scrollIntoView({ block: 'nearest' }); return; }
+    if (d.add) { var p = d.add.split('|'), ln = state.lanes[+p[0]], ns = S('Neuer Schritt', '', 'Weiter', 'text'); ln.steps.splice(+p[1], 0, ns); state.sel = ns.id; changed(); setTimeout(function () { var n = $('e-name'); if (n) { n.focus(); n.select(); } }, 0); return; }
+    if (d.dellane) { if (t.dataset.arm) { state.lanes.splice(+d.dellane, 1); state.sel = null; changed(); } else { t.dataset.arm = '1'; t.textContent = 'Wirklich löschen?'; setTimeout(function () { if (t.isConnected) { delete t.dataset.arm; t.textContent = 'Ablauf löschen'; } }, 3000); } return; }
+    var f = state.sel && find(state.sel);
+    if (d.close) { state.sel = null; render(); return; }
+    if (!f) return;
+    var steps = state.lanes[f.l].steps;
+    if (d.mv) { var j = f.s + +d.mv; if (j < 0 || j >= steps.length) return; steps.splice(j, 0, steps.splice(f.s, 1)[0]); changed(); return; }
+    if (d.dup) { var c = JSON.parse(JSON.stringify(f.st)); c.id = uid(); c.name += ' (Kopie)'; steps.splice(f.s + 1, 0, c); state.sel = c.id; changed(); return; }
+    if (d.del) { if (t.dataset.arm) { steps.splice(f.s, 1); state.sel = null; changed(); } else { t.dataset.arm = '1'; t.textContent = 'Wirklich löschen?'; setTimeout(function () { if (t.isConnected) { delete t.dataset.arm; t.textContent = 'Schritt löschen'; } }, 3000); } return; }
+  });
+  document.addEventListener('input', function (e) {
+    var i = e.target.dataset && e.target.dataset.lt; if (i === undefined) return;
+    state.lanes[+i].title = e.target.value;
+    if (!doc) { say(loaded ? 'Nur in dieser Ansicht' : ''); return; }
+    clearTimeout(timer); say('Ungespeichert …'); timer = setTimeout(push, 700);
+  });
+  $('addLane').addEventListener('click', function () { var ns = S('Erster Schritt', '', 'Weiter', 'text'); state.lanes.push({ id: uid(), title: 'Neuer Ablauf', note: '', steps: [ns] }); state.sel = ns.id; changed(); });
+  var resetArmed = false;
+  $('reset').addEventListener('click', function () {
+    var b = this;
+    if (!resetArmed) { resetArmed = true; b.textContent = 'Wirklich? Eigene Änderungen gehen verloren'; setTimeout(function () { resetArmed = false; b.textContent = 'Auf App-Stand zurücksetzen'; }, 3500); return; }
+    resetArmed = false; b.textContent = 'Auf App-Stand zurücksetzen'; state.lanes = defaults(); state.sel = null; changed();
+  });
+  $('copy').addEventListener('click', function () {
+    var md = '# Sturmhilfe Ablauf\n\n' + state.lanes.map(function (ln) {
+      return '## ' + ln.title + '\n' + (ln.note ? ln.note + '\n' : '') + '\n' + ln.steps.map(function (s, i) {
+        return (i + 1) + '. **' + s.name + '**' + (s.phase ? ' (' + s.phase + ')' : '') + ' [' + KINDS[s.kind] + ']\n   ' + s.desc + (s.btn ? '\n   Button: ' + s.btn : '') + (s.tag ? '\n   ' + s.tag : '');
+      }).join('\n');
+    }).join('\n\n');
+    var tb = $('toast');
+    function sel() { var ta = document.createElement('textarea'); ta.value = md; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); tb.textContent = 'Kopiert.'; } catch (x) { tb.textContent = 'Konnte nicht kopieren.'; } ta.remove(); }
+    try { navigator.clipboard.writeText(md).then(function () { tb.textContent = 'Kopiert.'; }, sel); } catch (x) { sel(); }
+  });
+
+  /* ---------- Start ---------- */
+  state.lanes = defaults();
+  render();
+  try {
+    if (window.claude && claude.use) claude.use('db').then(function (d) {
+      loaded = true;
+      if (!d) { say('Nur in dieser Ansicht'); return; }
+      db = d; var ref = d.doc('flow/main');
+      return ref.get().then(function (snap) {
+        if (snap.exists && snap.data() && snap.data().lanes && snap.data().lanes.length) { state.lanes = snap.data().lanes; render(); say('Gespeichert'); }
+        else say('Noch nichts gespeichert');
+        doc = ref;
+      });
+    }).catch(function () { loaded = true; say('Nur in dieser Ansicht'); });
+  } catch (e) {}
+})();
+</script>

@@ -183,7 +183,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 (function () {
   var K = 'sturmhilfe.v1';
   var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
-  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, places: [] };
+  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, places: [], lies: [], truths: {} };
   try { var raw = localStorage.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
   function save() { DB.ts = Date.now(); try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {} cloudSave(); }
 
@@ -202,6 +202,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     log.sort(function (a, b) { return a.t - b.t; });
     if ((rem.ts || 0) > (DB.ts || 0)) { DB.why = rem.why || ''; DB.plan = rem.plan || DB.plan; DB.msg = rem.msg || DB.msg; DB.ts = rem.ts; }
     DB.log = log;
+    var ll = (DB.lies || []).slice(); (rem.lies || []).forEach(function (x) { if (ll.indexOf(x) < 0) ll.push(x); }); DB.lies = ll;
+    DB.truths = Object.assign({}, rem.truths || {}, DB.truths || {});
     var pl = (DB.places || []).slice(); (rem.places || []).forEach(function (x) { if (pl.indexOf(x) < 0) pl.push(x); }); DB.places = pl;
     try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {}
   }
@@ -395,7 +397,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function heldCount() { return DB.log.filter(function (e) { return e.outcome === 'held'; }).length; }
 
   var PHASES = ['Erkennen', 'Verbinden', 'Antworten'];
-  var PHASE_OF = { strength: 0, place: 0, biochem: 0, svn: 0, state: 0, breathpick: 1, breath: 1, wave: 1, connect: 1, love: 1, cross: 1, why: 1, plan: 2, flag: 2, done: 2, end: 2 };
+  var PHASE_OF = { strength: 0, place: 0, biochem: 0, svn: 0, state: 0, breathpick: 1, breath: 1, wave: 1, connect: 1, love: 1, cross: 1, why: 1, lies: 1, plan: 2, flag: 2, done: 2, end: 2 };
   var FLOW = ['strength', 'place', 'biochem', 'svn', 'state', 'breathpick', 'wave', 'connect', 'plan', 'flag', 'done', 'end'];
 
   function go(name, noPush) {
@@ -619,9 +621,52 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="lead" style="margin:0">Wähle einen oder mehrere Wege.</p>' +
       '<button class="choice' + (c.love ? ' done' : '') + '" data-go="love"><b>Zu einem Menschen, den ich liebe</b><span>Meine zukünftige Partnerin vor Augen holen</span></button>' +
       '<button class="choice' + (c.cross ? ' done' : '') + '" data-go="cross"><b>Zum Kreuz</b><span>Franz von Sales: die Versuchung entmachten</span></button>' +
+      '<button class="choice' + (c.lies ? ' done' : '') + '" data-go="lies"><b>Lügen erkennen</b><span>Was redet mir mein Gehirn gerade ein, und was ist wahr?</span></button>' +
       '<button class="choice' + (c.why ? ' done' : '') + '" data-go="why"><b>Mein Warum</b><span>' + (DB.why ? 'Meine Gründe lesen und erneuern' : 'Meine Gründe aufschreiben') + '</span></button>' +
       '</div><div class="grow"></div>' +
       '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+  };
+
+  /* ---------- Lügen erkennen (Gedanken aus Notion, eigene Lügen dauerhaft) ---------- */
+  var LIES_VIEW = 'view://c2aa066d-043f-4194-9e2d-4059aecba3f4', LIES_DS = 'eb11de36-ac3b-49ff-a832-271db0ecd1dd';
+  function allLies() {
+    var out = [], seen = {};
+    (N.lies || []).concat(DB.lies || []).forEach(function (x) { var k = String(x).toLowerCase(); if (x && !seen[k]) { seen[k] = 1; out.push(x); } });
+    return out;
+  }
+  function nLoadLies() {
+    if (!N.mcp || N.lies || N.liesBusy || N.liesErr) return;
+    N.liesBusy = true; N.liesErr = '';
+    N.mcp.callTool('Notion', 'notion-query-data-sources', { data: { mode: 'view', view_url: LIES_VIEW, page_size: 100 } }, { cache: false })
+      .then(function (r) { var p = nData(r); N.lies = ((p && p.results) || []).map(function (x) { return (x['Gedanke'] || '').trim(); }).filter(Boolean); },
+        function (e) { N.liesErr = nErr(e); })
+      .then(function () { N.liesBusy = false; if (cur === 'lies') render(); });
+  }
+  function nAddLie(v) {
+    if (!N.mcp) return;
+    N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: LIES_DS }, pages: [{ properties: { 'Gedanke': v } }] }, { cache: false })
+      .then(function () { N.lies = (N.lies || []).concat(v); DB.lies = (DB.lies || []).filter(function (x) { return x !== v; }); save(); D.liesNote = 'In Notion gespeichert.'; if (cur === 'lies') render(); },
+        function () { D.liesNote = 'Nur in der App gespeichert, Notion hat nicht geantwortet.'; if (cur === 'lies') render(); });
+  }
+  S.lies = function () {
+    D.liesSel = D.liesSel || [];
+    if (D.lx === 1) {
+      return '<div class="stack"><p class="kicker">Lügen erkennen</p><h2>Wie ersetzt du diese Lügen durch Wahrheit?</h2>' +
+        '<p class="lead" style="margin:0">Wahrheit gibt dir Perspektive und Kraft. Deine Antworten bleiben gespeichert und stehen beim nächsten Mal wieder da.</p>' +
+        D.liesSel.map(function (l, i) {
+          return '<div class="card stack"><p class="note" style="margin:0">Die Lüge</p><p class="serif" style="font-size:20px;line-height:1.3">„' + esc(l) + '“</p>' +
+            '<textarea data-truth="' + i + '" style="min-height:90px" placeholder="Die Wahrheit ist …" aria-label="Wahrheit zu: ' + esc(l) + '">' + esc((DB.truths || {})[l] || '') + '</textarea></div>';
+        }).join('') +
+        '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="connDone" data-k="lies">Fertig</button></div>';
+    }
+    var list = allLies(), sel = D.liesSel;
+    return '<div class="stack"><p class="kicker">Lügen erkennen</p><h2>Welche Lügen erzählt dir dein Gehirn gerade?</h2>' +
+      '<p class="lead" style="margin:0">Das sind Lügen, die das Handeln gegen deine Werte falsch rechtfertigen. Wähle, was du gerade hörst.</p>' +
+      (N.liesBusy && !N.lies ? '<p class="note">Lade deine Gedanken aus Notion …</p>' : '') + (N.liesErr ? '<p class="note">' + esc(N.liesErr) + '</p>' : '') +
+      '<div class="chips">' + list.map(function (l) { return '<button class="chip' + (sel.indexOf(l) >= 0 ? ' sel' : '') + '" data-lie="' + esc(l) + '">' + esc(l) + '</button>'; }).join('') + '</div>' +
+      '<div class="row"><input type="text" id="newlie" placeholder="Neue Lüge hinzufügen" aria-label="Neue Lüge" maxlength="120"><button class="btn small" data-act="addLie" style="width:auto">Hinzufügen</button></div>' +
+      (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '<p class="note">Neue Lügen werden dauerhaft gespeichert, auch in Notion (Gedanken-Statistik).</p>') +
+      '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="liesNext"' + (sel.length ? '' : ' disabled') + '>Weiter</button><button class="link muted" data-act="liesSkip">Zurück zu den Wegen</button></div>';
   };
   function markConn(k) { D.conn = D.conn || {}; D.conn[k] = true; }
 
@@ -779,6 +824,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; wpChanged(); }); }
     var np = document.getElementById('newplace');
     if (np) np.addEventListener('input', function () { D.custom = np.value; });
+    if (cur === 'lies') { nLoadLies(); D.lx = D.lx || 0; Array.prototype.forEach.call(document.querySelectorAll('[data-truth]'), function (t) { t.addEventListener('input', function () { DB.truths = DB.truths || {}; DB.truths[D.liesSel[+t.getAttribute('data-truth')]] = t.value; save(); }); }); }
     var zn = document.getElementById('znote');
     if (zn) zn.addEventListener('input', function () { Z.note = zn.value; });
     var m = document.getElementById('msg');
@@ -794,7 +840,16 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     breathSkip: function () { stack.pop(); go('wave', true); },
     crossNext: function () { D.cx = (D.cx || 0) + 1; render(); },
     fallNext: function () { D.fx = (D.fx || 0) + 1; render(); },
-    connDone: function (el) { markConn(el.getAttribute('data-k')); D.cx = 0; history_pop(); },
+    liesNext: function () { if ((D.liesSel || []).length) { D.lx = 1; render(); window.scrollTo(0, 0); } },
+    liesSkip: function () { D.lx = 0; history_pop(); },
+    addLie: function () {
+      var i = document.getElementById('newlie'), v = i.value.trim().slice(0, 120); if (!v) return;
+      var known = allLies().filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
+      D.liesSel = D.liesSel || [];
+      if (known) { if (D.liesSel.indexOf(known) < 0) D.liesSel.push(known); D.liesNote = 'Diese Lüge gibt es schon, sie ist ausgewählt.'; render(); return; }
+      DB.lies = (DB.lies || []).concat(v); save(); D.liesSel.push(v); D.liesNote = 'Gespeichert.'; render(); nAddLie(v);
+    },
+    connDone: function (el) { markConn(el.getAttribute('data-k')); D.cx = 0; D.lx = 0; history_pop(); },
     addPlan: function () { var i = document.getElementById('newplan'), v = i.value.trim(); if (v) { DB.plan.push(v); wpChanged(); render(); } },
     copy: function () {
       var t = document.getElementById('msg'), ts = document.getElementById('toast');
@@ -820,9 +875,11 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (el.id === 'close') { home(); return; }
     if (el.dataset.act) { ACT[el.dataset.act](el); return; }
     if (el.dataset.go === 'zone') { D = {}; Z.day = 0; Z.msg = ''; go('zone'); zLoad(); return; }
+    if (el.dataset.lie !== undefined) { var li = el.dataset.lie, ix = (D.liesSel = D.liesSel || []).indexOf(li); if (ix >= 0) D.liesSel.splice(ix, 1); else D.liesSel.push(li); D.liesNote = ''; render(); return; }
     if (el.dataset.zday !== undefined) { Z.day = +el.dataset.zday; zLoad(); return; }
     if (el.dataset.zs) { var pr = el.dataset.zs.split('|'); Z.vals[pr[0]] = STATE[pr[1]]; Z.msg = ''; render(); return; }
     if (el.dataset.zall) { ZONES.forEach(function (z) { if (z[0] === el.dataset.zall) z[1].forEach(function (k) { Z.vals[k] = STATE.ok; }); }); Z.msg = ''; render(); return; }
+    if (el.dataset.go === 'lies') { D.lx = 0; N.liesErr = ''; }
     if (el.dataset.go) { if (el.dataset.go === 'fall') D = {}; go(el.dataset.go); return; }
     if (el.dataset.place !== undefined) { D.place = el.dataset.place; render(); return; }
     if (el.dataset.alone !== undefined) { D.alone = el.dataset.alone === '1'; render(); return; }

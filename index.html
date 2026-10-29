@@ -190,7 +190,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 (function () {
   var K = 'sturmhilfe.v1';
   var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
-  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, places: [], lies: [], truths: {}, cbi: ['', '', '', ''] };
+  var FALL_MSG = 'Ich bin gefallen. Ich verstecke mich nicht und sage dir deshalb Bescheid. Bitte bete für mich und frag später nach, wie es mir geht.';
+  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], lies: [], truths: {}, cbi: ['', '', '', ''] };
   try { var raw = localStorage.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
   function save() { DB.ts = Date.now(); try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {} cloudSave(); }
 
@@ -207,7 +208,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var seen = {}, log = [];
     (DB.log || []).concat(rem.log || []).forEach(function (e) { if (e && !seen[e.t]) { seen[e.t] = 1; log.push(e); } });
     log.sort(function (a, b) { return a.t - b.t; });
-    if ((rem.ts || 0) > (DB.ts || 0)) { DB.why = rem.why || ''; DB.plan = rem.plan || DB.plan; DB.msg = rem.msg || DB.msg; DB.cbi = rem.cbi || DB.cbi; DB.ts = rem.ts; }
+    if ((rem.ts || 0) > (DB.ts || 0)) { DB.why = rem.why || ''; DB.plan = rem.plan || DB.plan; DB.msg = rem.msg || DB.msg; DB.fmsg = rem.fmsg || DB.fmsg; DB.cbi = rem.cbi || DB.cbi; DB.ts = rem.ts; }
     DB.log = log;
     var ll = (DB.lies || []).slice(); (rem.lies || []).forEach(function (x) { if (ll.indexOf(x) < 0) ll.push(x); }); DB.lies = ll;
     DB.truths = Object.assign({}, rem.truths || {}, DB.truths || {});
@@ -762,8 +763,9 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       (D.standalone ? '<button class="btn" data-act="home">Fertig</button>' : '<button class="btn" data-act="next">Weiter</button>') + '</div>';
   };
 
-  function msgBox() {
-    return '<textarea id="msg" style="min-height:130px" aria-label="Nachricht an Rechenschaftspartner">' + esc(DB.msg) + '</textarea>' +
+  function msgBox(key) {
+    key = key || 'msg';
+    return '<textarea id="msg" data-key="' + key + '" style="min-height:130px" aria-label="Nachricht an Rechenschaftspartner">' + esc(DB[key] || (key === 'fmsg' ? FALL_MSG : DEFAULT_MSG)) + '</textarea>' +
       '<div class="row" style="align-items:center"><button class="btn small" data-act="copy">Nachricht kopieren</button><span class="toast" id="toast" role="status"></span></div>';
   }
   S.flag = function () {
@@ -811,7 +813,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   S.fall = function () {
     var i = D.fx || 0, f = FALL[i], extra = '';
     if (i === 1) extra = '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">';
-    if (i === 2) extra = msgBox();
+    if (i === 2) extra = msgBox('fmsg');
     if (i === 3) extra = '<div>' + ['Dies ist ein Augenblick des Leidens.', 'Leid gehört zum Leben.', 'Möge ich mir geben, was ich brauche.'].map(function (s) { return '<div class="sentence">' + s + '</div>'; }).join('') + '</div>';
     var last = i === FALL.length - 1;
     return '<div class="stack"><p class="kicker">Wenn ich gefallen bin</p><h2>' + esc(f[0]) + '</h2><p class="lead" style="margin:0">' + esc(f[1]) + '</p>' + extra +
@@ -875,7 +877,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var zn = document.getElementById('znote');
     if (zn) zn.addEventListener('input', function () { Z.note = zn.value; });
     var m = document.getElementById('msg');
-    if (m) m.addEventListener('input', function () { DB.msg = m.value; save(); });
+    if (m) m.addEventListener('input', function () { DB[m.getAttribute('data-key') || 'msg'] = m.value; save(); });
   }
 
   var ACT = {

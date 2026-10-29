@@ -245,6 +245,45 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     }).then(function () { N.note = 'In Notion gespeichert.'; nLoadHist(); if (cur === 'end') render(); },
       function (e) { N.note = e && e.code === 'no_row' ? 'Für heute gibt es in Notion keine Zeile. Nur auf diesem Gerät gespeichert.' : nErr(e) + ' Nur auf diesem Gerät gespeichert.'; if (cur === 'end') render(); });
   }
+  /* ---------- Mein Warum und Mein Plan in Notion ---------- */
+  var WP = { page: '4088dc05-3cb0-8190-8454-c4d7f589541a', timer: null, busy: false, again: false };
+  function wpParse(r) {
+    var p = r.payload; if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) {} }
+    var t = (p && p.text) || (typeof p === 'string' ? p : '');
+    var m = t.match(/<content>([\s\S]*?)<\/content>/); if (m) t = m[1];
+    var iw = t.indexOf('## Mein Warum'), ip = t.indexOf('## Mein Plan');
+    if (iw < 0 || ip < 0) return null;
+    var why = t.slice(iw + 13, ip).replace(/^\s*`{3,}[^\n]*\n?/, '').replace(/\n?`{3,}\s*$/, '').replace(/^\n+|\n+$/g, '');
+    var plan = [];
+    t.slice(ip + 12).split('\n').forEach(function (l) { var x = l.match(/^\s*- (.*)$/); if (x) { var v = x[1].replace(/\\(.)/g, '$1').trim(); if (v) plan.push(v); } });
+    return { why: why, plan: plan };
+  }
+  function wpMarkdown() {
+    var run = (DB.why.match(/`+/g) || []).reduce(function (a, b) { return Math.max(a, b.length); }, 2), f = new Array(run + 2).join('`');
+    return 'Wird von der Sturmhilfe-App gelesen und geschrieben. Änderungen hier erscheinen in der App, Änderungen in der App erscheinen hier.\n\n## Mein Warum\n\n' + f + 'plain text\n' + DB.why + '\n' + f + '\n\n## Mein Plan\n\n' +
+      DB.plan.map(function (x) { return '- ' + x.replace(/([\\*_`\[\]<>~$|{}^])/g, '\\$1'); }).join('\n');
+  }
+  function wpPush() {
+    if (!N.mcp) return;
+    if (WP.busy) { WP.again = true; return; }
+    WP.busy = true;
+    N.mcp.callTool('Notion', 'notion-update-page', { page_id: WP.page, command: 'replace_content', new_str: wpMarkdown() }, { cache: false })
+      .then(function () { DB.wpDirty = false; save(); }, function () {})
+      .then(function () { WP.busy = false; if (WP.again) { WP.again = false; wpPush(); } });
+  }
+  function wpChanged() { DB.wpDirty = true; save(); clearTimeout(WP.timer); WP.timer = setTimeout(wpPush, 1200); }
+  function wpLoad() {
+    if (!N.mcp) return;
+    N.mcp.callTool('Notion', 'notion-fetch', { id: WP.page }, { cache: false }).then(function (r) {
+      var n = wpParse(r); if (!n) return;
+      if (DB.wpDirty) { wpPush(); return; }
+      var changed = false;
+      if (n.why && n.why !== DB.why) { DB.why = n.why; changed = true; }
+      if (n.plan.length && n.plan.join('\n') !== DB.plan.join('\n')) { DB.plan = n.plan; changed = true; }
+      if (changed) { save(); if (cur === 'home' || cur === 'connect') render(); }
+      if ((!n.why && DB.why) || (!n.plan.length && DB.plan.length)) wpPush();
+    }, function () {});
+  }
   // Letzte 30 Tage bis heute aus der Recovery Zone, neueste zuerst.
   function nLoadHist() {
     if (!N.mcp) return;
@@ -319,7 +358,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   };
 
   function hhmm() { return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
-  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); } }, function () {}); } catch (e) {}
+  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); wpLoad(); } }, function () {}); } catch (e) {}
 
   var D = {};           // Daten dieses Durchlaufs
   var stack = [];       // Verlauf für Zurück
@@ -580,7 +619,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><p class="kicker">Mein Warum</p><h2>Wofür kämpfe ich?</h2>' +
       '<p class="lead" style="margin:0">Schreib deine Gründe auf, große und kleine. Heute Abend, morgen früh, für die Beziehung, die du dir wünschst.</p>' +
       '<textarea id="whytxt" placeholder="Ich will bleibende Freude statt kurzer Erleichterung …">' + esc(DB.why) + '</textarea>' +
-      '<p class="note">Nur auf diesem Gerät gespeichert, nur du siehst es.</p></div>' +
+      '<p class="note">' + (N.mcp ? 'Gespeichert in deinem Konto und in Notion (Seite „Sturmhilfe: Mein Warum und Mein Plan“).' : 'Gespeichert in deinem Konto, nur du siehst es.') + '</p></div>' +
       '<div class="grow"></div><div class="foot">' +
       (D.standalone ? '<button class="btn" data-act="home">Speichern und schließen</button>' : '<button class="btn" data-act="connDone" data-k="why">Fertig</button>') + '</div>';
   };
@@ -700,7 +739,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (cur !== 'hist') N.histBusy = false;
     if (cur === 'breath') runBreath();
     if (cur === 'wave') runWave();
-    if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; save(); }); }
+    if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; wpChanged(); }); }
     var zn = document.getElementById('znote');
     if (zn) zn.addEventListener('input', function () { Z.note = zn.value; });
     var m = document.getElementById('msg');
@@ -717,7 +756,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     crossNext: function () { D.cx = (D.cx || 0) + 1; render(); },
     fallNext: function () { D.fx = (D.fx || 0) + 1; render(); },
     connDone: function (el) { markConn(el.getAttribute('data-k')); D.cx = 0; history_pop(); },
-    addPlan: function () { var i = document.getElementById('newplan'), v = i.value.trim(); if (v) { DB.plan.push(v); save(); render(); } },
+    addPlan: function () { var i = document.getElementById('newplan'), v = i.value.trim(); if (v) { DB.plan.push(v); wpChanged(); render(); } },
     copy: function () {
       var t = document.getElementById('msg'), ts = document.getElementById('toast');
       function ok() { ts.textContent = 'Kopiert.'; }
@@ -751,7 +790,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (el.dataset.mode) { D.mode = el.dataset.mode; render(); return; }
     if (el.dataset.min) { D.mins = +el.dataset.min; go('breath'); return; }
     if (el.dataset.pick !== undefined) { D.next = DB.plan[+el.dataset.pick]; render(); return; }
-    if (el.dataset.del !== undefined) { DB.plan.splice(+el.dataset.del, 1); save(); render(); return; }
+    if (el.dataset.del !== undefined) { DB.plan.splice(+el.dataset.del, 1); wpChanged(); render(); return; }
   });
 
   render();

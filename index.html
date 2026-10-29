@@ -172,6 +172,48 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   try { var raw = localStorage.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
   function save() { try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {} }
 
+  /* ---------- Notion (Meine Recovery Zone) ---------- */
+  var N = { ds: 'collection://1080de9a-5751-46bd-ae0b-c1087d8047b9', mcp: null, row: null, text: '', note: '' };
+  var ZONE = ['Bilder', 'Edging', 'Pornografie', 'Masturbation', 'Lüstern', 'Scrollen', 'Fantasien', 'Chaos in mir', 'Zeit mit Gott', 'Lesen', 'Zeit draußen'];
+  function todayISO() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function nErr(e) {
+    var c = e && e.code;
+    if (c === 'needs_reauth' || c === 'server_not_connected') return 'Notion ist nicht verbunden. Verbinde es in claude.ai unter Einstellungen, Konnektoren.';
+    if (c === 'not_in_manifest' || c === 'approval_required' || c === 'consent_required') return 'Zugriff auf Notion wurde nicht erlaubt.';
+    return 'Notion hat gerade nicht geantwortet.';
+  }
+  function nToday() {
+    return N.mcp.callTool('Notion', 'notion-query-data-sources', { data: { mode: 'rows', data_source_url: N.ds, limit: 1,
+      filter: { type: 'group', operator: 'and', filters: [{ type: 'property', property: 'Datum', propertyType: 'date', operator: 'date_is', value: { type: 'exact', value: todayISO() } }] } } }, { cache: false })
+      .then(function (r) { var p = r.payload; if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) {} } return p && p.results && p.results[0] || null; });
+  }
+  function nRefresh() {
+    if (!N.mcp) return;
+    nToday().then(function (row) {
+      N.row = row;
+      if (!row) N.text = 'Für heute gibt es in Notion noch keine Zeile.';
+      else {
+        var ok = 0, bad = 0;
+        ZONE.forEach(function (k) { if (/✅/.test(row[k] || '')) ok++; else if (/❌/.test(row[k] || '')) bad++; });
+        N.text = 'Recovery Zone heute: ' + ok + ' geschafft' + (bad ? ', ' + bad + ' Rückschlag' + (bad > 1 ? 'e' : '') : '') + ' (von ' + ZONE.length + ')';
+      }
+      if (cur === 'home') render();
+    }, function (e) { N.text = nErr(e); if (cur === 'home') render(); });
+  }
+  // Hängt eine Zeile an das Feld "Notiz" der heutigen Zeile an.
+  function nLog(line) {
+    if (!N.mcp) return;
+    N.note = 'Wird in Notion gespeichert …';
+    nToday().then(function (row) {
+      if (!row) throw { code: 'no_row' };
+      var old = (row['Notiz'] || '').trim();
+      return N.mcp.callTool('Notion', 'notion-update-page', { page_id: row.url, command: 'update_properties', properties: { 'Notiz': old ? old + '\n' + line : line } }, { cache: false });
+    }).then(function () { N.note = 'In Notion gespeichert.'; nRefresh(); if (cur === 'end') render(); },
+      function (e) { N.note = e && e.code === 'no_row' ? 'Für heute gibt es in Notion keine Zeile. Nur auf diesem Gerät gespeichert.' : nErr(e) + ' Nur auf diesem Gerät gespeichert.'; if (cur === 'end') render(); });
+  }
+  function hhmm() { return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
+  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nRefresh(); } }, function () {}); } catch (e) {}
+
   var D = {};           // Daten dieses Durchlaufs
   var stack = [];       // Verlauf für Zurück
   var timer = null, wake = null;
@@ -220,6 +262,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="kicker">Im Sturm der Lust</p>' +
       '<h1>Der Sturm geht vorbei.</h1>' +
       '<p class="lead">Du musst ihn nicht bekämpfen. Du musst ihn nur durchstehen, Schritt für Schritt.</p>' +
+      (N.text ? '<p class="note">' + esc(N.text) + '</p>' : '') +
       '</div>' +
       '<div class="foot">' +
       '<button class="btn" data-act="start">Ich spüre einen Urge</button>' +
@@ -448,6 +491,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="kicker">Geschafft</p><h1>Du hast den Sturm ausgehalten.</h1>' +
       '<p class="lead">Das war dein ' + n + '. ausgehaltener Sturm. Jedes Mal, wenn du ihn aushältst, wird der alte Kreislauf schwächer.</p>' +
       (D.next ? '<div class="card"><p class="note" style="margin-bottom:4px">Als Nächstes</p><p class="serif" style="font-size:22px">' + esc(D.next) + '</p></div>' : '') +
+      (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') +
       '<p class="note">Langfristig baut verdientes Dopamin (Beziehungen, Ziele, Glaube, echte Anstrengung) die Baseline Stufe um Stufe auf. Bildschirme, Social Media und Binge-Watching senken sie.</p></div>' +
       '<div class="foot"><button class="btn" data-act="home">Fertig</button></div>';
   };
@@ -526,9 +570,11 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     },
     finish: function () {
       DB.log.push({ t: Date.now(), before: D.strength, after: D.after, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held' });
-      save(); stack = []; cur = 'end'; render();
+      save(); N.note = '';
+      nLog(hhmm() + ' Urge ausgehalten, Stärke ' + D.strength + ' → ' + D.after + (D.place ? ', ' + D.place : ''));
+      stack = []; cur = 'end'; render();
     },
-    fallSave: function () { DB.log.push({ t: Date.now(), outcome: 'fell' }); save(); home(); }
+    fallSave: function () { DB.log.push({ t: Date.now(), outcome: 'fell' }); save(); nLog(hhmm() + ' Rückfall'); home(); }
   };
   function history_pop() { cur = stack.pop() || 'connect'; render(); }
 

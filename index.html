@@ -118,7 +118,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .breath .count { font-family: var(--sans); font-weight: 600; font-size: 88px; margin-top: 28px; color: #bff0de; font-variant-numeric: tabular-nums; }
 .wave { position: absolute; left: -10%; right: -10%; bottom: 0; height: 10%; background: linear-gradient(#58c4a6, #2f8f78); border-radius: 50% 50% 0 0 / 28px 28px 0 0; transition: height 4s ease-in-out; }
 
-/* Wellen-Timer */
+/* Wellen-Anzeige */
+.sea { position: relative; height: 150px; overflow: hidden; border-radius: 16px; background: var(--surface2); }
+.sea i { position: absolute; left: -20%; right: -20%; bottom: 0; height: 40%; border-radius: 50% 50% 0 0 / 30px 30px 0 0; background: linear-gradient(#58c4a6, #2f8f78); opacity: .6; animation: swell 10s ease-in-out infinite; }
+.sea i + i { opacity: .9; height: 28%; animation-duration: 13s; animation-direction: reverse; }
+@keyframes swell { 0%, 100% { transform: translateY(45%); } 50% { transform: translateY(-60%); } }
+@media (prefers-reduced-motion: reduce) { .sea i { animation: none; } }
+/* alter Timer */
 .timer { font-family: var(--sans); font-weight: 600; font-size: 72px; font-variant-numeric: tabular-nums; text-align: center; letter-spacing: -.02em; }
 .track { position: relative; height: 10px; border-radius: 6px; background: var(--surface2); margin: 26px 0 30px; }
 .track .fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 6px; width: 0; transition: width 1s linear; }
@@ -564,7 +570,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   S.breathpick = function () {
     return '<div class="stack"><p class="kicker">Reconnect</p><h2>Atme. Wie viele Minuten?</h2>' +
       '<p class="lead" style="margin:0">Vier Sekunden ein, sechs Sekunden aus. Das senkt das Adrenalin.</p>' +
-      [1, 3, 5, 10].map(function (m) { return '<button class="choice" data-min="' + m + '"><b>' + m + (m === 1 ? ' Minute' : ' Minuten') + '</b></button>'; }).join('') +
+      [0.5, 1, 2, 3].map(function (m) { return '<button class="choice" data-min="' + m + '"><b>' + (m === 0.5 ? '30 Sekunden' : m + (m === 1 ? ' Minute' : ' Minuten')) + '</b></button>'; }).join('') +
       '</div><div class="grow"></div>' +
       '<div class="foot"><button class="link muted" data-act="next">Überspringen</button></div>';
   };
@@ -577,7 +583,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   };
   function runBreath() {
     keepAwake();
-    var total = (D.mins || 1) * 60, t = 0;
+    var total = Math.round((D.mins || 1) * 60), t = 0;
     var wave = document.getElementById('wave'), msg = document.getElementById('bmsg'), cnt = document.getElementById('bcount'), bt = document.getElementById('bt');
     function tick() {
       var s = t % 10;
@@ -596,8 +602,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><p class="kicker">Die Welle reiten</p><h2>Kämpf nicht dagegen an.</h2>' +
       '<p class="lead" style="margin:0" id="wtxt"></p></div>' +
       '<div class="grow" style="display:grid;align-content:center">' +
-      '<div class="timer" id="wtime">0:00</div>' +
-      '<div class="track"><div class="fill" id="wfill"></div><span class="mark" style="left:' + (20 / 30 * 100) + '%">20 min</span><span class="mark" style="left:100%;transform:translateX(-100%)">30 min</span></div>' +
+      '<div class="sea" aria-hidden="true"><i></i><i></i></div>' +
       '</div>' +
       '<p class="note" style="margin-bottom:6px">Verdränge nichts. Betrachte die Empfindungen nur als Entladung im Körper. Die Dynorphin-Welle ist nach höchstens 20 bis 30 Minuten vorbei.</p>' +
       '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
@@ -605,11 +610,9 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function runWave() {
     keepAwake();
     if (!D.waveStart) D.waveStart = Date.now();
-    var tm = document.getElementById('wtime'), fl = document.getElementById('wfill'), tx = document.getElementById('wtxt');
+    var tx = document.getElementById('wtxt');
     function tick() {
       var sec = Math.floor((Date.now() - D.waveStart) / 1000);
-      tm.textContent = Math.floor(sec / 60) + ':' + ('0' + (sec % 60)).slice(-2);
-      fl.style.width = Math.min(100, sec / 1800 * 100) + '%';
       tx.textContent = sec < 1200 ? 'Die Welle steigt und fällt von allein. Du musst nichts tun, nur da bleiben.' : sec < 1800 ? 'Du bist im letzten Stück. Das Ende ist nah.' : 'Die Welle ist durch. Du hast sie ausgehalten.';
     }
     tick(); timer = setInterval(tick, 1000);

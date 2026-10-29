@@ -558,12 +558,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   var PRAY = ['Beten', 'Such Gott. Ein kurzes Gebet reicht.'];
   var MOVE = ['Schnell bewegen', 'Beweg dich so schnell du kannst, bis der Druck sinkt.'];
   var MODE_STEPS = {
-    dorsal: [{ t: 'breath' }, { h: PRAY[0], p: PRAY[1] }, { t: 'sent' },
+    dorsal: [{ t: 'breath' }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent' },
       { h: 'Sanfte Bewegung', p: 'Steh auf, geh ans Tageslicht, beweg dich ruhig.' },
       { h: 'Raum und Farben wahrnehmen', p: 'Schau dich um. Benenne, was du an Farben und Dingen im Raum siehst.' },
       { h: 'Skill nutzen', p: 'Nutze einen Skill zur Emotionsregulation, zum Beispiel einen Knetball.' },
       { h: 'Gemeinschaft suchen', p: 'Geh zu Menschen oder ruf jemanden an.' }],
-    fight: [{ t: 'breath' }, { h: 'Aussprechen', p: 'Sag laut, was dich gerade stresst.' }, { h: PRAY[0], p: PRAY[1] }, { t: 'sent' }, { h: MOVE[0], p: MOVE[1] }]
+    fight: [{ t: 'breath' }, { h: 'Aussprechen', p: 'Sag laut, was dich gerade stresst.' }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent' }, { h: MOVE[0], p: MOVE[1] }]
   };
   function MSTEPS() { return MODE_STEPS[D.mode] || []; }
   function afterBreath() { var j = (D.mi || 0) + 1; go(j < MSTEPS().length ? 'm' + j : 'wave', true); }
@@ -574,7 +574,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (st.t === 'breath') return S.breathpick();
     var kick = D.mode === 'dorsal' ? 'Dorsal' : 'Fight Mode';
     if (st.t === 'sent') return '<div class="stack"><p class="kicker">' + kick + '</p><h2>Sag die Sätze laut.</h2><div>' + SENT.map(function (x) { return '<div class="sentence">' + x + '</div>'; }).join('') + '</div></div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
-    return '<div class="stack"><p class="kicker">' + kick + '</p><h2>' + esc(st.h) + '</h2><p class="lead" style="margin:0">' + esc(st.p) + '</p></div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+    return '<div class="stack"><p class="kicker">' + kick + '</p><h2>' + esc(st.h) + '</h2><p class="lead" style="margin:0">' + esc(st.p) + '</p>' + (st.img ? '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">' : '') + '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
   }
   for (var mi = 0; mi < 7; mi++) (function (i) { S['m' + i] = function () { return modeStep(i); }; })(mi);
   S.state = function () {

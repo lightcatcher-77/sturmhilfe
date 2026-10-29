@@ -122,15 +122,15 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 
 /* Wellen-Anzeige */
 .sea { position: relative; height: 150px; overflow: hidden; border-radius: 16px; background: var(--surface2); }
-.sea i { position: absolute; left: -20%; right: -20%; bottom: 0; height: 40%; border-radius: 50% 50% 0 0 / 30px 30px 0 0; background: linear-gradient(#58c4a6, #2f8f78); opacity: .6; animation: swell 10s ease-in-out infinite; }
-.sea i + i { opacity: .9; height: 28%; animation-duration: 13s; animation-direction: reverse; }
+.sea i { position: absolute; left: -20%; right: -20%; bottom: 0; height: 70%; border-radius: 50% 50% 0 0 / 30px 30px 0 0; background: linear-gradient(#58c4a6, #2f8f78); opacity: .6; animation: swell 10s ease-in-out infinite; }
+.sea i + i { opacity: .9; height: 55%; animation-duration: 13s; animation-direction: reverse; }
 .homewave { flex: 1; min-height: 90px; position: relative; overflow: hidden; margin: 8px calc(50% - 50vw) 0; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 35%); mask-image: linear-gradient(to bottom, transparent, #000 35%); }
 .homewave svg { position: absolute; left: 0; bottom: 0; width: 200%; height: 100%; animation: drift 14s linear infinite; }
 .homewave svg:nth-child(2) { animation-duration: 20s; animation-direction: reverse; height: 80%; }
 .homewave svg:nth-child(3) { animation-duration: 28s; height: 60%; }
 @keyframes drift { to { transform: translateX(-50%); } }
 @media (prefers-reduced-motion: reduce) { .homewave svg { animation: none; } }
-@keyframes swell { 0%, 100% { transform: translateY(45%); } 50% { transform: translateY(-60%); } }
+@keyframes swell { 0%, 100% { transform: translateY(55%); } 50% { transform: translateY(8%); } }
 @media (prefers-reduced-motion: reduce) { .sea i { animation: none; } }
 /* alter Timer */
 .timer { font-family: var(--sans); font-weight: 600; font-size: 72px; font-variant-numeric: tabular-nums; text-align: center; letter-spacing: -.02em; }
@@ -139,8 +139,47 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .track .mark { position: absolute; top: 16px; transform: translateX(-50%); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .track .mark::before { content: ""; position: absolute; left: 50%; top: -22px; width: 2px; height: 10px; background: var(--muted); }
 
+
+/* Szenen: sanft animierte Visualisierungen im Stil der Wellen-Anzeige */
+.scene { position: relative; height: 150px; width: 100%; overflow: hidden; border-radius: 16px; background: var(--surface2); }
+.scene i, .scene b, .scene u { position: absolute; display: block; }
+.sc-breath i { left: 50%; top: 50%; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%; background: linear-gradient(#58c4a6, #2f8f78); opacity: .35; animation: sc-breathe 10s ease-in-out infinite; }
+.sc-breath i + i { width: 70px; height: 70px; margin: -35px 0 0 -35px; opacity: .85; }
+@keyframes sc-breathe { 0%, 100% { transform: scale(.5); } 40% { transform: scale(1.25); } }
+.sc-speak b { left: 14%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #58c4a6; }
+.sc-speak i { left: 14%; top: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; border: 2px solid #58c4a6; opacity: 0; animation: sc-ripple 4.5s ease-out infinite; }
+.sc-speak i:nth-of-type(2) { animation-delay: 1.5s; } .sc-speak i:nth-of-type(3) { animation-delay: 3s; }
+@keyframes sc-ripple { 0% { transform: scale(.2); opacity: .9; } 100% { transform: scale(4.2); opacity: 0; } }
+.sc-book { display: flex; align-items: center; justify-content: center; gap: 9px; }
+.sc-book i { position: static; width: 9px; height: 30%; border-radius: 6px; background: linear-gradient(#58c4a6, #2f8f78); animation: sc-bar 2.8s ease-in-out infinite; }
+.sc-book i:nth-child(2n) { animation-delay: -.7s; } .sc-book i:nth-child(3n) { animation-delay: -1.4s; } .sc-book i:nth-child(4) { animation-delay: -2.1s; }
+@keyframes sc-bar { 0%, 100% { height: 22%; opacity: .55; } 50% { height: 66%; opacity: 1; } }
+.sc-sun b { left: 50%; bottom: 20%; width: 64px; height: 64px; margin-left: -32px; border-radius: 50%; background: linear-gradient(#f1cf8e, #e8b86d); animation: sc-rise 14s ease-in-out infinite alternate; }
+.sc-sun u { left: -20%; right: -20%; bottom: 0; height: 46%; border-radius: 50% 50% 0 0 / 30px 30px 0 0; background: linear-gradient(#58c4a6, #2f8f78); opacity: .6; }
+.sc-sun u + u { height: 30%; opacity: .9; left: -40%; right: 0; }
+@keyframes sc-rise { from { transform: translateY(26px); } to { transform: translateY(-14px); } }
+.sc-colors i { width: 90px; height: 90px; border-radius: 50%; filter: blur(10px); opacity: .75; animation: sc-drift 11s ease-in-out infinite alternate; }
+.sc-colors i:nth-child(1) { left: 18%; top: 14%; background: #58c4a6; } .sc-colors i:nth-child(2) { left: 40%; top: 30%; background: #e8b86d; animation-duration: 13s; } .sc-colors i:nth-child(3) { left: 60%; top: 10%; background: #8fb0ee; animation-duration: 9s; }
+@keyframes sc-drift { from { transform: translate(-24px, 8px) scale(.9); } to { transform: translate(26px, -10px) scale(1.15); } }
+.sc-ball b { left: 50%; bottom: 14%; width: 70px; height: 10px; margin-left: -35px; border-radius: 50%; background: #000; opacity: .18; animation: sc-shadow 3.2s ease-in-out infinite; }
+.sc-ball i { left: 50%; top: 50%; width: 70px; height: 70px; margin: -42px 0 0 -35px; border-radius: 50%; background: linear-gradient(#58c4a6, #2f8f78); animation: sc-squeeze 3.2s ease-in-out infinite; }
+@keyframes sc-squeeze { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.3, .72) translateY(10%); } }
+@keyframes sc-shadow { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.35); } }
+.sc-people i { top: 50%; width: 30px; height: 30px; margin-top: -15px; border-radius: 50%; background: linear-gradient(#58c4a6, #2f8f78); animation: sc-gather 6s ease-in-out infinite; }
+.sc-people i:nth-child(1) { left: 50%; margin-left: -15px; --x: -88px; } .sc-people i:nth-child(2) { left: 50%; margin-left: -15px; --x: 0px; background: linear-gradient(#f1cf8e, #e8b86d); } .sc-people i:nth-child(3) { left: 50%; margin-left: -15px; --x: 88px; }
+@keyframes sc-gather { 0%, 100% { transform: translateX(var(--x)); opacity: .6; } 50% { transform: translateX(calc(var(--x) * .3)); opacity: 1; } }
+.sc-bolt i { height: 3px; border-radius: 2px; background: #58c4a6; opacity: .8; left: -40%; width: 40%; animation: sc-dash 1.6s linear infinite; }
+.sc-bolt i:nth-child(1) { top: 24%; animation-duration: 1.3s; } .sc-bolt i:nth-child(2) { top: 42%; animation-duration: 1.9s; animation-delay: -.6s; width: 55%; } .sc-bolt i:nth-child(3) { top: 60%; animation-duration: 1.5s; animation-delay: -1s; } .sc-bolt i:nth-child(4) { top: 78%; animation-duration: 2.2s; animation-delay: -.3s; width: 50%; }
+@keyframes sc-dash { to { transform: translateX(420%); } }
+@media (prefers-reduced-motion: reduce) { .scene i, .scene b, .scene u { animation: none !important; } }
+
 /* Kreuz */
-.jesus { width: 100%; max-height: 48vh; object-fit: cover; object-position: 50% 30%; border-radius: 18px; border: 1px solid var(--line); display: block; }
+.csteps { display: grid; gap: 22px; width: 100%; }
+.cstep { opacity: 0; transform: translateY(10px); animation: cfade 1.4s ease forwards; }
+.cstep h2 { font-size: 26px; }
+@keyframes cfade { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .cstep { animation: none; opacity: 1; transform: none; } }
+.jesus { display: block; width: auto; max-width: 100%; height: auto; max-height: 64vh; margin: 0 auto; object-fit: contain; border-radius: 18px; border: 1px solid var(--line); }
 .cross { text-align: center; display: grid; gap: 18px; justify-items: center; padding-top: 8px; }
 .cross svg { width: 70px; height: 96px; stroke: var(--warm); stroke-width: 3; fill: none; stroke-linecap: round; }
 .dots { display: flex; gap: 8px; justify-content: center; }
@@ -199,7 +238,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   var K = 'sturmhilfe.v1';
   var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
   var FALL_MSG = 'Ich bin gefallen. Ich verstecke mich nicht und sage dir deshalb Bescheid. Bitte bete für mich und frag später nach, wie es mir geht.';
-  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], lies: [], truths: {}, cbi: ['', '', '', ''] };
+  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], trig: [], lies: [], truths: {}, cbi: ['', '', '', ''] };
   try { var raw = localStorage.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
   function save() { DB.ts = Date.now(); try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {} cloudSave(); }
 
@@ -220,6 +259,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     DB.log = log;
     var ll = (DB.lies || []).slice(); (rem.lies || []).forEach(function (x) { if (ll.indexOf(x) < 0) ll.push(x); }); DB.lies = ll;
     DB.truths = Object.assign({}, rem.truths || {}, DB.truths || {});
+    var tg = (DB.trig || []).slice(); (rem.trig || []).forEach(function (x) { if (tg.indexOf(x) < 0) tg.push(x); }); DB.trig = tg;
     var pl = (DB.places || []).slice(); (rem.places || []).forEach(function (x) { if (pl.indexOf(x) < 0) pl.push(x); }); DB.places = pl;
     try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {}
   }
@@ -342,6 +382,43 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       }, function (e) { N.histErr = nErr(e); if (cur === 'hist' || cur === 'home') render(); });
   }
   function nDaysSince(iso) { return Math.max(0, Math.round((new Date(todayISO()) - new Date(iso)) / 86400000)); }
+  /* ---------- Ereignisse in Notion (Muster erkennen) ---------- */
+  var EV_DS = '62d7bafb-963a-4aab-9eac-892019389b72';
+  var WD = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+  var CONN_NAMES = { love: 'Mensch', cross: 'Kreuz', lies: 'Lügen erkennen', cost: 'Kosten und Nutzen', why: 'Warum' };
+  function pad(n) { return ('0' + n).slice(-2); }
+  function isoLocal(d) { var o = -d.getTimezoneOffset(), sg = o >= 0 ? '+' : '-'; o = Math.abs(o); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00' + sg + pad(Math.floor(o / 60)) + ':' + pad(o % 60); }
+  function dayPart(h) { return h < 5 ? 'Nacht (0-5)' : h < 11 ? 'Morgen (5-11)' : h < 14 ? 'Mittag (11-14)' : h < 18 ? 'Nachmittag (14-18)' : h < 22 ? 'Abend (18-22)' : 'Spät (22-24)'; }
+  function clean(x) { return String(x).replace(/[,\n]+/g, ' ').trim().slice(0, 90); }
+  function evProps(held) {
+    var d = new Date(), q = {
+      'Ereignis': (held ? 'Urge ausgehalten ' : 'Rückfall ') + pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '. ' + pad(d.getHours()) + ':' + pad(d.getMinutes()),
+      'Ausgang': held ? 'Ausgehalten' : 'Gefallen',
+      'date:Zeitpunkt:start': isoLocal(d), 'date:Zeitpunkt:is_datetime': 1,
+      'Wochentag': WD[d.getDay()], 'Tageszeit': dayPart(d.getHours()), 'Uhrzeit': pad(d.getHours()) + ':' + pad(d.getMinutes())
+    };
+    if (D.strength) q['Stärke vorher'] = D.strength;
+    if (held && D.after) q['Stärke nachher'] = D.after;
+    if (D.place) q['Ort'] = clean(D.place);
+    if (D.alone !== undefined) q['Allein'] = D.alone ? 'Ja' : 'Nein';
+    if (D.svn !== undefined) q['Stufe'] = SVN[D.svn][0];
+    if (D.mode) q['Zustand'] = D.mode === 'dorsal' ? 'Dorsal' : 'Fight Mode';
+    if (D.breathSec) q['Atemdauer Sekunden'] = D.breathSec;
+    if ((D.trig || []).length) q['Auslöser'] = D.trig.map(clean);
+    var w = Object.keys(D.conn || {}).map(function (k) { return CONN_NAMES[k]; }).filter(Boolean);
+    if (w.length) q['Wege'] = w;
+    if ((D.liesSel || []).length) q['Lügen'] = D.liesSel.map(clean).join('; ');
+    return q;
+  }
+  // Ereignisse werden erst gemerkt und dann gesendet, damit nichts verloren geht, wenn Notion gerade nicht antwortet.
+  var evBusy = false;
+  function nEvent(held) { DB.pend = (DB.pend || []).concat([evProps(held)]); save(); flushEv(); }
+  function flushEv() {
+    if (!N.mcp || evBusy || !(DB.pend || []).length) return;
+    evBusy = true;
+    N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: EV_DS }, pages: [{ properties: DB.pend[0] }] }, { cache: false })
+      .then(function () { DB.pend.shift(); save(); evBusy = false; flushEv(); }, function () { evBusy = false; });
+  }
   var S = {};
   /* ---------- Recovery Zone eintragen ---------- */
   var ZONES = [
@@ -397,7 +474,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   };
 
   function hhmm() { return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
-  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); wpLoad(); } else { N.off = true; if (cur === 'home') render(); } }, function () {}); } catch (e) {}
+  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); wpLoad(); flushEv(); } else { N.off = true; if (cur === 'home') render(); } }, function () {}); } catch (e) {}
 
   var D = {};           // Daten dieses Durchlaufs
   var stack = [];       // Verlauf für Zurück
@@ -413,8 +490,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function heldCount() { return DB.log.filter(function (e) { return e.outcome === 'held'; }).length; }
 
   var PHASES = ['Erkennen', 'Verbinden', 'Antworten'];
-  var PHASE_OF = { breathpick: 0, strength: 0, place: 0, biochem: 0, svn: 0, state: 0, breath: 0, wave: 1, connect: 1, love: 1, cross: 1, why: 1, lies: 1, cost: 1, plan: 2, flag: 2, done: 2, end: 2 };
-  var FLOW = ['breathpick', 'strength', 'place', 'biochem', 'svn', 'state', 'wave', 'connect', 'plan', 'flag', 'done', 'end'];
+  var PHASE_OF = { strength: 0, place: 0, biochem: 0, svn: 0, state: 0, m0: 1, m1: 1, m2: 1, m3: 1, m4: 1, m5: 1, m6: 1, breathpick: 1, breath: 1, wave: 1, connect: 1, love: 1, cross: 1, why: 1, lies: 1, cost: 1, plan: 2, flag: 2, done: 2, end: 2 };
+  var FLOW = ['strength', 'place', 'biochem', 'svn', 'state', 'm0', 'wave', 'connect', 'plan', 'flag', 'done', 'end'];
 
   function go(name, noPush) {
     stopTimer();
@@ -423,7 +500,10 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     render();
     window.scrollTo(0, 0);
   }
-  function next() { var i = FLOW.indexOf(cur); go(FLOW[i + 1]); }
+  function next() {
+    if (/^m\d+$/.test(cur)) { var j = +cur.slice(1) + 1; go(j < MSTEPS().length ? 'm' + j : 'wave'); return; }
+    var i = FLOW.indexOf(cur); go(FLOW[i + 1]);
+  }
   function home() { stopTimer(); stack = []; D = {}; cur = 'home'; render(); }
 
   function chrome() {
@@ -561,24 +641,46 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   };
 
   var SENT = ['Mein System ist im Überlebensmodus.', 'Es ist normal, in dieses Schutzmuster zu verfallen.', 'Möge ich fähig sein, meine ventrale Energie zu aktivieren.'];
+  var TRIG0 = ['Gedanken an eine Frau aus meinem Umfeld', 'Muss zum nächsten Termin', 'Kritik', 'Überforderung'];
+  function allTrig() { return TRIG0.concat(DB.trig || []); }
+  function trigBox() {
+    D.trig = D.trig || [];
+    return '<div class="chips">' + allTrig().map(function (t) { return '<button class="chip' + (D.trig.indexOf(t) >= 0 ? ' sel' : '') + '" data-trig="' + esc(t) + '">' + esc(t) + '</button>'; }).join('') + '</div>' +
+      '<div class="row"><input type="text" id="newtrig" placeholder="Eigenen Auslöser eintragen" maxlength="60" aria-label="Eigener Auslöser"><button class="btn ghost small" data-act="addTrig">Hinzufügen</button></div>';
+  }
+  var SCENES = {'breath': '<i></i><i></i>', 'speak': '<b></b><i></i><i></i><i></i>', 'book': '<i></i><i></i><i></i><i></i><i></i><i></i><i></i>', 'sun': '<b></b><u></u><u></u>', 'colors': '<i></i><i></i><i></i>', 'ball': '<b></b><i></i>', 'people': '<i></i><i></i><i></i>', 'bolt': '<i></i><i></i><i></i><i></i>'};
+  function icon(k) { return SCENES[k] ? '<div class="scene sc-' + k + '" aria-hidden="true">' + SCENES[k] + '</div>' : ''; }
+  var PRAY = ['Beten', 'Such Gott. Ein kurzes Gebet reicht.'];
+  var MOVE = ['Schnell bewegen', 'Beweg dich so schnell du kannst, bis der Druck sinkt.'];
+  var MODE_STEPS = {
+    dorsal: [{ t: 'breath' }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent', ic: 'book' },
+      { ic: 'sun', h: 'Sanfte Bewegung', p: 'Steh auf, geh ans Tageslicht, beweg dich ruhig.' },
+      { ic: 'colors', h: 'Raum und Farben wahrnehmen', p: 'Schau dich um. Benenne, was du an Farben und Dingen im Raum siehst.' },
+      { ic: 'ball', h: 'Skill nutzen', p: 'Nutze einen Skill zur Emotionsregulation, zum Beispiel einen Knetball.' },
+      { ic: 'people', h: 'Gemeinschaft suchen', p: 'Geh zu Menschen oder ruf jemanden an.' }],
+    fight: [{ t: 'breath' }, { ic: 'speak', h: 'Aussprechen', p: 'Sag laut, was dich gerade stresst.', trig: true }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent', ic: 'book' }, { ic: 'bolt', h: MOVE[0], p: MOVE[1] }]
+  };
+  function MSTEPS() { return MODE_STEPS[D.mode] || []; }
+  function afterBreath() { var j = (D.mi || 0) + 1; go(j < MSTEPS().length ? 'm' + j : 'wave', true); }
+  function modeStep(i) {
+    D.mi = i;
+    var st = MSTEPS()[i];
+    if (!st) return '';
+    if (st.t === 'breath') return S.breathpick();
+    var kick = D.mode === 'dorsal' ? 'Dorsal' : 'Fight Mode';
+    if (st.t === 'sent') return '<div class="stack"><p class="kicker">' + kick + '</p>' + icon('book') + '<h2>Sag die Sätze laut.</h2><div>' + SENT.map(function (x) { return '<div class="sentence">' + x + '</div>'; }).join('') + '</div></div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+    return '<div class="stack"><p class="kicker">' + kick + '</p>' + icon(st.ic) + '<h2>' + esc(st.h) + '</h2><p class="lead" style="margin:0">' + esc(st.p) + '</p>' + (st.trig ? '<p style="font-weight:600;margin:8px 0 0">Was stresst dich?</p>' + trigBox() : '') + (st.img ? '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">' : '') + '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+  }
+  for (var mi = 0; mi < 7; mi++) (function (i) { S['m' + i] = function () { return modeStep(i); }; })(mi);
   S.state = function () {
-    var out = '';
-    if (D.mode === 'dorsal') {
-      out = '<div class="card stack"><b>Dorsal: Atmen, Beten, Sätze, dann das Passende tun</b><ul class="list"><li>Atmen</li><li>Beten und Gott suchen</li><li>Sätze laut sagen</li><li>Sanfte Bewegung, Tageslicht</li><li>Raum und Farben wahrnehmen</li><li>Skill nutzen</li><li>Gemeinschaft suchen</li></ul></div>';
-    } else if (D.mode === 'fight') {
-      out = '<div class="card stack"><b>Fight Mode: Atmen, aussprechen, beten, schnell bewegen</b><ul class="list"><li>Atmen</li><li>Aussprechen, was mich gerade stresst</li><li>Beten</li><li>Sätze laut sagen</li><li>Mich möglichst schnell bewegen</li></ul></div>';
-    }
-    var sents = D.mode ? '<div>' + SENT.map(function (s) { return '<div class="sentence">' + s + '</div>'; }).join('') + '</div>' : '';
     return '<div class="stack"><h2>Aus welchem Zustand kommt die Lust?</h2>' +
       '<button class="choice' + (D.mode === 'dorsal' ? ' sel' : '') + '" data-mode="dorsal"><b>Dorsal</b><span>Rückzug, schwer, leer, abgeschaltet</span></button>' +
       '<button class="choice' + (D.mode === 'fight' ? ' sel' : '') + '" data-mode="fight"><b>Fight Mode</b><span>Unter Strom, gestresst, Druck, Wut</span></button>' +
-      out + sents +
-      '</div><div class="grow"></div>' +
-      '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+      '</div><div class="grow"></div>';
   };
 
   S.breathpick = function () {
-    return '<div class="stack"><p class="kicker">Reconnect</p><h2>Atme. Wie viele Minuten?</h2>' +
+    return '<div class="stack"><p class="kicker">Reconnect</p>' + icon('breath') + '<h2>Atme. Wie viele Minuten?</h2>' +
       '<p class="lead" style="margin:0">Vier Sekunden ein, sechs Sekunden aus. Das senkt das Adrenalin.</p>' +
       [0.5, 1, 2, 3].map(function (m) { return '<button class="choice" data-min="' + m + '"><b>' + (m === 0.5 ? '30 Sekunden' : m + (m === 1 ? ' Minute' : ' Minuten')) + '</b></button>'; }).join('') +
       '</div><div class="grow"></div>' +
@@ -601,7 +703,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       if (s === 4) { wave.style.transitionDuration = '6s'; wave.style.height = '10%'; msg.textContent = 'Jetzt atme aus…'; }
       cnt.textContent = s < 4 ? 4 - s : 10 - s;
       var left = total - t; bt.textContent = Math.floor(left / 60) + ':' + ('0' + (left % 60)).slice(-2);
-      if (t >= total) { stopTimer(); go('strength', true); return; }
+      if (t >= total) { stopTimer(); afterBreath(); return; }
       t++;
     }
     setTimeout(tick, 60);
@@ -739,15 +841,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     ['Blick auf und verweile in seinen Augen.', 'Das entmachtet die Versuchung. Seine Versuchung führt dich zu einem Akt der Liebe zu Jesus, und das ärgert den Feind.']
   ];
   S.cross = function () {
-    var i = D.cx || 0, c = CROSS[i];
     return '<div class="cross">' +
       '<svg viewBox="0 0 60 80" aria-hidden="true"><path d="M30 4v72M12 24h36"/></svg>' +
-      '<h2 style="color:var(--warm)">' + esc(c[0]) + '</h2>' +
-      '<p class="lead" style="margin:0">' + esc(c[1]) + '</p>' +
-      '<div class="dots">' + CROSS.map(function (_, j) { return '<i class="' + (j <= i ? 'on' : '') + '"></i>'; }).join('') + '</div></div>' +
-      '<div class="grow"></div><div class="foot">' +
-      (i < CROSS.length - 1 ? '<button class="btn warm" data-act="crossNext">Weiter</button>' : '<button class="btn warm" data-act="connDone" data-k="cross">Fertig</button>') +
-      '</div>';
+      '<div class="csteps">' + CROSS.map(function (c, j) {
+        return '<div class="cstep" style="animation-delay:' + (0.4 + j * 3.2) + 's"><h2 style="color:var(--warm)">' + esc(c[0]) + '</h2><p class="lead" style="margin:6px 0 0">' + esc(c[1]) + '</p></div>';
+      }).join('') + '</div>' +
+      '<img class="jesus cstep" style="animation-delay:' + (0.4 + CROSS.length * 3.2) + 's" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()"></div>' +
+      '<div class="grow"></div><div class="foot"><button class="btn warm" data-act="connDone" data-k="cross">Fertig</button></div>';
   };
 
   S.why = function () {
@@ -815,13 +915,28 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     ['Die Scham ist die Falle.', 'Die Stimme, die flüstert „Du bist unverzeihlich“, will dich von Gottes Liebe trennen. Glaub ihr nicht.'],
     ['Geh sofort zu Christus.', 'Er wendet sich nicht ab. Er steht mit dir im Dreck, schaut dich barmherzig an und vergibt bedingungslos. Versteck dich nicht.'],
     ['Sag jemandem Bescheid.', 'Ein Rechenschaftspartner oder deine Gemeinschaft, damit du nicht allein damit bist.'],
+    ['Was war davor los?', 'Wähle, was zutrifft.'],
     ['Mitgefühl statt Selbstverurteilung.', 'Sag die drei Sätze langsam.']
   ];
+  function fallForm() {
+    var q = 'font-weight:600;margin:10px 0 0';
+    return '<p style="' + q.replace('10px', '2px') + '">Wo warst du?</p>' +
+      '<div class="chips">' + allPlaces().map(function (p) { return '<button class="chip' + (D.place === p ? ' sel' : '') + '" data-place="' + esc(p) + '">' + esc(p) + '</button>'; }).join('') + '</div>' +
+      (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40">' : '') +
+      '<p style="' + q + '">Warst du allein?</p>' +
+      '<div class="seg"><button class="chip' + (D.alone === true ? ' sel' : '') + '" data-alone="1">Ja</button><button class="chip' + (D.alone === false ? ' sel' : '') + '" data-alone="0">Nein</button></div>' +
+      '<p style="' + q + '">Wo hast du gestanden?</p>' +
+      '<div class="chips">' + SVN.map(function (x, j) { return '<button class="chip' + (D.svn === j ? ' sel' : '') + '" data-svn="' + j + '">' + x[0] + '</button>'; }).join('') + '</div>' +
+      '<p style="' + q + '">Wie stark war der Urge? <b id="frv">' + (D.strength || 5) + '</b> von 10</p>' +
+      '<input type="range" id="frng" min="1" max="10" value="' + (D.strength || 5) + '" aria-label="Stärke des Urge von 1 bis 10">' +
+      '<p style="' + q + '">Was hat ihn ausgelöst?</p>' + trigBox();
+  }
   S.fall = function () {
     var i = D.fx || 0, f = FALL[i], extra = '';
     if (i === 1) extra = '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">';
     if (i === 2) extra = msgBox('fmsg');
-    if (i === 3) extra = '<div>' + ['Dies ist ein Augenblick des Leidens.', 'Leid gehört zum Leben.', 'Möge ich mir geben, was ich brauche.'].map(function (s) { return '<div class="sentence">' + s + '</div>'; }).join('') + '</div>';
+    if (i === 3) extra = fallForm();
+    if (i === 4) extra = '<div>' + ['Dies ist ein Augenblick des Leidens.', 'Leid gehört zum Leben.', 'Möge ich mir geben, was ich brauche.'].map(function (s) { return '<div class="sentence">' + s + '</div>'; }).join('') + '</div>';
     var last = i === FALL.length - 1;
     return '<div class="stack"><p class="kicker">Wenn ich gefallen bin</p><h2>' + esc(f[0]) + '</h2><p class="lead" style="margin:0">' + esc(f[1]) + '</p>' + extra +
       '<div class="dots" style="justify-content:flex-start">' + FALL.map(function (_, j) { return '<i class="' + (j <= i ? 'on' : '') + '"></i>'; }).join('') + '</div></div>' +
@@ -877,6 +992,10 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (cur === 'breath') runBreath();
     if (cur === 'wave') runWave();
     if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; wpChanged(); }); }
+    var nt = document.getElementById('newtrig');
+    if (nt) { nt.value = D.newtrig || ''; nt.addEventListener('input', function () { D.newtrig = nt.value; }); }
+    var fr = document.getElementById('frng');
+    if (fr) fr.addEventListener('input', function () { D.strength = +fr.value; document.getElementById('frv').textContent = fr.value; });
     var np = document.getElementById('newplace');
     if (np) np.addEventListener('input', function () { D.custom = np.value; });
     if (cur === 'cost') { var cb = document.getElementById('cbtxt'); cb.addEventListener('input', function () { DB.cbi[D.cbx || 0] = cb.value; save(); }); }
@@ -888,14 +1007,14 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
 
   var ACT = {
-    start: function () { D = {}; stack = []; cur = 'home'; go('breathpick'); },
+    start: function () { D = {}; stack = []; cur = 'home'; go('strength'); },
     next: function () { if (cur === 'place') commitPlace(); next(); },
     home: home,
     whyHome: function () { D = { standalone: true }; go('why'); },
     planHome: function () { D = { standalone: true }; go('plan'); },
-    breathSkip: function () { go('strength', true); },
+    breathSkip: function () { afterBreath(); },
     crossNext: function () { D.cx = (D.cx || 0) + 1; render(); },
-    fallNext: function () { D.fx = (D.fx || 0) + 1; render(); },
+    fallNext: function () { if (D.fx === 3) commitPlace(); D.fx = (D.fx || 0) + 1; render(); },
     cbNext: function () { D.cbx = (D.cbx || 0) + 1; render(); window.scrollTo(0, 0); },
     liesNext: function () { if ((D.liesSel || []).length) { D.lx = 1; render(); window.scrollTo(0, 0); } },
     liesSkip: function () { D.lx = 0; history_pop(); },
@@ -914,14 +1033,25 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       try { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }); } catch (e) { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }
     },
     finish: function () {
-      DB.log.push({ t: Date.now(), before: D.strength, after: D.after, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held' });
-      save(); N.note = '';
+      DB.log.push({ t: Date.now(), before: D.strength, after: D.after, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held', svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
+      save(); N.note = ''; nEvent(true);
       nLog(hhmm() + ' Urge ausgehalten, Stärke ' + D.strength + ' → ' + D.after + (D.place ? ', ' + D.place : ''));
       stack = []; cur = 'end'; render();
     },
     zoneSave: zSave,
     nRetry: function () { N.histErr = ''; nLoadHist(); wpLoad(); render(); },
-    fallSave: function () { DB.log.push({ t: Date.now(), outcome: 'fell' }); save(); nLog(hhmm() + ' Rückfall'); home(); }
+    addTrig: function () {
+      var v = (D.newtrig || '').trim().slice(0, 60); if (!v) return;
+      var have = allTrig().filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
+      if (!have) { DB.trig = (DB.trig || []).concat(v); have = v; save(); }
+      D.trig = D.trig || []; if (D.trig.indexOf(have) < 0) D.trig.push(have);
+      D.newtrig = ''; render();
+    },
+    fallSave: function () {
+      commitPlace();
+      DB.log.push({ t: Date.now(), outcome: 'fell', place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
+      save(); nEvent(false); nLog(hhmm() + ' Rückfall'); home();
+    }
   };
   function history_pop() { cur = stack.pop() || 'connect'; render(); }
 
@@ -939,11 +1069,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (el.dataset.go === 'lies') { D.lx = 0; N.liesErr = ''; }
     if (el.dataset.go === 'cost') D.cbx = 0;
     if (el.dataset.go) { if (el.dataset.go === 'fall') D = {}; go(el.dataset.go); return; }
+    if (el.dataset.trig !== undefined) { var tg = el.dataset.trig, ti = (D.trig = D.trig || []).indexOf(tg); if (ti >= 0) D.trig.splice(ti, 1); else D.trig.push(tg); render(); return; }
     if (el.dataset.place !== undefined) { D.place = el.dataset.place; render(); return; }
     if (el.dataset.alone !== undefined) { D.alone = el.dataset.alone === '1'; render(); return; }
     if (el.dataset.svn !== undefined) { D.svn = +el.dataset.svn; render(); return; }
-    if (el.dataset.mode) { D.mode = el.dataset.mode; render(); return; }
-    if (el.dataset.min) { D.mins = +el.dataset.min; go('breath'); return; }
+    if (el.dataset.mode) { D.mode = el.dataset.mode; next(); return; }
+    if (el.dataset.min) { D.mins = +el.dataset.min; D.breathSec = Math.round(D.mins * 60); go('breath'); return; }
     if (el.dataset.pick !== undefined) { D.next = DB.plan[+el.dataset.pick]; render(); return; }
     if (el.dataset.del !== undefined) { DB.plan.splice(+el.dataset.del, 1); wpChanged(); render(); return; }
   });

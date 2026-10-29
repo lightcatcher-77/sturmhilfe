@@ -124,6 +124,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .sea { position: relative; height: 150px; overflow: hidden; border-radius: 16px; background: var(--surface2); }
 .sea i { position: absolute; left: -20%; right: -20%; bottom: 0; height: 40%; border-radius: 50% 50% 0 0 / 30px 30px 0 0; background: linear-gradient(#58c4a6, #2f8f78); opacity: .6; animation: swell 10s ease-in-out infinite; }
 .sea i + i { opacity: .9; height: 28%; animation-duration: 13s; animation-direction: reverse; }
+.homewave { flex: 1; min-height: 90px; position: relative; overflow: hidden; margin: 8px calc(50% - 50vw) 0; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 35%); mask-image: linear-gradient(to bottom, transparent, #000 35%); }
+.homewave svg { position: absolute; left: 0; bottom: 0; width: 200%; height: 100%; animation: drift 14s linear infinite; }
+.homewave svg:nth-child(2) { animation-duration: 20s; animation-direction: reverse; height: 80%; }
+.homewave svg:nth-child(3) { animation-duration: 28s; height: 60%; }
+@keyframes drift { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .homewave svg { animation: none; } }
 @keyframes swell { 0%, 100% { transform: translateY(45%); } 50% { transform: translateY(-60%); } }
 @media (prefers-reduced-motion: reduce) { .sea i { animation: none; } }
 /* alter Timer */
@@ -474,12 +480,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 
   S.home = function () {
     var n = heldCount();
-    return '<div class="grow stack" style="align-content:start;padding-top:28px">' +
+    return '<div class="stack" style="align-content:start;padding-top:28px">' +
       '<p class="kicker">Im Sturm der Lust</p>' +
       '<h1>Der Sturm geht vorbei.</h1>' +
       '<p class="lead">Du musst ihn nicht bekämpfen. Du musst ihn nur durchstehen, Schritt für Schritt.</p>' +
       encourage() +
       '</div>' +
+      '<div class="homewave" aria-hidden="true"><svg viewBox="0 0 1200 100" preserveAspectRatio="none"><path d="M0 50 Q75 25 150 50 T300 50 T450 50 T600 50 T750 50 T900 50 T1050 50 T1200 50 V100 H0Z" fill="#4cc9a4" fill-opacity=".10"/></svg><svg viewBox="0 0 1200 100" preserveAspectRatio="none"><path d="M0 50 Q75 25 150 50 T300 50 T450 50 T600 50 T750 50 T900 50 T1050 50 T1200 50 V100 H0Z" fill="#4cc9a4" fill-opacity=".16"/></svg><svg viewBox="0 0 1200 100" preserveAspectRatio="none"><path d="M0 50 Q75 25 150 50 T300 50 T450 50 T600 50 T750 50 T900 50 T1050 50 T1200 50 V100 H0Z" fill="#4cc9a4" fill-opacity=".26"/></svg></div>' +
       '<div class="foot">' +
       '<button class="btn" data-act="start">Ich spüre einen Urge</button>' +
       '<div class="seg"><button class="btn ghost small" data-go="fall" style="width:100%">Ich bin gefallen</button><button class="btn ghost small" data-go="hist" style="width:100%">Verlauf' + (n ? ' (' + n + ')' : '') + '</button></div>' +

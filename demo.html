@@ -132,6 +132,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .track .mark::before { content: ""; position: absolute; left: 50%; top: -22px; width: 2px; height: 10px; background: var(--muted); }
 
 /* Kreuz */
+.micon { width: 64px; height: 64px; stroke: var(--accent); stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .csteps { display: grid; gap: 22px; width: 100%; }
 .cstep { opacity: 0; transform: translateY(10px); animation: cfade 1.4s ease forwards; }
 .cstep h2 { font-size: 26px; }
@@ -608,15 +609,26 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="chips">' + allTrig().map(function (t) { return '<button class="chip' + (D.trig.indexOf(t) >= 0 ? ' sel' : '') + '" data-trig="' + esc(t) + '">' + esc(t) + '</button>'; }).join('') + '</div>' +
       '<div class="row"><input type="text" id="newtrig" placeholder="Eigenen Auslöser eintragen" maxlength="60" aria-label="Eigener Auslöser"><button class="btn ghost small" data-act="addTrig">Hinzufügen</button></div>';
   }
+  var ICONS = {
+    breath: '<path d="M4 36c8-12 16-12 24 0s16 12 24 0 6-6 8-8"/><path d="M4 48c8-12 16-12 24 0s16 12 24 0 6-6 8-8" opacity=".5"/>',
+    speak: '<path d="M8 12h48a4 4 0 0 1 4 4v24a4 4 0 0 1-4 4H30L18 54V44H8a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4z"/><path d="M16 24h32M16 32h20"/>',
+    book: '<path d="M32 16v34M32 16c-6-4-14-4-24-2v34c10-2 18-2 24 2M32 16c6-4 14-4 24-2v34c-10-2-18-2-24 2"/>',
+    sun: '<circle cx="32" cy="32" r="10"/><path d="M32 6v8M32 50v8M6 32h8M50 32h8M14 14l6 6M44 44l6 6M50 14l-6 6M20 44l-6 6"/>',
+    colors: '<circle cx="24" cy="26" r="14"/><circle cx="40" cy="26" r="14"/><circle cx="32" cy="40" r="14"/>',
+    ball: '<circle cx="32" cy="32" r="14"/><path d="M24 26a10 10 0 0 1 8-6M3 32h12M10 27l5 5-5 5M61 32H49M54 27l-5 5 5 5"/>',
+    people: '<circle cx="32" cy="20" r="7"/><circle cx="12" cy="28" r="6"/><circle cx="52" cy="28" r="6"/><path d="M18 54a14 14 0 0 1 28 0M2 50a10 10 0 0 1 14-8M62 50a10 10 0 0 0-14-8"/>',
+    bolt: '<path d="M38 4L16 36h14l-4 24 22-32H34z"/><path d="M4 22h10M2 32h8M6 42h8"/>'
+  };
+  function icon(k) { return ICONS[k] ? '<svg class="micon" viewBox="0 0 64 64" aria-hidden="true">' + ICONS[k] + '</svg>' : ''; }
   var PRAY = ['Beten', 'Such Gott. Ein kurzes Gebet reicht.'];
   var MOVE = ['Schnell bewegen', 'Beweg dich so schnell du kannst, bis der Druck sinkt.'];
   var MODE_STEPS = {
-    dorsal: [{ t: 'breath' }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent' },
-      { h: 'Sanfte Bewegung', p: 'Steh auf, geh ans Tageslicht, beweg dich ruhig.' },
-      { h: 'Raum und Farben wahrnehmen', p: 'Schau dich um. Benenne, was du an Farben und Dingen im Raum siehst.' },
-      { h: 'Skill nutzen', p: 'Nutze einen Skill zur Emotionsregulation, zum Beispiel einen Knetball.' },
-      { h: 'Gemeinschaft suchen', p: 'Geh zu Menschen oder ruf jemanden an.' }],
-    fight: [{ t: 'breath' }, { h: 'Aussprechen', p: 'Sag laut, was dich gerade stresst.', trig: true }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent' }, { h: MOVE[0], p: MOVE[1] }]
+    dorsal: [{ t: 'breath' }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent', ic: 'book' },
+      { ic: 'sun', h: 'Sanfte Bewegung', p: 'Steh auf, geh ans Tageslicht, beweg dich ruhig.' },
+      { ic: 'colors', h: 'Raum und Farben wahrnehmen', p: 'Schau dich um. Benenne, was du an Farben und Dingen im Raum siehst.' },
+      { ic: 'ball', h: 'Skill nutzen', p: 'Nutze einen Skill zur Emotionsregulation, zum Beispiel einen Knetball.' },
+      { ic: 'people', h: 'Gemeinschaft suchen', p: 'Geh zu Menschen oder ruf jemanden an.' }],
+    fight: [{ t: 'breath' }, { ic: 'speak', h: 'Aussprechen', p: 'Sag laut, was dich gerade stresst.', trig: true }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent', ic: 'book' }, { ic: 'bolt', h: MOVE[0], p: MOVE[1] }]
   };
   function MSTEPS() { return MODE_STEPS[D.mode] || []; }
   function afterBreath() { var j = (D.mi || 0) + 1; go(j < MSTEPS().length ? 'm' + j : 'wave', true); }
@@ -626,8 +638,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (!st) return '';
     if (st.t === 'breath') return S.breathpick();
     var kick = D.mode === 'dorsal' ? 'Dorsal' : 'Fight Mode';
-    if (st.t === 'sent') return '<div class="stack"><p class="kicker">' + kick + '</p><h2>Sag die Sätze laut.</h2><div>' + SENT.map(function (x) { return '<div class="sentence">' + x + '</div>'; }).join('') + '</div></div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
-    return '<div class="stack"><p class="kicker">' + kick + '</p><h2>' + esc(st.h) + '</h2><p class="lead" style="margin:0">' + esc(st.p) + '</p>' + (st.trig ? '<p style="font-weight:600;margin:8px 0 0">Was stresst dich?</p>' + trigBox() : '') + (st.img ? '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">' : '') + '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+    if (st.t === 'sent') return '<div class="stack"><p class="kicker">' + kick + '</p>' + icon('book') + '<h2>Sag die Sätze laut.</h2><div>' + SENT.map(function (x) { return '<div class="sentence">' + x + '</div>'; }).join('') + '</div></div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+    return '<div class="stack"><p class="kicker">' + kick + '</p>' + icon(st.ic) + '<h2>' + esc(st.h) + '</h2><p class="lead" style="margin:0">' + esc(st.p) + '</p>' + (st.trig ? '<p style="font-weight:600;margin:8px 0 0">Was stresst dich?</p>' + trigBox() : '') + (st.img ? '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">' : '') + '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
   }
   for (var mi = 0; mi < 7; mi++) (function (i) { S['m' + i] = function () { return modeStep(i); }; })(mi);
   S.state = function () {
@@ -638,7 +650,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   };
 
   S.breathpick = function () {
-    return '<div class="stack"><p class="kicker">Reconnect</p><h2>Atme. Wie viele Minuten?</h2>' +
+    return '<div class="stack"><p class="kicker">Reconnect</p>' + icon('breath') + '<h2>Atme. Wie viele Minuten?</h2>' +
       '<p class="lead" style="margin:0">Vier Sekunden ein, sechs Sekunden aus. Das senkt das Adrenalin.</p>' +
       [0.5, 1, 2, 3].map(function (m) { return '<button class="choice" data-min="' + m + '"><b>' + (m === 0.5 ? '30 Sekunden' : m + (m === 1 ? ' Minute' : ' Minuten')) + '</b></button>'; }).join('') +
       '</div><div class="grow"></div>' +

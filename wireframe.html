@@ -144,13 +144,13 @@ h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -.01em; text-
   function defaults() {
     return [
       { id: uid(), title: 'Ich spüre einen Urge', note: 'Hauptablauf in drei Phasen. Ein Zurück-Pfeil führt einen Schritt zurück, das X bricht ab.', steps: [
+        S('Atem wählen', '30 Sekunden, 1, 2 oder 3 Minuten.', 'Überspringen', 'choices', 'Erkennen'),
+        S('Atmen', 'Vollbild. Vier Sekunden ein, sechs aus, Welle und Countdown.', 'Überspringen', 'timer', 'Erkennen', 'Vollbild'),
         S('Stärke', 'Wie stark ist der Urge? Blob und Regler 1 bis 10.', 'Weiter', 'slider', 'Erkennen'),
         S('Ort', 'Wo bist du? Chips für den Ort, eigene Orte unter „Woanders“ (dauerhaft gespeichert), dazu: allein ja oder nein.', 'Weiter', 'chips', 'Erkennen'),
         S('Biochemie', 'Dopamin, Dynorphin, Willenskraft: drei kurze Punkte.', 'Weiter', 'list', 'Erkennen'),
         S('Sehen, Wollen, Nehmen', 'Drei Stufen wählen. Darunter erscheint die passende Antwort.', 'Weiter', 'choices', 'Erkennen'),
-        S('Zustand', 'Dorsal oder Fight Mode. Danach passende Schritte und die drei Sätze.', 'Weiter zum Atmen', 'choices', 'Erkennen'),
-        S('Atem wählen', '30 Sekunden, 1, 2 oder 3 Minuten.', 'Überspringen', 'choices', 'Verbinden'),
-        S('Atmen', 'Vollbild. Vier Sekunden ein, sechs aus, Welle und Countdown.', 'Überspringen', 'timer', 'Verbinden', 'Vollbild'),
+        S('Zustand', 'Dorsal oder Fight Mode. Danach passende Schritte und die drei Sätze.', 'Weiter', 'choices', 'Erkennen'),
         S('Welle reiten', 'Kein Timer. Nur eine beruhigende Wellen-Animation, die zeigt, dass es nach 20 bis 30 Minuten wieder vorbei sein wird.', 'Weiter', 'wave', 'Verbinden'),
         S('Verbinden', 'Fünf Wege: Mensch, Kreuz, Lügen erkennen, Kosten und Nutzen, Warum. Erledigte sind markiert.', 'Weiter', 'choices', 'Verbinden'),
         S('Mensch, den ich liebe', 'Zukünftige Partnerin vor Augen holen.', 'Fertig', 'text', 'Verbinden', 'Abzweig'),

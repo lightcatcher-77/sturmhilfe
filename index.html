@@ -405,8 +405,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function heldCount() { return DB.log.filter(function (e) { return e.outcome === 'held'; }).length; }
 
   var PHASES = ['Erkennen', 'Verbinden', 'Antworten'];
-  var PHASE_OF = { strength: 0, place: 0, biochem: 0, svn: 0, state: 0, breathpick: 1, breath: 1, wave: 1, connect: 1, love: 1, cross: 1, why: 1, lies: 1, cost: 1, plan: 2, flag: 2, done: 2, end: 2 };
-  var FLOW = ['strength', 'place', 'biochem', 'svn', 'state', 'breathpick', 'wave', 'connect', 'plan', 'flag', 'done', 'end'];
+  var PHASE_OF = { breathpick: 0, strength: 0, place: 0, biochem: 0, svn: 0, state: 0, breath: 0, wave: 1, connect: 1, love: 1, cross: 1, why: 1, lies: 1, cost: 1, plan: 2, flag: 2, done: 2, end: 2 };
+  var FLOW = ['breathpick', 'strength', 'place', 'biochem', 'svn', 'state', 'wave', 'connect', 'plan', 'flag', 'done', 'end'];
 
   function go(name, noPush) {
     stopTimer();
@@ -565,7 +565,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<button class="choice' + (D.mode === 'fight' ? ' sel' : '') + '" data-mode="fight"><b>Fight Mode</b><span>Unter Strom, gestresst, Druck, Wut</span></button>' +
       out + sents +
       '</div><div class="grow"></div>' +
-      '<div class="foot"><button class="btn" data-act="next">Weiter zum Atmen</button></div>';
+      '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
   };
 
   S.breathpick = function () {
@@ -592,7 +592,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       if (s === 4) { wave.style.transitionDuration = '6s'; wave.style.height = '10%'; msg.textContent = 'Jetzt atme aus…'; }
       cnt.textContent = s < 4 ? 4 - s : 10 - s;
       var left = total - t; bt.textContent = Math.floor(left / 60) + ':' + ('0' + (left % 60)).slice(-2);
-      if (t >= total) { stopTimer(); stack.pop(); go('wave', true); return; }
+      if (t >= total) { stopTimer(); go('strength', true); return; }
       t++;
     }
     setTimeout(tick, 60);
@@ -879,12 +879,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
 
   var ACT = {
-    start: function () { D = {}; stack = []; cur = 'home'; go('strength'); },
+    start: function () { D = {}; stack = []; cur = 'home'; go('breathpick'); },
     next: function () { if (cur === 'place') commitPlace(); next(); },
     home: home,
     whyHome: function () { D = { standalone: true }; go('why'); },
     planHome: function () { D = { standalone: true }; go('plan'); },
-    breathSkip: function () { stack.pop(); go('wave', true); },
+    breathSkip: function () { go('strength', true); },
     crossNext: function () { D.cx = (D.cx || 0) + 1; render(); },
     fallNext: function () { D.fx = (D.fx || 0) + 1; render(); },
     cbNext: function () { D.cbx = (D.cbx || 0) + 1; render(); window.scrollTo(0, 0); },

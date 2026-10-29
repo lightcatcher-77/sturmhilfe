@@ -4,6 +4,7 @@ Web-App für den Akutmoment bei einem Urge. Ablauf in drei Phasen (Erkennen, Ver
 
 ## Dateien
 - `index.html`: die komplette App in einer Datei, ohne Build.
+- `apple-touch-icon.png` (180 px, Home-Bildschirm-Icon), `icon-1024.png` (Vorlage ohne Rundung, iOS rundet selbst) und `icon.svg` (Quelle).
 
 ## Benutzung
 - Über GitHub Pages öffnen (`https://lightcatcher-77.github.io/sturmhilfe/`), im Safari "Zum Home-Bildschirm" wählen. Deine Einträge (Warum, Plan, Verlauf) liegen nur im Browser dieses Geräts.

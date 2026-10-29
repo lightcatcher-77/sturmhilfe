@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#16302c"/><stop offset="1" stop-color="#0a1211"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="512" cy="400" r="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4cc9a4" stop-opacity=".28"/><stop offset="1" stop-color="#4cc9a4" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <rect width="1024" height="1024" fill="url(#glow)"/>
+  <!-- Kreuz -->
+  <g fill="#4cc9a4">
+    <rect x="474" y="190" width="76" height="420" rx="14"/>
+    <rect x="352" y="292" width="320" height="76" rx="14"/>
+  </g>
+  <!-- Wellen -->
+  <g fill="none" stroke="#4cc9a4" stroke-linecap="round" stroke-width="40">
+    <path d="M212 700 q75 -75 150 0 t150 0 t150 0 t150 0" opacity=".95"/>
+    <path d="M212 810 q75 -75 150 0 t150 0 t150 0 t150 0" opacity=".5"/>
+    <path d="M212 920 q75 -75 150 0 t150 0 t150 0 t150 0" opacity=".22"/>
+  </g>
+</svg>

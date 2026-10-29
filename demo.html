@@ -132,6 +132,11 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .track .mark::before { content: ""; position: absolute; left: 50%; top: -22px; width: 2px; height: 10px; background: var(--muted); }
 
 /* Kreuz */
+.csteps { display: grid; gap: 22px; width: 100%; }
+.cstep { opacity: 0; transform: translateY(10px); animation: cfade 1.4s ease forwards; }
+.cstep h2 { font-size: 26px; }
+@keyframes cfade { to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .cstep { animation: none; opacity: 1; transform: none; } }
 .jesus { display: block; width: auto; max-width: 100%; height: auto; max-height: 64vh; margin: 0 auto; object-fit: contain; border-radius: 18px; border: 1px solid var(--line); }
 .cross { text-align: center; display: grid; gap: 18px; justify-items: center; padding-top: 8px; }
 .cross svg { width: 70px; height: 96px; stroke: var(--warm); stroke-width: 3; fill: none; stroke-linecap: round; }
@@ -795,15 +800,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     ['Blick auf und verweile in seinen Augen.', 'Das entmachtet die Versuchung. Seine Versuchung führt dich zu einem Akt der Liebe zu Jesus, und das ärgert den Feind.']
   ];
   S.cross = function () {
-    var i = D.cx || 0, c = CROSS[i];
     return '<div class="cross">' +
       '<svg viewBox="0 0 60 80" aria-hidden="true"><path d="M30 4v72M12 24h36"/></svg>' +
-      '<h2 style="color:var(--warm)">' + esc(c[0]) + '</h2>' +
-      '<p class="lead" style="margin:0">' + esc(c[1]) + '</p>' +
-      '<div class="dots">' + CROSS.map(function (_, j) { return '<i class="' + (j <= i ? 'on' : '') + '"></i>'; }).join('') + '</div></div>' +
-      '<div class="grow"></div><div class="foot">' +
-      (i < CROSS.length - 1 ? '<button class="btn warm" data-act="crossNext">Weiter</button>' : '<button class="btn warm" data-act="connDone" data-k="cross">Fertig</button>') +
-      '</div>';
+      '<div class="csteps">' + CROSS.map(function (c, j) {
+        return '<div class="cstep" style="animation-delay:' + (0.4 + j * 3.2) + 's"><h2 style="color:var(--warm)">' + esc(c[0]) + '</h2><p class="lead" style="margin:6px 0 0">' + esc(c[1]) + '</p></div>';
+      }).join('') + '</div></div>' +
+      '<div class="grow"></div><div class="foot"><button class="btn warm" data-act="connDone" data-k="cross">Fertig</button></div>';
   };
 
   S.why = function () {

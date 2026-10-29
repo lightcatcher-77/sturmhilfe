@@ -634,8 +634,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><h2>Aus welchem Zustand kommt die Lust?</h2>' +
       '<button class="choice' + (D.mode === 'dorsal' ? ' sel' : '') + '" data-mode="dorsal"><b>Dorsal</b><span>Rückzug, schwer, leer, abgeschaltet</span></button>' +
       '<button class="choice' + (D.mode === 'fight' ? ' sel' : '') + '" data-mode="fight"><b>Fight Mode</b><span>Unter Strom, gestresst, Druck, Wut</span></button>' +
-      '</div><div class="grow"></div>' +
-      '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+      '</div><div class="grow"></div>';
   };
 
   S.breathpick = function () {
@@ -1032,7 +1031,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (el.dataset.place !== undefined) { D.place = el.dataset.place; render(); return; }
     if (el.dataset.alone !== undefined) { D.alone = el.dataset.alone === '1'; render(); return; }
     if (el.dataset.svn !== undefined) { D.svn = +el.dataset.svn; render(); return; }
-    if (el.dataset.mode) { D.mode = el.dataset.mode; render(); return; }
+    if (el.dataset.mode) { D.mode = el.dataset.mode; next(); return; }
     if (el.dataset.min) { D.mins = +el.dataset.min; D.breathSec = Math.round(D.mins * 60); go('breath'); return; }
     if (el.dataset.pick !== undefined) { D.next = DB.plan[+el.dataset.pick]; render(); return; }
     if (el.dataset.del !== undefined) { DB.plan.splice(+el.dataset.del, 1); wpChanged(); render(); return; }

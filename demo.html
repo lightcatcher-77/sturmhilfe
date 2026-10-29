@@ -194,7 +194,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   var K = 'sturmhilfe.v1';
   var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
   var FALL_MSG = 'Ich bin gefallen. Ich verstecke mich nicht und sage dir deshalb Bescheid. Bitte bete für mich und frag später nach, wie es mir geht.';
-  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], trig: [], lies: ['Ein Mal schadet nicht.', 'Niemand merkt es.', 'Ich habe es mir verdient.'], truths: {}, cbi: ['', '', '', ''] };
+  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], trig: [], lies: ['Lieber Masturbieren als Pornos', 'Nur dieses eine Mal', 'Ich brauche das gegen Stress', 'Ich bin eh schon gescheitert', 'Morgen fange ich neu an', 'Es ist egal', 'Ich habe es mir verdient', 'Nur kurz schauen', 'Zu müde zum Kämpfen', 'Ist doch nicht so schlimm', 'Ich habe es im Griff', 'Es merkt ja keiner'], truths: {}, cbi: ['', '', '', ''] };
   try { var raw = MEM.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
   function save() { DB.ts = Date.now(); try { MEM.setItem(K, JSON.stringify(DB)); } catch (e) {} cloudSave(); }
 

@@ -211,6 +211,24 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     }).then(function () { N.note = 'In Notion gespeichert.'; nRefresh(); if (cur === 'end') render(); },
       function (e) { N.note = e && e.code === 'no_row' ? 'Für heute gibt es in Notion keine Zeile. Nur auf diesem Gerät gespeichert.' : nErr(e) + ' Nur auf diesem Gerät gespeichert.'; if (cur === 'end') render(); });
   }
+  // Letzte 30 Tage bis heute aus der Recovery Zone, neueste zuerst.
+  function nLoadHist() {
+    if (!N.mcp) return;
+    N.hist = null; N.histErr = '';
+    N.mcp.callTool('Notion', 'notion-query-data-sources', { data: { mode: 'rows', data_source_url: N.ds, limit: 30,
+      sort: [{ property: 'Datum', direction: 'descending' }],
+      filter: { type: 'group', operator: 'and', filters: [{ type: 'property', property: 'Datum', propertyType: 'date', operator: 'date_is_on_or_before', value: { type: 'exact', value: todayISO() } }] } } }, { cache: false })
+      .then(function (r) {
+        var p = r.payload; if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) {} }
+        N.hist = (p && p.results || []).map(function (row) {
+          var ok = 0, bad = 0;
+          ZONE.forEach(function (k) { if (/✅/.test(row[k] || '')) ok++; else if (/❌/.test(row[k] || '')) bad++; });
+          return { date: row['date:Datum:start'], tag: row['Tag'], note: (row['Notiz'] || '').trim(), ok: ok, bad: bad };
+        });
+        if (cur === 'hist') render();
+      }, function (e) { N.histErr = nErr(e); if (cur === 'hist') render(); });
+  }
+  function nDaysSince(iso) { return Math.max(0, Math.round((new Date(todayISO()) - new Date(iso)) / 86400000)); }
   function hhmm() { return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
   try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nRefresh(); } }, function () {}); } catch (e) {}
 
@@ -526,13 +544,25 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var maxp = plist.length ? places[plist[0]] : 1;
     var withAlone = DB.log.filter(function (e) { return e.alone !== undefined && e.alone !== null; });
     var aloneN = withAlone.filter(function (e) { return e.alone; }).length;
-    if (!DB.log.length) return '<div class="stack"><h2>Verlauf</h2><p class="lead">Noch keine Einträge. Nach dem ersten durchgestandenen Urge siehst du hier deine Muster.</p></div><div class="grow"></div><div class="foot"><button class="btn ghost" data-act="home">Zurück</button></div>';
+    // Rückschläge aus Notion (Tage mit mindestens einem ❌) zählen mit.
+    var nDays = (N.hist || []).filter(function (h) { return h.bad > 0 && h.date; });
+    if (nDays.length) { var nd = nDaysSince(nDays[0].date); if (days === null || nd < days) days = nd; }
+    var notion = '';
+    if (N.mcp) {
+      if (N.histErr) notion = '<p class="note">' + esc(N.histErr) + '</p>';
+      else if (!N.hist) notion = '<p class="note">Lade Recovery Zone aus Notion …</p>';
+      else notion = '<div class="card stack"><b>Recovery Zone (Notion)</b>' + (N.hist.filter(function (h) { return h.ok || h.bad || h.note; }).slice(0, 14).map(function (h) {
+        return '<div class="entry"><div><b>' + esc(h.tag || h.date) + '</b>' + (h.note ? '<br><small>' + esc(h.note).replace(/\n/g, '<br>') + '</small>' : '') + '</div><span class="pill ' + (h.bad ? 'fell' : 'held') + '">' + h.ok + ' ✅' + (h.bad ? ' · ' + h.bad + ' ❌' : '') + '</span></div>';
+      }).join('') || '<p class="note">Noch nichts eingetragen.</p>') + '</div>';
+    }
+    if (!DB.log.length && !nDays.length && !(N.hist && N.hist.length)) return '<div class="stack"><h2>Verlauf</h2><p class="lead">Noch keine Einträge. Nach dem ersten durchgestandenen Urge siehst du hier deine Muster.</p>' + notion + '</div><div class="grow"></div><div class="foot"><button class="btn ghost" data-act="home">Zurück</button></div>';
     return '<div class="stack"><h2>Verlauf</h2>' +
       '<div class="tiles"><div class="tile"><b>' + held.length + '</b><span>Stürme ausgehalten</span></div>' +
       '<div class="tile"><b>' + (days === null ? '–' : days) + '</b><span>' + (days === null ? 'Tage seit Rückfall' : 'Tage seit letztem Rückfall') + '</span></div>' +
       '<div class="tile"><b>' + (avg === null ? '–' : (avg > 0 ? '−' : '') + Math.abs(avg).toFixed(1).replace('.', ',')) + '</b><span>Stärke im Schnitt vorher zu nachher</span></div></div>' +
       (plist.length ? '<div class="card stack"><b>Wo es passiert</b><div class="bars">' + plist.map(function (p) { return '<div><span>' + esc(p) + '</span><span class="b"><i style="width:' + (places[p] / maxp * 100) + '%"></i></span><span>' + places[p] + '</span></div>'; }).join('') + '</div>' +
         (withAlone.length ? '<p class="note">' + aloneN + ' von ' + withAlone.length + ' Malen warst du allein.</p>' : '') + '</div>' : '') +
+      notion +
       '<div>' + L.slice(0, 30).map(function (e) {
         return '<div class="entry"><div><b>' + fmt(e.t) + '</b><br><small>' + esc(e.place || 'Ort offen') + (e.alone === true ? ' · allein' : e.alone === false ? ' · nicht allein' : '') + (e.before ? ' · Stärke ' + e.before + (e.after ? ' → ' + e.after : '') : '') + '</small></div><span class="pill ' + e.outcome + '">' + (e.outcome === 'held' ? 'ausgehalten' : 'Rückfall') + '</span></div>';
       }).join('') + '</div></div>' +
@@ -545,6 +575,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     $v.innerHTML = S[cur]();
     if (cur === 'strength') { var r = document.getElementById('rng'); r.addEventListener('input', blob); blob(); }
     if (cur === 'done') { var r2 = document.getElementById('rng2'); r2.addEventListener('input', blob2); blob2(); }
+    if (cur === 'hist' && !N.histBusy) { N.histBusy = true; nLoadHist(); }
+    if (cur !== 'hist') N.histBusy = false;
     if (cur === 'breath') runBreath();
     if (cur === 'wave') runWave();
     if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; save(); }); }

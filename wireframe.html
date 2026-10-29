@@ -140,21 +140,27 @@ h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -.01em; text-
   function uid() { return Math.random().toString(36).slice(2, 8); }
   function S(name, desc, btn, kind, phase, tag) { return { id: uid(), name: name, desc: desc, btn: btn, kind: kind, phase: phase || '', tag: tag || '' }; }
 
-  // Stand der App (index.html), Stand 29.10.2026.
+  // Stand der App (index.html), Stand 29.10.2026, inkl. Lügen erkennen und Kosten und Nutzen.
   function defaults() {
     return [
       { id: uid(), title: 'Ich spüre einen Urge', note: 'Hauptablauf in drei Phasen. Ein Zurück-Pfeil führt einen Schritt zurück, das X bricht ab.', steps: [
         S('Stärke', 'Wie stark ist der Urge? Blob und Regler 1 bis 10.', 'Weiter', 'slider', 'Erkennen'),
-        S('Ort', 'Wo bist du? Chips für den Ort, dazu: allein ja oder nein.', 'Weiter', 'chips', 'Erkennen'),
+        S('Ort', 'Wo bist du? Chips für den Ort, eigene Orte unter „Woanders“ (dauerhaft gespeichert), dazu: allein ja oder nein.', 'Weiter', 'chips', 'Erkennen'),
         S('Biochemie', 'Dopamin, Dynorphin, Willenskraft: drei kurze Punkte.', 'Weiter', 'list', 'Erkennen'),
         S('Sehen, Wollen, Nehmen', 'Drei Stufen wählen. Darunter erscheint die passende Antwort.', 'Weiter', 'choices', 'Erkennen'),
         S('Zustand', 'Dorsal oder Fight Mode. Danach passende Schritte und die drei Sätze.', 'Weiter zum Atmen', 'choices', 'Erkennen'),
         S('Atem wählen', '1, 3, 5 oder 10 Minuten.', 'Überspringen', 'choices', 'Verbinden'),
         S('Atmen', 'Vollbild. Vier Sekunden ein, sechs aus, Welle und Countdown.', 'Überspringen', 'timer', 'Verbinden', 'Vollbild'),
         S('Welle reiten', 'Timer bis 30 Minuten, Marken bei 20 und 30.', 'Weiter', 'timer', 'Verbinden'),
-        S('Verbinden', 'Drei Wege: Mensch, Kreuz, Warum. Erledigte sind markiert.', 'Weiter', 'choices', 'Verbinden'),
+        S('Verbinden', 'Fünf Wege: Mensch, Kreuz, Lügen erkennen, Kosten und Nutzen, Warum. Erledigte sind markiert.', 'Weiter', 'choices', 'Verbinden'),
         S('Mensch, den ich liebe', 'Zukünftige Partnerin vor Augen holen.', 'Fertig', 'text', 'Verbinden', 'Abzweig'),
         S('Zum Kreuz', 'Vier Schritte nach Franz von Sales, mit Punkten.', 'Weiter / Fertig', 'text', 'Verbinden', 'Abzweig'),
+        S('Lügen wählen', 'Gedanken aus Notion (Gedanken-Statistik) als Chips, mehrfach wählbar. Eigenes Feld für neue Lügen, dauerhaft gespeichert.', 'Weiter', 'chips', 'Verbinden', 'liest und schreibt Notion'),
+        S('Wahrheit schreiben', 'Zu jeder gewählten Lüge ein Textfeld für die Wahrheit. Antworten bleiben gespeichert.', 'Fertig', 'input', 'Verbinden', 'Abzweig'),
+        S('Kosten des Nachgebens', 'Was kostet es dich, nachzugeben? Folgen auflisten. Antwort bleibt gespeichert.', 'Weiter', 'input', 'Verbinden', 'Abzweig'),
+        S('Nutzen des Nachgebens', 'Was bringt es dir, nachzugeben? Positive Seiten auflisten.', 'Weiter', 'input', 'Verbinden', 'Abzweig'),
+        S('Kosten des Standhaftbleibens', 'Was kostet es dich, standhaft zu bleiben?', 'Weiter', 'input', 'Verbinden', 'Abzweig'),
+        S('Nutzen des Standhaftbleibens', 'Was bringt es dir, standhaft zu bleiben?', 'Fertig', 'input', 'Verbinden', 'Abzweig'),
         S('Mein Warum', 'Textfeld mit den eigenen Gründen.', 'Fertig', 'input', 'Verbinden', 'Abzweig'),
         S('Plan', 'Was tust du jetzt danach? Punkt wählen oder neuen anlegen.', 'Weiter', 'list', 'Antworten'),
         S('Bescheid geben', 'Nachricht an den Rechenschaftspartner zum Kopieren.', 'Weiter / Das möchte ich gerade nicht', 'input', 'Antworten'),
@@ -173,7 +179,7 @@ h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -.01em; text-
         S('Notiz', 'Freitext zum Tag, enthält auch die automatischen Zeilen.', 'In Notion speichern', 'input', '', 'schreibt Notion')
       ] },
       { id: uid(), title: 'Startseite und weitere Screens', note: 'Von der Startseite aus erreichbar.', steps: [
-        S('Startseite', 'Titel, Ermutigungskarte mit Wochenpunkten und einem Satz, fünf Buttons.', 'Ich spüre einen Urge', 'home', '', 'liest Notion'),
+        S('Startseite', 'Titel, Ermutigungskarte (Wochenpunkte, Satz zum Rückfall, Tage seit Rückfall ab 2 Tagen), fünf Buttons.', 'Ich spüre einen Urge', 'home', '', 'liest Notion'),
         S('Verlauf', 'Kacheln (ausgehalten, Tage seit Rückfall, Schnitt), Orte, Notion-Tage, Liste der Einträge.', 'Zurück', 'list', '', 'liest Notion'),
         S('Mein Warum', 'Eigenständig geöffnet. Textfeld, wird automatisch gespeichert.', 'Speichern und schließen', 'input', '', 'Notion-Seite'),
         S('Mein Plan', 'Liste pflegen: Punkte hinzufügen oder entfernen.', 'Fertig', 'list', '', 'Notion-Seite')

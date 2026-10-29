@@ -519,7 +519,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><h2>Gut erkannt. Jetzt prüfen wir die Lage.</h2>' +
       '<p class="lead" style="margin:0">Wo bist du gerade? Sei so genau wie möglich.</p>' +
       '<div class="chips" id="places">' + allPlaces().map(function (p) { return '<button class="chip' + (D.place === p ? ' sel' : '') + '" data-place="' + esc(p) + '">' + esc(p) + '</button>'; }).join('') + '</div>' +
-      (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen, z. B. Bei Oma" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40"><p class="note">Wird gespeichert, damit du ihn beim nächsten Mal direkt auswählen kannst.</p>' : '') +
+      (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen, z. B. Bei Oma" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40">' : '') +
       '<p style="margin-top:10px;font-weight:600">Bist du gerade allein?</p>' +
       '<div class="seg"><button class="chip' + (D.alone === true ? ' sel' : '') + '" data-alone="1">Ja</button><button class="chip' + (D.alone === false ? ' sel' : '') + '" data-alone="0">Nein</button></div>' +
       '</div><div class="grow"></div>' +
@@ -564,7 +564,6 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<button class="choice' + (D.mode === 'dorsal' ? ' sel' : '') + '" data-mode="dorsal"><b>Dorsal</b><span>Rückzug, schwer, leer, abgeschaltet</span></button>' +
       '<button class="choice' + (D.mode === 'fight' ? ' sel' : '') + '" data-mode="fight"><b>Fight Mode</b><span>Unter Strom, gestresst, Druck, Wut</span></button>' +
       out + sents +
-      '<p class="note">Das Modell stammt aus der Polyvagal-Theorie und ist ein Bild und Werkzeug, keine gesicherte Tatsache. Wenn du es nicht sicher weißt, wähle das, was näher dran ist. Atmen und Beten passen immer.</p>' +
       '</div><div class="grow"></div>' +
       '<div class="foot"><button class="btn" data-act="next">Weiter zum Atmen</button></div>';
   };
@@ -693,7 +692,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       (N.liesBusy && !N.lies ? '<p class="note">Lade deine Gedanken aus Notion …</p>' : '') + (N.liesErr ? '<p class="note">' + esc(N.liesErr) + '</p>' : '') +
       '<div class="chips">' + list.map(function (l) { return '<button class="chip' + (sel.indexOf(l) >= 0 ? ' sel' : '') + '" data-lie="' + esc(l) + '">' + esc(l) + '</button>'; }).join('') + '</div>' +
       '<div class="row"><input type="text" id="newlie" placeholder="Neue Lüge hinzufügen" aria-label="Neue Lüge" maxlength="120"><button class="btn small" data-act="addLie" style="width:auto">Hinzufügen</button></div>' +
-      (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '<p class="note">Neue Lügen werden dauerhaft gespeichert, auch in Notion (Gedanken-Statistik).</p>') +
+      (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '') +
       '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="liesNext"' + (sel.length ? '' : ' disabled') + '>Weiter</button><button class="link muted" data-act="liesSkip">Zurück zu den Wegen</button></div>';
   };
 
@@ -710,7 +709,6 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><p class="kicker">Kosten und Nutzen</p><h2>' + q[0] + q[1] + q[2] + '</h2>' +
       '<p class="lead" style="margin:0">' + q[3] + '</p>' +
       '<textarea id="cbtxt" style="min-height:170px" placeholder="' + esc(q[4]) + '" aria-label="' + esc(q[0].replace(/, $/, '')) + '">' + esc(DB.cbi[i]) + '</textarea>' +
-      '<p class="note">Deine Antworten bleiben gespeichert, nur du siehst sie. Beim nächsten Mal kannst du sie lesen und ergänzen.</p>' +
       '<div class="dots" style="justify-content:flex-start">' + CB.map(function (_, j) { return '<i class="' + (j <= i ? 'on' : '') + '"></i>'; }).join('') + '</div></div>' +
       '<div class="grow"></div><div class="foot">' + (last ? '<button class="btn" data-act="connDone" data-k="cost">Fertig</button>' : '<button class="btn" data-act="cbNext">Weiter</button>') + '</div>';
   };
@@ -747,7 +745,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><p class="kicker">Mein Warum</p><h2>Wofür kämpfe ich?</h2>' +
       '<p class="lead" style="margin:0">Schreib deine Gründe auf, große und kleine. Heute Abend, morgen früh, für die Beziehung, die du dir wünschst.</p>' +
       '<textarea id="whytxt" placeholder="Ich will bleibende Freude statt kurzer Erleichterung …">' + esc(DB.why) + '</textarea>' +
-      '<p class="note">' + (N.mcp ? 'Gespeichert in deinem Konto und in Notion (Seite „Sturmhilfe: Mein Warum und Mein Plan“).' : 'Gespeichert in deinem Konto, nur du siehst es.') + '</p></div>' +
+      '</div>' +
       '<div class="grow"></div><div class="foot">' +
       (D.standalone ? '<button class="btn" data-act="home">Speichern und schließen</button>' : '<button class="btn" data-act="connDone" data-k="why">Fertig</button>') + '</div>';
   };
@@ -800,7 +798,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="lead">Das war dein ' + n + '. ausgehaltener Sturm. Jedes Mal, wenn du ihn aushältst, wird der alte Kreislauf schwächer.</p>' +
       (D.next ? '<div class="card"><p class="note" style="margin-bottom:4px">Als Nächstes</p><p class="serif" style="font-size:22px">' + esc(D.next) + '</p></div>' : '') +
       (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') +
-      '<p class="note">Langfristig baut verdientes Dopamin (Beziehungen, Ziele, Glaube, echte Anstrengung) die Baseline Stufe um Stufe auf. Bildschirme, Social Media und Binge-Watching senken sie.</p></div>' +
+      '</div>' +
       '<div class="foot"><button class="btn" data-act="home">Fertig</button></div>';
   };
 

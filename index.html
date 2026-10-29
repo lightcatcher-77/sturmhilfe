@@ -624,7 +624,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><p class="kicker">Reconnect</p><h2>Verbinde dich neu.</h2>' +
       '<p class="lead" style="margin:0">Wähle einen oder mehrere Wege.</p>' +
       '<button class="choice' + (c.love ? ' done' : '') + '" data-go="love"><b>Zu einem Menschen, den ich liebe</b><span>Meine zukünftige Partnerin vor Augen holen</span></button>' +
-      '<button class="choice' + (c.cross ? ' done' : '') + '" data-go="cross"><b>Zum Kreuz</b><span>Franz von Sales: die Versuchung entmachten</span></button>' +
+      '<button class="choice' + (c.cross ? ' done' : '') + '" data-go="cross"><b>Das Kreuz</b><span>Die Versuchung entmachten</span></button>' +
       '<button class="choice' + (c.lies ? ' done' : '') + '" data-go="lies"><b>Lügen erkennen</b><span>Was redet mir mein Gehirn gerade ein, und was ist wahr?</span></button>' +
       '<button class="choice' + (c.cost ? ' done' : '') + '" data-go="cost"><b>Kosten und Nutzen</b><span>Nachgeben oder standhaft bleiben: was bringt es, was kostet es?</span></button>' +
       '<button class="choice' + (c.why ? ' done' : '') + '" data-go="why"><b>Mein Warum</b><span>' + (DB.why ? 'Meine Gründe lesen und erneuern' : 'Meine Gründe aufschreiben') + '</span></button>' +
@@ -731,7 +731,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   ];
   S.cross = function () {
     var i = D.cx || 0, c = CROSS[i];
-    return '<div class="cross"><p class="tag">Franz von Sales</p>' +
+    return '<div class="cross">' +
       '<svg viewBox="0 0 60 80" aria-hidden="true"><path d="M30 4v72M12 24h36"/></svg>' +
       '<h2 style="color:var(--warm)">' + esc(c[0]) + '</h2>' +
       '<p class="lead" style="margin:0">' + esc(c[1]) + '</p>' +

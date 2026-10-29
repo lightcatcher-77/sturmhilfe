@@ -183,7 +183,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 (function () {
   var K = 'sturmhilfe.v1';
   var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
-  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG };
+  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, places: [] };
   try { var raw = localStorage.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
   function save() { DB.ts = Date.now(); try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {} cloudSave(); }
 
@@ -202,6 +202,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     log.sort(function (a, b) { return a.t - b.t; });
     if ((rem.ts || 0) > (DB.ts || 0)) { DB.why = rem.why || ''; DB.plan = rem.plan || DB.plan; DB.msg = rem.msg || DB.msg; DB.ts = rem.ts; }
     DB.log = log;
+    var pl = (DB.places || []).slice(); (rem.places || []).forEach(function (x) { if (pl.indexOf(x) < 0) pl.push(x); }); DB.places = pl;
     try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {}
   }
   try {
@@ -494,10 +495,21 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
 
   var PLACES = ['Im Zimmer', 'Im Bett', 'Im Bad', 'Am Bildschirm', 'Unterwegs', 'Bei der Arbeit', 'Woanders'];
+  function allPlaces() { return PLACES.slice(0, -1).concat(DB.places || [], PLACES.slice(-1)); }
+  // Ein neuer Ort ("Woanders" mit Text) wird dauerhaft in der Liste gespeichert (Gerät und Konto).
+  function commitPlace() {
+    if (D.place !== 'Woanders') return;
+    var v = (D.custom || '').trim().slice(0, 40);
+    if (!v) return;
+    var known = allPlaces().filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
+    if (known) { D.place = known; return; }
+    DB.places = (DB.places || []).concat(v); D.place = v; save();
+  }
   S.place = function () {
     return '<div class="stack"><h2>Gut erkannt. Jetzt prüfen wir die Lage.</h2>' +
       '<p class="lead" style="margin:0">Wo bist du gerade? Sei so genau wie möglich.</p>' +
-      '<div class="chips" id="places">' + PLACES.map(function (p) { return '<button class="chip' + (D.place === p ? ' sel' : '') + '" data-place="' + esc(p) + '">' + esc(p) + '</button>'; }).join('') + '</div>' +
+      '<div class="chips" id="places">' + allPlaces().map(function (p) { return '<button class="chip' + (D.place === p ? ' sel' : '') + '" data-place="' + esc(p) + '">' + esc(p) + '</button>'; }).join('') + '</div>' +
+      (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen, z. B. Bei Oma" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40"><p class="note">Wird gespeichert, damit du ihn beim nächsten Mal direkt auswählen kannst.</p>' : '') +
       '<p style="margin-top:10px;font-weight:600">Bist du gerade allein?</p>' +
       '<div class="seg"><button class="chip' + (D.alone === true ? ' sel' : '') + '" data-alone="1">Ja</button><button class="chip' + (D.alone === false ? ' sel' : '') + '" data-alone="0">Nein</button></div>' +
       '</div><div class="grow"></div>' +
@@ -765,6 +777,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (cur === 'breath') runBreath();
     if (cur === 'wave') runWave();
     if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; wpChanged(); }); }
+    var np = document.getElementById('newplace');
+    if (np) np.addEventListener('input', function () { D.custom = np.value; });
     var zn = document.getElementById('znote');
     if (zn) zn.addEventListener('input', function () { Z.note = zn.value; });
     var m = document.getElementById('msg');
@@ -773,7 +787,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 
   var ACT = {
     start: function () { D = {}; stack = []; cur = 'home'; go('strength'); },
-    next: next,
+    next: function () { if (cur === 'place') commitPlace(); next(); },
     home: home,
     whyHome: function () { D = { standalone: true }; go('why'); },
     planHome: function () { D = { standalone: true }; go('plan'); },

@@ -183,7 +183,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 (function () {
   var K = 'sturmhilfe.v1';
   var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
-  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, places: [], lies: [], truths: {} };
+  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, places: [], lies: [], truths: {}, cbi: ['', '', '', ''] };
   try { var raw = localStorage.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
   function save() { DB.ts = Date.now(); try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {} cloudSave(); }
 
@@ -200,7 +200,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var seen = {}, log = [];
     (DB.log || []).concat(rem.log || []).forEach(function (e) { if (e && !seen[e.t]) { seen[e.t] = 1; log.push(e); } });
     log.sort(function (a, b) { return a.t - b.t; });
-    if ((rem.ts || 0) > (DB.ts || 0)) { DB.why = rem.why || ''; DB.plan = rem.plan || DB.plan; DB.msg = rem.msg || DB.msg; DB.ts = rem.ts; }
+    if ((rem.ts || 0) > (DB.ts || 0)) { DB.why = rem.why || ''; DB.plan = rem.plan || DB.plan; DB.msg = rem.msg || DB.msg; DB.cbi = rem.cbi || DB.cbi; DB.ts = rem.ts; }
     DB.log = log;
     var ll = (DB.lies || []).slice(); (rem.lies || []).forEach(function (x) { if (ll.indexOf(x) < 0) ll.push(x); }); DB.lies = ll;
     DB.truths = Object.assign({}, rem.truths || {}, DB.truths || {});
@@ -397,7 +397,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function heldCount() { return DB.log.filter(function (e) { return e.outcome === 'held'; }).length; }
 
   var PHASES = ['Erkennen', 'Verbinden', 'Antworten'];
-  var PHASE_OF = { strength: 0, place: 0, biochem: 0, svn: 0, state: 0, breathpick: 1, breath: 1, wave: 1, connect: 1, love: 1, cross: 1, why: 1, lies: 1, plan: 2, flag: 2, done: 2, end: 2 };
+  var PHASE_OF = { strength: 0, place: 0, biochem: 0, svn: 0, state: 0, breathpick: 1, breath: 1, wave: 1, connect: 1, love: 1, cross: 1, why: 1, lies: 1, cost: 1, plan: 2, flag: 2, done: 2, end: 2 };
   var FLOW = ['strength', 'place', 'biochem', 'svn', 'state', 'breathpick', 'wave', 'connect', 'plan', 'flag', 'done', 'end'];
 
   function go(name, noPush) {
@@ -622,6 +622,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<button class="choice' + (c.love ? ' done' : '') + '" data-go="love"><b>Zu einem Menschen, den ich liebe</b><span>Meine zukünftige Partnerin vor Augen holen</span></button>' +
       '<button class="choice' + (c.cross ? ' done' : '') + '" data-go="cross"><b>Zum Kreuz</b><span>Franz von Sales: die Versuchung entmachten</span></button>' +
       '<button class="choice' + (c.lies ? ' done' : '') + '" data-go="lies"><b>Lügen erkennen</b><span>Was redet mir mein Gehirn gerade ein, und was ist wahr?</span></button>' +
+      '<button class="choice' + (c.cost ? ' done' : '') + '" data-go="cost"><b>Kosten und Nutzen</b><span>Nachgeben oder standhaft bleiben: was bringt es, was kostet es?</span></button>' +
       '<button class="choice' + (c.why ? ' done' : '') + '" data-go="why"><b>Mein Warum</b><span>' + (DB.why ? 'Meine Gründe lesen und erneuern' : 'Meine Gründe aufschreiben') + '</span></button>' +
       '</div><div class="grow"></div>' +
       '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
@@ -667,6 +668,24 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<div class="row"><input type="text" id="newlie" placeholder="Neue Lüge hinzufügen" aria-label="Neue Lüge" maxlength="120"><button class="btn small" data-act="addLie" style="width:auto">Hinzufügen</button></div>' +
       (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '<p class="note">Neue Lügen werden dauerhaft gespeichert, auch in Notion (Gedanken-Statistik).</p>') +
       '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="liesNext"' + (sel.length ? '' : ' disabled') + '>Weiter</button><button class="link muted" data-act="liesSkip">Zurück zu den Wegen</button></div>';
+  };
+
+  /* ---------- Kosten und Nutzen (vier Schritte) ---------- */
+  var CB = [
+    ['Was kostet es dich, ', '<span style="color:var(--warm)">nachzugeben</span>', '?', 'Liste die Folgen dieses Weges auf.', 'Die Folgen wären …'],
+    ['Was bringt es dir, ', '<span style="color:var(--warm)">nachzugeben</span>', '?', 'Liste die positiven Seiten dieses Weges auf.', 'Der Vorteil wäre …'],
+    ['Was kostet es dich, ', '<span style="color:var(--accent)">standhaft zu bleiben</span>', '?', 'Liste die Folgen dieses Weges auf.', 'Die Folgen wären …'],
+    ['Was bringt es dir, ', '<span style="color:var(--accent)">standhaft zu bleiben</span>', '?', 'Liste die positiven Seiten dieses Weges auf.', 'Der Vorteil wäre …']
+  ];
+  S.cost = function () {
+    var i = D.cbx || 0, q = CB[i], last = i === CB.length - 1;
+    if (!DB.cbi || DB.cbi.length < 4) DB.cbi = ['', '', '', ''];
+    return '<div class="stack"><p class="kicker">Kosten und Nutzen</p><h2>' + q[0] + q[1] + q[2] + '</h2>' +
+      '<p class="lead" style="margin:0">' + q[3] + '</p>' +
+      '<textarea id="cbtxt" style="min-height:170px" placeholder="' + esc(q[4]) + '" aria-label="' + esc(q[0].replace(/, $/, '')) + '">' + esc(DB.cbi[i]) + '</textarea>' +
+      '<p class="note">Deine Antworten bleiben gespeichert, nur du siehst sie. Beim nächsten Mal kannst du sie lesen und ergänzen.</p>' +
+      '<div class="dots" style="justify-content:flex-start">' + CB.map(function (_, j) { return '<i class="' + (j <= i ? 'on' : '') + '"></i>'; }).join('') + '</div></div>' +
+      '<div class="grow"></div><div class="foot">' + (last ? '<button class="btn" data-act="connDone" data-k="cost">Fertig</button>' : '<button class="btn" data-act="cbNext">Weiter</button>') + '</div>';
   };
   function markConn(k) { D.conn = D.conn || {}; D.conn[k] = true; }
 
@@ -824,6 +843,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; wpChanged(); }); }
     var np = document.getElementById('newplace');
     if (np) np.addEventListener('input', function () { D.custom = np.value; });
+    if (cur === 'cost') { var cb = document.getElementById('cbtxt'); cb.addEventListener('input', function () { DB.cbi[D.cbx || 0] = cb.value; save(); }); }
     if (cur === 'lies') { nLoadLies(); D.lx = D.lx || 0; Array.prototype.forEach.call(document.querySelectorAll('[data-truth]'), function (t) { t.addEventListener('input', function () { DB.truths = DB.truths || {}; DB.truths[D.liesSel[+t.getAttribute('data-truth')]] = t.value; save(); }); }); }
     var zn = document.getElementById('znote');
     if (zn) zn.addEventListener('input', function () { Z.note = zn.value; });
@@ -840,6 +860,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     breathSkip: function () { stack.pop(); go('wave', true); },
     crossNext: function () { D.cx = (D.cx || 0) + 1; render(); },
     fallNext: function () { D.fx = (D.fx || 0) + 1; render(); },
+    cbNext: function () { D.cbx = (D.cbx || 0) + 1; render(); window.scrollTo(0, 0); },
     liesNext: function () { if ((D.liesSel || []).length) { D.lx = 1; render(); window.scrollTo(0, 0); } },
     liesSkip: function () { D.lx = 0; history_pop(); },
     addLie: function () {
@@ -849,7 +870,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       if (known) { if (D.liesSel.indexOf(known) < 0) D.liesSel.push(known); D.liesNote = 'Diese Lüge gibt es schon, sie ist ausgewählt.'; render(); return; }
       DB.lies = (DB.lies || []).concat(v); save(); D.liesSel.push(v); D.liesNote = 'Gespeichert.'; render(); nAddLie(v);
     },
-    connDone: function (el) { markConn(el.getAttribute('data-k')); D.cx = 0; D.lx = 0; history_pop(); },
+    connDone: function (el) { markConn(el.getAttribute('data-k')); D.cx = 0; D.lx = 0; D.cbx = 0; history_pop(); },
     addPlan: function () { var i = document.getElementById('newplan'), v = i.value.trim(); if (v) { DB.plan.push(v); wpChanged(); render(); } },
     copy: function () {
       var t = document.getElementById('msg'), ts = document.getElementById('toast');
@@ -880,6 +901,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (el.dataset.zs) { var pr = el.dataset.zs.split('|'); Z.vals[pr[0]] = STATE[pr[1]]; Z.msg = ''; render(); return; }
     if (el.dataset.zall) { ZONES.forEach(function (z) { if (z[0] === el.dataset.zall) z[1].forEach(function (k) { Z.vals[k] = STATE.ok; }); }); Z.msg = ''; render(); return; }
     if (el.dataset.go === 'lies') { D.lx = 0; N.liesErr = ''; }
+    if (el.dataset.go === 'cost') D.cbx = 0;
     if (el.dataset.go) { if (el.dataset.go === 'fall') D = {}; go(el.dataset.go); return; }
     if (el.dataset.place !== undefined) { D.place = el.dataset.place; render(); return; }
     if (el.dataset.alone !== undefined) { D.alone = el.dataset.alone === '1'; render(); return; }

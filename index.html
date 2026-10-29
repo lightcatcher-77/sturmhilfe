@@ -131,8 +131,41 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .track .mark { position: absolute; top: 16px; transform: translateX(-50%); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .track .mark::before { content: ""; position: absolute; left: 50%; top: -22px; width: 2px; height: 10px; background: var(--muted); }
 
+
+/* Szenen: sanft animierte Visualisierungen im Stil der Wellen-Anzeige */
+.scene { position: relative; height: 150px; width: 100%; overflow: hidden; border-radius: 16px; background: var(--surface2); }
+.scene i, .scene b, .scene u { position: absolute; display: block; }
+.sc-breath i { left: 50%; top: 50%; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%; background: linear-gradient(#58c4a6, #2f8f78); opacity: .35; animation: sc-breathe 10s ease-in-out infinite; }
+.sc-breath i + i { width: 70px; height: 70px; margin: -35px 0 0 -35px; opacity: .85; }
+@keyframes sc-breathe { 0%, 100% { transform: scale(.5); } 40% { transform: scale(1.25); } }
+.sc-speak b { left: 14%; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #58c4a6; }
+.sc-speak i { left: 14%; top: 50%; width: 60px; height: 60px; margin: -30px 0 0 -30px; border-radius: 50%; border: 2px solid #58c4a6; opacity: 0; animation: sc-ripple 4.5s ease-out infinite; }
+.sc-speak i:nth-of-type(2) { animation-delay: 1.5s; } .sc-speak i:nth-of-type(3) { animation-delay: 3s; }
+@keyframes sc-ripple { 0% { transform: scale(.2); opacity: .9; } 100% { transform: scale(4.2); opacity: 0; } }
+.sc-book { display: flex; align-items: center; justify-content: center; gap: 9px; }
+.sc-book i { position: static; width: 9px; height: 30%; border-radius: 6px; background: linear-gradient(#58c4a6, #2f8f78); animation: sc-bar 2.8s ease-in-out infinite; }
+.sc-book i:nth-child(2n) { animation-delay: -.7s; } .sc-book i:nth-child(3n) { animation-delay: -1.4s; } .sc-book i:nth-child(4) { animation-delay: -2.1s; }
+@keyframes sc-bar { 0%, 100% { height: 22%; opacity: .55; } 50% { height: 66%; opacity: 1; } }
+.sc-sun b { left: 50%; bottom: 20%; width: 64px; height: 64px; margin-left: -32px; border-radius: 50%; background: linear-gradient(#f1cf8e, #e8b86d); animation: sc-rise 14s ease-in-out infinite alternate; }
+.sc-sun u { left: -20%; right: -20%; bottom: 0; height: 46%; border-radius: 50% 50% 0 0 / 30px 30px 0 0; background: linear-gradient(#58c4a6, #2f8f78); opacity: .6; }
+.sc-sun u + u { height: 30%; opacity: .9; left: -40%; right: 0; }
+@keyframes sc-rise { from { transform: translateY(26px); } to { transform: translateY(-14px); } }
+.sc-colors i { width: 90px; height: 90px; border-radius: 50%; filter: blur(10px); opacity: .75; animation: sc-drift 11s ease-in-out infinite alternate; }
+.sc-colors i:nth-child(1) { left: 18%; top: 14%; background: #58c4a6; } .sc-colors i:nth-child(2) { left: 40%; top: 30%; background: #e8b86d; animation-duration: 13s; } .sc-colors i:nth-child(3) { left: 60%; top: 10%; background: #8fb0ee; animation-duration: 9s; }
+@keyframes sc-drift { from { transform: translate(-24px, 8px) scale(.9); } to { transform: translate(26px, -10px) scale(1.15); } }
+.sc-ball b { left: 50%; bottom: 14%; width: 70px; height: 10px; margin-left: -35px; border-radius: 50%; background: #000; opacity: .18; animation: sc-shadow 3.2s ease-in-out infinite; }
+.sc-ball i { left: 50%; top: 50%; width: 70px; height: 70px; margin: -42px 0 0 -35px; border-radius: 50%; background: linear-gradient(#58c4a6, #2f8f78); animation: sc-squeeze 3.2s ease-in-out infinite; }
+@keyframes sc-squeeze { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.3, .72) translateY(10%); } }
+@keyframes sc-shadow { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.35); } }
+.sc-people i { top: 50%; width: 30px; height: 30px; margin-top: -15px; border-radius: 50%; background: linear-gradient(#58c4a6, #2f8f78); animation: sc-gather 6s ease-in-out infinite; }
+.sc-people i:nth-child(1) { left: 50%; margin-left: -15px; --x: -88px; } .sc-people i:nth-child(2) { left: 50%; margin-left: -15px; --x: 0px; background: linear-gradient(#f1cf8e, #e8b86d); } .sc-people i:nth-child(3) { left: 50%; margin-left: -15px; --x: 88px; }
+@keyframes sc-gather { 0%, 100% { transform: translateX(var(--x)); opacity: .6; } 50% { transform: translateX(calc(var(--x) * .3)); opacity: 1; } }
+.sc-bolt i { height: 3px; border-radius: 2px; background: #58c4a6; opacity: .8; left: -40%; width: 40%; animation: sc-dash 1.6s linear infinite; }
+.sc-bolt i:nth-child(1) { top: 24%; animation-duration: 1.3s; } .sc-bolt i:nth-child(2) { top: 42%; animation-duration: 1.9s; animation-delay: -.6s; width: 55%; } .sc-bolt i:nth-child(3) { top: 60%; animation-duration: 1.5s; animation-delay: -1s; } .sc-bolt i:nth-child(4) { top: 78%; animation-duration: 2.2s; animation-delay: -.3s; width: 50%; }
+@keyframes sc-dash { to { transform: translateX(420%); } }
+@media (prefers-reduced-motion: reduce) { .scene i, .scene b, .scene u { animation: none !important; } }
+
 /* Kreuz */
-.micon { width: 64px; height: 64px; stroke: var(--accent); stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .csteps { display: grid; gap: 22px; width: 100%; }
 .cstep { opacity: 0; transform: translateY(10px); animation: cfade 1.4s ease forwards; }
 .cstep h2 { font-size: 26px; }
@@ -606,17 +639,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="chips">' + allTrig().map(function (t) { return '<button class="chip' + (D.trig.indexOf(t) >= 0 ? ' sel' : '') + '" data-trig="' + esc(t) + '">' + esc(t) + '</button>'; }).join('') + '</div>' +
       '<div class="row"><input type="text" id="newtrig" placeholder="Eigenen Auslöser eintragen" maxlength="60" aria-label="Eigener Auslöser"><button class="btn ghost small" data-act="addTrig">Hinzufügen</button></div>';
   }
-  var ICONS = {
-    breath: '<path d="M4 36c8-12 16-12 24 0s16 12 24 0 6-6 8-8"/><path d="M4 48c8-12 16-12 24 0s16 12 24 0 6-6 8-8" opacity=".5"/>',
-    speak: '<path d="M8 12h48a4 4 0 0 1 4 4v24a4 4 0 0 1-4 4H30L18 54V44H8a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4z"/><path d="M16 24h32M16 32h20"/>',
-    book: '<path d="M32 16v34M32 16c-6-4-14-4-24-2v34c10-2 18-2 24 2M32 16c6-4 14-4 24-2v34c-10-2-18-2-24 2"/>',
-    sun: '<circle cx="32" cy="32" r="10"/><path d="M32 6v8M32 50v8M6 32h8M50 32h8M14 14l6 6M44 44l6 6M50 14l-6 6M20 44l-6 6"/>',
-    colors: '<circle cx="24" cy="26" r="14"/><circle cx="40" cy="26" r="14"/><circle cx="32" cy="40" r="14"/>',
-    ball: '<circle cx="32" cy="32" r="14"/><path d="M24 26a10 10 0 0 1 8-6M3 32h12M10 27l5 5-5 5M61 32H49M54 27l-5 5 5 5"/>',
-    people: '<circle cx="32" cy="20" r="7"/><circle cx="12" cy="28" r="6"/><circle cx="52" cy="28" r="6"/><path d="M18 54a14 14 0 0 1 28 0M2 50a10 10 0 0 1 14-8M62 50a10 10 0 0 0-14-8"/>',
-    bolt: '<path d="M38 4L16 36h14l-4 24 22-32H34z"/><path d="M4 22h10M2 32h8M6 42h8"/>'
-  };
-  function icon(k) { return ICONS[k] ? '<svg class="micon" viewBox="0 0 64 64" aria-hidden="true">' + ICONS[k] + '</svg>' : ''; }
+  var SCENES = {'breath': '<i></i><i></i>', 'speak': '<b></b><i></i><i></i><i></i>', 'book': '<i></i><i></i><i></i><i></i><i></i><i></i><i></i>', 'sun': '<b></b><u></u><u></u>', 'colors': '<i></i><i></i><i></i>', 'ball': '<b></b><i></i>', 'people': '<i></i><i></i><i></i>', 'bolt': '<i></i><i></i><i></i><i></i>'};
+  function icon(k) { return SCENES[k] ? '<div class="scene sc-' + k + '" aria-hidden="true">' + SCENES[k] + '</div>' : ''; }
   var PRAY = ['Beten', 'Such Gott. Ein kurzes Gebet reicht.'];
   var MOVE = ['Schnell bewegen', 'Beweg dich so schnell du kannst, bis der Druck sinkt.'];
   var MODE_STEPS = {

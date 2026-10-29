@@ -157,6 +157,15 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .week i { width: 12px; height: 12px; border-radius: 50%; background: var(--line); }
 .week i.good { background: var(--accent); }
 .week i.hard { background: var(--warm); }
+.zhead { display: flex; justify-content: space-between; align-items: center; }
+.zhead .link { padding: 4px 8px; min-height: 36px; }
+.zrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+.zbtns { display: flex; gap: 6px; flex: none; }
+.zb { width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); filter: grayscale(1); opacity: .6; }
+.zb.on { opacity: 1; filter: none; color: var(--fg); border-color: var(--muted); background: var(--surface2); }
+.zb.ok.on { border-color: var(--accent); }
+.zb.bad.on { border-color: var(--danger); }
+.btn:disabled { opacity: .6; }
 .toast { color: var(--accent); font-size: 14px; min-height: 20px; }
 @media (prefers-reduced-motion: reduce) { .wave, .blob, .track .fill { transition: none; } }
 </style>
@@ -220,9 +229,9 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (c === 'not_in_manifest' || c === 'approval_required' || c === 'consent_required') return 'Zugriff auf Notion wurde nicht erlaubt.';
     return 'Notion hat gerade nicht geantwortet.';
   }
-  function nToday() {
+  function nToday(iso) {
     return N.mcp.callTool('Notion', 'notion-query-data-sources', { data: { mode: 'rows', data_source_url: N.ds, limit: 1,
-      filter: { type: 'group', operator: 'and', filters: [{ type: 'property', property: 'Datum', propertyType: 'date', operator: 'date_is', value: { type: 'exact', value: todayISO() } }] } } }, { cache: false })
+      filter: { type: 'group', operator: 'and', filters: [{ type: 'property', property: 'Datum', propertyType: 'date', operator: 'date_is', value: { type: 'exact', value: iso || todayISO() } }] } } }, { cache: false })
       .then(function (r) { var p = r.payload; if (typeof p === 'string') { try { p = JSON.parse(p); } catch (e) {} } return p && p.results && p.results[0] || null; });
   }
   // Hängt eine Zeile an das Feld "Notiz" der heutigen Zeile an.
@@ -254,6 +263,60 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       }, function (e) { N.histErr = nErr(e); if (cur === 'hist') render(); });
   }
   function nDaysSince(iso) { return Math.max(0, Math.round((new Date(todayISO()) - new Date(iso)) / 86400000)); }
+  var S = {};
+  /* ---------- Recovery Zone eintragen ---------- */
+  var ZONES = [
+    ['🟠 Enthaltsamkeit', ['Bilder', 'Edging', 'Pornografie', 'Masturbation']],
+    ['🟡 Grenzen', ['Lüstern', 'Scrollen', 'Fantasien', 'Chaos in mir']],
+    ['🟢 Selbstfürsorge', ['Zeit mit Gott', 'Lesen', 'Zeit draußen']]
+  ];
+  var STATE = { open: 'Offen', ok: '✅ Geschafft', bad: '❌ Rückschlag' };
+  var Z = { day: 0, row: null, vals: {}, note: '', loading: false, saving: false, err: '', msg: '' };
+  function zIso() { return isoMinus(Z.day); }
+  function zLoad() {
+    Z.row = null; Z.err = ''; Z.msg = '';
+    if (!N.mcp) { Z.err = 'Notion ist hier nicht verfügbar. Öffne die App über den Artifact-Link in Claude.'; render(); return; }
+    Z.loading = true; render();
+    var want = Z.day;
+    nToday(zIso()).then(function (row) {
+      if (want !== Z.day) return;
+      Z.loading = false; Z.row = row;
+      if (!row) Z.err = 'Für diesen Tag gibt es in Notion keine Zeile.';
+      else { Z.vals = {}; ZONE.forEach(function (k) { Z.vals[k] = row[k] || STATE.open; }); Z.note = (row['Notiz'] || ''); }
+      render();
+    }, function (e) { if (want !== Z.day) return; Z.loading = false; Z.err = nErr(e); render(); });
+  }
+  function zSave() {
+    if (!Z.row || Z.saving) return;
+    var props = { 'Notiz': Z.note };
+    ZONE.forEach(function (k) { props[k] = Z.vals[k] || STATE.open; });
+    Z.saving = true; Z.msg = ''; render();
+    N.mcp.callTool('Notion', 'notion-update-page', { page_id: Z.row.url, command: 'update_properties', properties: props }, { cache: false })
+      .then(function () { Z.saving = false; Z.msg = 'In Notion gespeichert.'; nLoadHist(); render(); },
+        function (e) { Z.saving = false; Z.msg = nErr(e) + ' Nichts wurde gespeichert.'; render(); });
+  }
+  S.zone = function () {
+    var tag = Z.row && Z.row['Tag'] ? ' · ' + esc(Z.row['Tag']) : '';
+    var head = '<div class="stack"><p class="kicker">Recovery Zone</p><h2>Wie war der Tag?</h2>' +
+      '<div class="seg"><button class="chip' + (Z.day === 0 ? ' sel' : '') + '" data-zday="0">Heute</button><button class="chip' + (Z.day === 1 ? ' sel' : '') + '" data-zday="1">Gestern</button></div>';
+    if (Z.loading) return head + '<p class="note">Lade aus Notion …</p></div><div class="grow"></div><div class="foot"><button class="btn ghost" data-act="home">Zurück</button></div>';
+    if (Z.err) return head + '<p class="note">' + esc(Z.err) + '</p></div><div class="grow"></div><div class="foot"><button class="btn ghost" data-act="home">Zurück</button></div>';
+    var body = ZONES.map(function (z) {
+      return '<div class="card stack"><div class="zhead"><b>' + z[0] + '</b><button class="link" data-zall="' + esc(z[0]) + '">Alle ✅</button></div>' +
+        z[1].map(function (k) {
+          var v = Z.vals[k];
+          return '<div class="zrow"><span>' + esc(k) + '</span><span class="zbtns">' +
+            '<button class="zb' + (v === STATE.open ? ' on' : '') + '" data-zs="' + esc(k) + '|open" aria-label="' + esc(k) + ': offen">–</button>' +
+            '<button class="zb ok' + (v === STATE.ok ? ' on' : '') + '" data-zs="' + esc(k) + '|ok" aria-label="' + esc(k) + ': geschafft">✅</button>' +
+            '<button class="zb bad' + (v === STATE.bad ? ' on' : '') + '" data-zs="' + esc(k) + '|bad" aria-label="' + esc(k) + ': Rückschlag">❌</button></span></div>';
+        }).join('') + '</div>';
+    }).join('');
+    return head.replace('Wie war der Tag?', 'Wie war der Tag?') + '<p class="note">' + (Z.day ? 'Gestern' : 'Heute') + tag + '</p>' + body +
+      '<textarea id="znote" placeholder="Notiz zum Tag" aria-label="Notiz">' + esc(Z.note) + '</textarea>' +
+      (Z.msg ? '<p class="note" role="status">' + esc(Z.msg) + '</p>' : '') + '</div>' +
+      '<div class="grow"></div><div class="foot"><button class="btn" data-act="zoneSave"' + (Z.saving ? ' disabled' : '') + '>' + (Z.saving ? 'Speichere …' : 'In Notion speichern') + '</button><button class="link muted" data-act="home">Zurück</button></div>';
+  };
+
   function hhmm() { return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
   try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); } }, function () {}); } catch (e) {}
 
@@ -297,7 +360,6 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
 
   /* ---------- Screens ---------- */
-  var S = {};
 
   // Ermutigende Anzeige: sieben Tage als Punkte (grün = Gutes getan, bernstein = schwerer Tag) und ein Satz, der nur Positives zählt.
   function isoMinus(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
@@ -329,6 +391,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<div class="foot">' +
       '<button class="btn" data-act="start">Ich spüre einen Urge</button>' +
       '<div class="seg"><button class="btn ghost small" data-go="fall" style="width:100%">Ich bin gefallen</button><button class="btn ghost small" data-go="hist" style="width:100%">Verlauf' + (n ? ' (' + n + ')' : '') + '</button></div>' +
+      '<button class="btn ghost small" data-go="zone" style="width:100%">Recovery Zone eintragen</button>' +
       '<div class="seg"><button class="btn ghost small" data-act="whyHome" style="width:100%">Mein Warum</button><button class="btn ghost small" data-act="planHome" style="width:100%">Mein Plan</button></div>' +
       '</div>';
   };
@@ -624,6 +687,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (cur === 'breath') runBreath();
     if (cur === 'wave') runWave();
     if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; save(); }); }
+    var zn = document.getElementById('znote');
+    if (zn) zn.addEventListener('input', function () { Z.note = zn.value; });
     var m = document.getElementById('msg');
     if (m) m.addEventListener('input', function () { DB.msg = m.value; save(); });
   }
@@ -650,6 +715,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       nLog(hhmm() + ' Urge ausgehalten, Stärke ' + D.strength + ' → ' + D.after + (D.place ? ', ' + D.place : ''));
       stack = []; cur = 'end'; render();
     },
+    zoneSave: zSave,
     fallSave: function () { DB.log.push({ t: Date.now(), outcome: 'fell' }); save(); nLog(hhmm() + ' Rückfall'); home(); }
   };
   function history_pop() { cur = stack.pop() || 'connect'; render(); }
@@ -660,6 +726,10 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (el.id === 'back') { cur = stack.pop() || 'home'; stopTimer(); render(); return; }
     if (el.id === 'close') { home(); return; }
     if (el.dataset.act) { ACT[el.dataset.act](el); return; }
+    if (el.dataset.go === 'zone') { D = {}; Z.day = 0; Z.msg = ''; go('zone'); zLoad(); return; }
+    if (el.dataset.zday !== undefined) { Z.day = +el.dataset.zday; zLoad(); return; }
+    if (el.dataset.zs) { var pr = el.dataset.zs.split('|'); Z.vals[pr[0]] = STATE[pr[1]]; Z.msg = ''; render(); return; }
+    if (el.dataset.zall) { ZONES.forEach(function (z) { if (z[0] === el.dataset.zall) z[1].forEach(function (k) { Z.vals[k] = STATE.ok; }); }); Z.msg = ''; render(); return; }
     if (el.dataset.go) { if (el.dataset.go === 'fall') D = {}; go(el.dataset.go); return; }
     if (el.dataset.place !== undefined) { D.place = el.dataset.place; render(); return; }
     if (el.dataset.alone !== undefined) { D.alone = el.dataset.alone === '1'; render(); return; }

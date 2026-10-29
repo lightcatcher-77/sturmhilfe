@@ -237,7 +237,11 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var c = e && e.code;
     if (c === 'needs_reauth' || c === 'server_not_connected') return 'Notion ist nicht verbunden. Verbinde es in claude.ai unter Einstellungen, Konnektoren.';
     if (c === 'not_in_manifest' || c === 'approval_required' || c === 'consent_required') return 'Zugriff auf Notion wurde nicht erlaubt.';
-    return 'Notion hat gerade nicht geantwortet' + (c ? ' (' + c + ')' : '') + '.';
+    var d = '';
+    if (c === 'tool_error') {
+      try { var rc = e.result && e.result.content && e.result.content[0] && e.result.content[0].text; d = String(rc || e.message || '').replace(/\s+/g, ' ').slice(0, 220); } catch (x) {}
+    }
+    return 'Notion hat gerade nicht geantwortet' + (c ? ' (' + c + ')' : '') + (d ? ': ' + d : '') + '.';
   }
   function nToday(iso) {
     return N.mcp.callTool('Notion', 'notion-query-data-sources', { data: { mode: 'rows', data_source_url: N.ds, limit: 1,

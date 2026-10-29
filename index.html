@@ -257,7 +257,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
         N.hist = (p && p.results || []).map(function (row) {
           var ok = 0, bad = 0;
           ZONE.forEach(function (k) { if (/✅/.test(row[k] || '')) ok++; else if (/❌/.test(row[k] || '')) bad++; });
-          return { date: row['date:Datum:start'], tag: row['Tag'], note: (row['Notiz'] || '').trim(), ok: ok, bad: bad };
+          var fall = ZONES[0][1].some(function (k) { return /❌/.test(row[k] || ''); });
+          return { date: row['date:Datum:start'], tag: row['Tag'], note: (row['Notiz'] || '').trim(), ok: ok, bad: bad, fall: fall };
         });
         if (cur === 'hist' || cur === 'home') render();
       }, function (e) { N.histErr = nErr(e); if (cur === 'hist') render(); });
@@ -361,6 +362,18 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 
   /* ---------- Screens ---------- */
 
+  // Tage seit dem letzten Rückfall: lokaler Rückfall-Eintrag oder ein Tag in Notion mit ❌ in der Zone Enthaltsamkeit.
+  function streak() {
+    var best = null, atLeast = false;
+    var falls = DB.log.filter(function (e) { return e.outcome === 'fell'; });
+    if (falls.length) { var t = falls[falls.length - 1].t, d = new Date(t); best = nDaysSince(d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2)); }
+    if (N.hist && N.hist.length) {
+      var f = N.hist.filter(function (h) { return h.fall && h.date; })[0];
+      if (f) { var nd = nDaysSince(f.date); if (best === null || nd < best) best = nd; }
+      else if (best === null) { best = nDaysSince(N.hist[N.hist.length - 1].date); atLeast = true; }
+    }
+    return best === null ? null : { days: best, atLeast: atLeast };
+  }
   // Ermutigende Anzeige: sieben Tage als Punkte (grün = Gutes getan, bernstein = schwerer Tag) und ein Satz, der nur Positives zählt.
   function isoMinus(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function encourage() {
@@ -373,6 +386,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     }
     todayRow = by[isoMinus(0)];
     var lines = [];
+    var st = streak();
+    if (st && st.days >= 2) lines.push(st.days + (st.atLeast ? ' Tage oder mehr' : ' Tage') + ' seit dem letzten Rückfall.');
     if (N.hist && good) lines.push('An ' + good + ' von 7 Tagen hast du etwas Gutes für dich getan.');
     if (held) lines.push(held === 1 ? 'Du hast schon einen Sturm ausgehalten.' : 'Du hast schon ' + held + ' Stürme ausgehalten.');
     if (N.hist && !lines.length) lines.push('Heute ist ein guter Tag, um neu anzufangen.');
@@ -651,9 +666,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var maxp = plist.length ? places[plist[0]] : 1;
     var withAlone = DB.log.filter(function (e) { return e.alone !== undefined && e.alone !== null; });
     var aloneN = withAlone.filter(function (e) { return e.alone; }).length;
-    // Rückschläge aus Notion (Tage mit mindestens einem ❌) zählen mit.
-    var nDays = (N.hist || []).filter(function (h) { return h.bad > 0 && h.date; });
-    if (nDays.length) { var nd = nDaysSince(nDays[0].date); if (days === null || nd < days) days = nd; }
+    var st = streak(); days = st ? st.days : null;
+    var nDays = (N.hist || []).filter(function (h) { return h.fall; });
     var notion = '';
     if (N.mcp) {
       if (N.histErr) notion = '<p class="note">' + esc(N.histErr) + '</p>';

@@ -6,7 +6,7 @@ Web-App für den Akutmoment bei einem Urge. Ablauf in drei Phasen (Erkennen, Ver
 - `index.html`: die komplette App in einer Datei, ohne Build.
 
 ## Benutzung
-- Am zuverlässigsten über den veröffentlichten Artifact-Link im Safari öffnen und "Zum Home-Bildschirm" wählen. Deine Einträge (Warum, Plan, Verlauf) liegen nur im Browser dieses Geräts.
+- Über GitHub Pages öffnen (`https://lightcatcher-77.github.io/sturmhilfe/`), im Safari "Zum Home-Bildschirm" wählen und "Zum Home-Bildschirm" wählen. Deine Einträge (Warum, Plan, Verlauf) liegen nur im Browser dieses Geräts.
 - `index.html` lässt sich auch direkt am Mac im Browser öffnen. Auf dem iPhone aus der Dateien-App speichert der Browser bei lokalen Dateien oft nicht.
 
 ## Inhalte aus dem Cheat Sheet

@@ -170,7 +170,39 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
   var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG };
   try { var raw = localStorage.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
-  function save() { try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {} }
+  function save() { DB.ts = Date.now(); try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {} cloudSave(); }
+
+  /* ---------- Sicherung im Konto (db), damit nichts vom Gerätespeicher abhängt ---------- */
+  var C = { doc: null, timer: null, busy: false, again: false };
+  function cloudPush() {
+    if (!C.doc) return;
+    if (C.busy) { C.again = true; return; }
+    C.busy = true;
+    C.doc.set(JSON.parse(JSON.stringify(DB))).catch(function () {}).then(function () { C.busy = false; if (C.again) { C.again = false; cloudPush(); } });
+  }
+  function cloudSave() { if (!C.doc) return; clearTimeout(C.timer); C.timer = setTimeout(cloudPush, 800); }
+  function cloudMerge(rem) {
+    var seen = {}, log = [];
+    (DB.log || []).concat(rem.log || []).forEach(function (e) { if (e && !seen[e.t]) { seen[e.t] = 1; log.push(e); } });
+    log.sort(function (a, b) { return a.t - b.t; });
+    if ((rem.ts || 0) > (DB.ts || 0)) { DB.why = rem.why || ''; DB.plan = rem.plan || DB.plan; DB.msg = rem.msg || DB.msg; DB.ts = rem.ts; }
+    DB.log = log;
+    try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {}
+  }
+  try {
+    if (window.claude && claude.use) Promise.all([claude.use('db'), claude.use('user')]).then(function (r) {
+      if (!r[0] || !r[1]) return null;
+      return r[1].id().then(function (id) {
+        if (!id) return;
+        C.doc = r[0].collection('data/users/' + id).doc('sturmhilfe');
+        return C.doc.get().then(function (snap) {
+          if (snap.exists) cloudMerge(snap.data() || {});
+          cloudPush();
+          if (cur === 'home' || cur === 'hist') render();
+        });
+      });
+    }).catch(function () {});
+  } catch (e) {}
 
   /* ---------- Notion (Meine Recovery Zone) ---------- */
   var N = { ds: 'collection://1080de9a-5751-46bd-ae0b-c1087d8047b9', mcp: null, row: null, text: '', note: '' };

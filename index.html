@@ -405,8 +405,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function heldCount() { return DB.log.filter(function (e) { return e.outcome === 'held'; }).length; }
 
   var PHASES = ['Erkennen', 'Verbinden', 'Antworten'];
-  var PHASE_OF = { breathpick: 0, strength: 0, place: 0, biochem: 0, svn: 0, state: 0, breath: 0, wave: 1, connect: 1, love: 1, cross: 1, why: 1, lies: 1, cost: 1, plan: 2, flag: 2, done: 2, end: 2 };
-  var FLOW = ['breathpick', 'strength', 'place', 'biochem', 'svn', 'state', 'wave', 'connect', 'plan', 'flag', 'done', 'end'];
+  var PHASE_OF = { strength: 0, place: 0, biochem: 0, svn: 0, state: 0, m0: 1, m1: 1, m2: 1, m3: 1, m4: 1, m5: 1, m6: 1, breathpick: 1, breath: 1, wave: 1, connect: 1, love: 1, cross: 1, why: 1, lies: 1, cost: 1, plan: 2, flag: 2, done: 2, end: 2 };
+  var FLOW = ['strength', 'place', 'biochem', 'svn', 'state', 'm0', 'wave', 'connect', 'plan', 'flag', 'done', 'end'];
 
   function go(name, noPush) {
     stopTimer();
@@ -415,7 +415,10 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     render();
     window.scrollTo(0, 0);
   }
-  function next() { var i = FLOW.indexOf(cur); go(FLOW[i + 1]); }
+  function next() {
+    if (/^m\d+$/.test(cur)) { var j = +cur.slice(1) + 1; go(j < MSTEPS().length ? 'm' + j : 'wave'); return; }
+    var i = FLOW.indexOf(cur); go(FLOW[i + 1]);
+  }
   function home() { stopTimer(); stack = []; D = {}; cur = 'home'; render(); }
 
   function chrome() {
@@ -552,18 +555,32 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   };
 
   var SENT = ['Mein System ist im Überlebensmodus.', 'Es ist normal, in dieses Schutzmuster zu verfallen.', 'Möge ich fähig sein, meine ventrale Energie zu aktivieren.'];
+  var PRAY = ['Beten', 'Such Gott. Ein kurzes Gebet reicht.'];
+  var MOVE = ['Schnell bewegen', 'Beweg dich so schnell du kannst, bis der Druck sinkt.'];
+  var MODE_STEPS = {
+    dorsal: [{ t: 'breath' }, { h: PRAY[0], p: PRAY[1] }, { t: 'sent' },
+      { h: 'Sanfte Bewegung', p: 'Steh auf, geh ans Tageslicht, beweg dich ruhig.' },
+      { h: 'Raum und Farben wahrnehmen', p: 'Schau dich um. Benenne, was du an Farben und Dingen im Raum siehst.' },
+      { h: 'Skill nutzen', p: 'Nutze einen Skill zur Emotionsregulation, zum Beispiel einen Knetball.' },
+      { h: 'Gemeinschaft suchen', p: 'Geh zu Menschen oder ruf jemanden an.' }],
+    fight: [{ t: 'breath' }, { h: 'Aussprechen', p: 'Sag laut, was dich gerade stresst.' }, { h: PRAY[0], p: PRAY[1] }, { t: 'sent' }, { h: MOVE[0], p: MOVE[1] }]
+  };
+  function MSTEPS() { return MODE_STEPS[D.mode] || []; }
+  function afterBreath() { var j = (D.mi || 0) + 1; go(j < MSTEPS().length ? 'm' + j : 'wave', true); }
+  function modeStep(i) {
+    D.mi = i;
+    var st = MSTEPS()[i];
+    if (!st) return '';
+    if (st.t === 'breath') return S.breathpick();
+    var kick = D.mode === 'dorsal' ? 'Dorsal' : 'Fight Mode';
+    if (st.t === 'sent') return '<div class="stack"><p class="kicker">' + kick + '</p><h2>Sag die Sätze laut.</h2><div>' + SENT.map(function (x) { return '<div class="sentence">' + x + '</div>'; }).join('') + '</div></div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+    return '<div class="stack"><p class="kicker">' + kick + '</p><h2>' + esc(st.h) + '</h2><p class="lead" style="margin:0">' + esc(st.p) + '</p></div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+  }
+  for (var mi = 0; mi < 7; mi++) (function (i) { S['m' + i] = function () { return modeStep(i); }; })(mi);
   S.state = function () {
-    var out = '';
-    if (D.mode === 'dorsal') {
-      out = '<div class="card stack"><b>Dorsal: Atmen, Beten, Sätze, dann das Passende tun</b><ul class="list"><li>Atmen</li><li>Beten und Gott suchen</li><li>Sätze laut sagen</li><li>Sanfte Bewegung, Tageslicht</li><li>Raum und Farben wahrnehmen</li><li>Skill nutzen</li><li>Gemeinschaft suchen</li></ul></div>';
-    } else if (D.mode === 'fight') {
-      out = '<div class="card stack"><b>Fight Mode: Atmen, aussprechen, beten, schnell bewegen</b><ul class="list"><li>Atmen</li><li>Aussprechen, was mich gerade stresst</li><li>Beten</li><li>Sätze laut sagen</li><li>Mich möglichst schnell bewegen</li></ul></div>';
-    }
-    var sents = D.mode ? '<div>' + SENT.map(function (s) { return '<div class="sentence">' + s + '</div>'; }).join('') + '</div>' : '';
     return '<div class="stack"><h2>Aus welchem Zustand kommt die Lust?</h2>' +
       '<button class="choice' + (D.mode === 'dorsal' ? ' sel' : '') + '" data-mode="dorsal"><b>Dorsal</b><span>Rückzug, schwer, leer, abgeschaltet</span></button>' +
       '<button class="choice' + (D.mode === 'fight' ? ' sel' : '') + '" data-mode="fight"><b>Fight Mode</b><span>Unter Strom, gestresst, Druck, Wut</span></button>' +
-      out + sents +
       '</div><div class="grow"></div>' +
       '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
   };
@@ -592,7 +609,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       if (s === 4) { wave.style.transitionDuration = '6s'; wave.style.height = '10%'; msg.textContent = 'Jetzt atme aus…'; }
       cnt.textContent = s < 4 ? 4 - s : 10 - s;
       var left = total - t; bt.textContent = Math.floor(left / 60) + ':' + ('0' + (left % 60)).slice(-2);
-      if (t >= total) { stopTimer(); go('strength', true); return; }
+      if (t >= total) { stopTimer(); afterBreath(); return; }
       t++;
     }
     setTimeout(tick, 60);
@@ -879,12 +896,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
 
   var ACT = {
-    start: function () { D = {}; stack = []; cur = 'home'; go('breathpick'); },
+    start: function () { D = {}; stack = []; cur = 'home'; go('strength'); },
     next: function () { if (cur === 'place') commitPlace(); next(); },
     home: home,
     whyHome: function () { D = { standalone: true }; go('why'); },
     planHome: function () { D = { standalone: true }; go('plan'); },
-    breathSkip: function () { go('strength', true); },
+    breathSkip: function () { afterBreath(); },
     crossNext: function () { D.cx = (D.cx || 0) + 1; render(); },
     fallNext: function () { D.fx = (D.fx || 0) + 1; render(); },
     cbNext: function () { D.cbx = (D.cbx || 0) + 1; render(); window.scrollTo(0, 0); },

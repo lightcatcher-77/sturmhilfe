@@ -144,13 +144,11 @@ h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -.01em; text-
   function defaults() {
     return [
       { id: uid(), title: 'Ich spüre einen Urge', note: 'Hauptablauf in drei Phasen. Ein Zurück-Pfeil führt einen Schritt zurück, das X bricht ab.', steps: [
-        S('Atem wählen', '30 Sekunden, 1, 2 oder 3 Minuten.', 'Überspringen', 'choices', 'Erkennen'),
-        S('Atmen', 'Vollbild. Vier Sekunden ein, sechs aus, Welle und Countdown.', 'Überspringen', 'timer', 'Erkennen', 'Vollbild'),
         S('Stärke', 'Wie stark ist der Urge? Blob und Regler 1 bis 10.', 'Weiter', 'slider', 'Erkennen'),
         S('Ort', 'Wo bist du? Chips für den Ort, eigene Orte unter „Woanders“ (dauerhaft gespeichert), dazu: allein ja oder nein.', 'Weiter', 'chips', 'Erkennen'),
         S('Biochemie', 'Dopamin, Dynorphin, Willenskraft: drei kurze Punkte.', 'Weiter', 'list', 'Erkennen'),
         S('Sehen, Wollen, Nehmen', 'Drei Stufen wählen. Darunter erscheint die passende Antwort.', 'Weiter', 'choices', 'Erkennen'),
-        S('Zustand', 'Dorsal oder Fight Mode. Danach passende Schritte und die drei Sätze.', 'Weiter', 'choices', 'Erkennen'),
+        S('Zustand', 'Nur zwei Kästen mit Beschreibung: Dorsal oder Fight Mode. Danach laufen die Schritte des gewählten Modus (siehe die zwei Abläufe darunter).', 'Weiter', 'choices', 'Erkennen'),
         S('Welle reiten', 'Kein Timer. Nur eine beruhigende Wellen-Animation, die zeigt, dass es nach 20 bis 30 Minuten wieder vorbei sein wird.', 'Weiter', 'wave', 'Verbinden'),
         S('Verbinden', 'Fünf Wege: Mensch, Kreuz, Lügen erkennen, Kosten und Nutzen, Warum. Erledigte sind markiert.', 'Weiter', 'choices', 'Verbinden'),
         S('Mensch, den ich liebe', 'Zukünftige Partnerin vor Augen holen.', 'Fertig', 'text', 'Verbinden', 'Abzweig'),
@@ -166,6 +164,24 @@ h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -.01em; text-
         S('Bescheid geben', 'Nachricht an den Rechenschaftspartner zum Kopieren.', 'Weiter / Das möchte ich gerade nicht', 'input', 'Antworten'),
         S('Stärke danach', 'Wie stark ist der Urge jetzt? Vorher-Wert wird gezeigt.', 'Speichern', 'slider', 'Antworten', 'schreibt Notiz'),
         S('Geschafft', 'Zähler der ausgehaltenen Stürme und der nächste Schritt aus dem Plan.', 'Fertig', 'done', 'Antworten')
+      ] },
+      { id: uid(), title: 'Modus Dorsal', note: 'Folgt auf „Zustand“, wenn Dorsal gewählt ist. Danach geht es mit „Welle reiten“ weiter.', steps: [
+        S('Atem wählen', '30 Sekunden, 1, 2 oder 3 Minuten.', 'Überspringen', 'choices', 'Verbinden'),
+        S('Atmen', 'Vollbild. Vier Sekunden ein, sechs aus, Welle und Countdown.', 'Überspringen', 'timer', 'Verbinden', 'Vollbild'),
+        S('Beten', 'Such Gott. Ein kurzes Gebet reicht.', 'Weiter', 'text', 'Verbinden'),
+        S('Die drei Sätze', 'Die drei Sätze laut sagen.', 'Weiter', 'text', 'Verbinden'),
+        S('Sanfte Bewegung', 'Aufstehen, ans Tageslicht, ruhig bewegen.', 'Weiter', 'text', 'Verbinden'),
+        S('Raum und Farben wahrnehmen', 'Umschauen, Farben und Dinge im Raum benennen.', 'Weiter', 'text', 'Verbinden'),
+        S('Skill nutzen', 'Emotionsregulations-Skill, zum Beispiel ein Knetball.', 'Weiter', 'text', 'Verbinden'),
+        S('Gemeinschaft suchen', 'Zu Menschen gehen oder jemanden anrufen.', 'Weiter', 'text', 'Verbinden')
+      ] },
+      { id: uid(), title: 'Modus Fight Mode', note: 'Folgt auf „Zustand“, wenn Fight Mode gewählt ist. Danach geht es mit „Welle reiten“ weiter.', steps: [
+        S('Atem wählen', '30 Sekunden, 1, 2 oder 3 Minuten.', 'Überspringen', 'choices', 'Verbinden'),
+        S('Atmen', 'Vollbild. Vier Sekunden ein, sechs aus, Welle und Countdown.', 'Überspringen', 'timer', 'Verbinden', 'Vollbild'),
+        S('Aussprechen', 'Laut sagen, was mich gerade stresst.', 'Weiter', 'text', 'Verbinden'),
+        S('Beten', 'Such Gott. Ein kurzes Gebet reicht.', 'Weiter', 'text', 'Verbinden'),
+        S('Die drei Sätze', 'Die drei Sätze laut sagen.', 'Weiter', 'text', 'Verbinden'),
+        S('Schnell bewegen', 'So schnell bewegen, bis der Druck sinkt.', 'Weiter', 'text', 'Verbinden')
       ] },
       { id: uid(), title: 'Ich bin gefallen', note: 'Vier ruhige Schritte ohne Scham. Der Rückfall wird nur auf Wunsch gespeichert.', steps: [
         S('Die Scham ist die Falle', 'Kurzer Text, glaub der Stimme nicht.', 'Weiter', 'text'),

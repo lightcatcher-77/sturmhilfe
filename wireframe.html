@@ -162,7 +162,7 @@ h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -.01em; text-
         S('Mein Warum', 'Textfeld mit den eigenen Gründen.', 'Fertig', 'input', 'Verbinden', 'Abzweig'),
         S('Plan', 'Was tust du jetzt danach? Punkt wählen oder neuen anlegen.', 'Weiter', 'list', 'Antworten'),
         S('Bescheid geben', 'Nachricht an den Rechenschaftspartner zum Kopieren.', 'Weiter / Das möchte ich gerade nicht', 'input', 'Antworten'),
-        S('Stärke danach', 'Wie stark ist der Urge jetzt? Vorher-Wert wird gezeigt.', 'Speichern', 'slider', 'Antworten', 'schreibt Notiz'),
+        S('Stärke danach', 'Wie stark ist der Urge jetzt? Vorher-Wert wird gezeigt. Beim Speichern geht der ganze Urge in die Notion-Datenbank „Sturmhilfe Ereignisse“: Stärke vorher und nachher, Ort, allein, Stufe (Sehen, Wollen, Nehmen), Zustand, Atemdauer, Auslöser, Wege, Lügen, Wochentag und Uhrzeit.', 'Speichern', 'slider', 'Antworten', 'schreibt Notion'),
         S('Geschafft', 'Zähler der ausgehaltenen Stürme und der nächste Schritt aus dem Plan.', 'Fertig', 'done', 'Antworten')
       ] },
       { id: uid(), title: 'Modus Dorsal', note: 'Folgt auf „Zustand“, wenn Dorsal gewählt ist. Danach geht es mit „Welle reiten“ weiter.', steps: [
@@ -178,7 +178,7 @@ h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -.01em; text-
       { id: uid(), title: 'Modus Fight Mode', note: 'Folgt auf „Zustand“, wenn Fight Mode gewählt ist. Danach geht es mit „Welle reiten“ weiter.', steps: [
         S('Atem wählen', '30 Sekunden, 1, 2 oder 3 Minuten.', 'Überspringen', 'choices', 'Verbinden'),
         S('Atmen', 'Vollbild. Vier Sekunden ein, sechs aus, Welle und Countdown.', 'Überspringen', 'timer', 'Verbinden', 'Vollbild'),
-        S('Aussprechen', 'Laut sagen, was mich gerade stresst.', 'Weiter', 'text', 'Verbinden'),
+        S('Aussprechen', 'Laut sagen, was mich gerade stresst. Auswahlfeld mit Beispielen (Gedanken an eine Frau aus meinem Umfeld, Muss zum nächsten Termin, Kritik, Überforderung) und freiem Feld. Eigene Einträge bleiben für die Zukunft gespeichert.', 'Weiter', 'chips', 'Verbinden', 'schreibt Notion'),
         S('Beten', 'Such Gott. Ein kurzes Gebet reicht. Darunter das Bild von Christus am Kreuz.', 'Weiter', 'text', 'Verbinden'),
         S('Die drei Sätze', 'Die drei Sätze laut sagen.', 'Weiter', 'text', 'Verbinden'),
         S('Schnell bewegen', 'So schnell bewegen, bis der Druck sinkt.', 'Weiter', 'text', 'Verbinden')
@@ -187,7 +187,8 @@ h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -.01em; text-
         S('Die Scham ist die Falle', 'Kurzer Text, glaub der Stimme nicht.', 'Weiter', 'text'),
         S('Geh zu Christus', 'Er wendet sich nicht ab.', 'Weiter', 'text'),
         S('Sag jemandem Bescheid', 'Eigene Nachricht für den Rückfall zum Kopieren: „Ich bin gefallen. Ich verstecke mich nicht und sage dir deshalb Bescheid.“ Getrennt von der Urge-Nachricht, beide bearbeitbar.', 'Weiter', 'input'),
-        S('Mitgefühl', 'Die drei Sätze langsam sagen.', 'Als Rückfall speichern / Nicht speichern', 'text', '', 'schreibt Notiz')
+        S('Was war davor los?', 'Optional, für die Muster in Notion: Ort, allein, Stufe (Sehen, Wollen, Nehmen), Stärke des Urge und Auslöser (gleiche Auswahl wie bei „Aussprechen“).', 'Weiter', 'chips', '', 'schreibt Notion'),
+        S('Mitgefühl', 'Die drei Sätze langsam sagen.', 'Als Rückfall speichern / Nicht speichern', 'text', '', 'schreibt Notion')
       ] },
       { id: uid(), title: 'Recovery Zone eintragen', note: 'Heute oder gestern, direkt in die Notion-Datenbank.', steps: [
         S('Tag wählen', 'Heute oder Gestern. Die Zeile wird aus Notion geladen.', '', 'chips', '', 'liest Notion'),

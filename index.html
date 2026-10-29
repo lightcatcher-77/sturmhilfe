@@ -120,9 +120,9 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 
 /* Wellen-Anzeige */
 .sea { position: relative; height: 150px; overflow: hidden; border-radius: 16px; background: var(--surface2); }
-.sea i { position: absolute; left: -20%; right: -20%; bottom: 0; height: 40%; border-radius: 50% 50% 0 0 / 30px 30px 0 0; background: linear-gradient(#58c4a6, #2f8f78); opacity: .6; animation: swell 10s ease-in-out infinite; }
-.sea i + i { opacity: .9; height: 28%; animation-duration: 13s; animation-direction: reverse; }
-@keyframes swell { 0%, 100% { transform: translateY(45%); } 50% { transform: translateY(-60%); } }
+.sea i { position: absolute; left: -20%; right: -20%; bottom: 0; height: 70%; border-radius: 50% 50% 0 0 / 30px 30px 0 0; background: linear-gradient(#58c4a6, #2f8f78); opacity: .6; animation: swell 10s ease-in-out infinite; }
+.sea i + i { opacity: .9; height: 55%; animation-duration: 13s; animation-direction: reverse; }
+@keyframes swell { 0%, 100% { transform: translateY(55%); } 50% { transform: translateY(8%); } }
 @media (prefers-reduced-motion: reduce) { .sea i { animation: none; } }
 /* alter Timer */
 .timer { font-family: var(--sans); font-weight: 600; font-size: 72px; font-variant-numeric: tabular-nums; text-align: center; letter-spacing: -.02em; }
@@ -132,7 +132,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .track .mark::before { content: ""; position: absolute; left: 50%; top: -22px; width: 2px; height: 10px; background: var(--muted); }
 
 /* Kreuz */
-.jesus { width: 100%; max-height: 48vh; object-fit: cover; object-position: 50% 30%; border-radius: 18px; border: 1px solid var(--line); display: block; }
+.jesus { display: block; width: auto; max-width: 100%; height: auto; max-height: 64vh; margin: 0 auto; object-fit: contain; border-radius: 18px; border: 1px solid var(--line); }
 .cross { text-align: center; display: grid; gap: 18px; justify-items: center; padding-top: 8px; }
 .cross svg { width: 70px; height: 96px; stroke: var(--warm); stroke-width: 3; fill: none; stroke-linecap: round; }
 .dots { display: flex; gap: 8px; justify-content: center; }
@@ -191,7 +191,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   var K = 'sturmhilfe.v1';
   var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
   var FALL_MSG = 'Ich bin gefallen. Ich verstecke mich nicht und sage dir deshalb Bescheid. Bitte bete für mich und frag später nach, wie es mir geht.';
-  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], lies: [], truths: {}, cbi: ['', '', '', ''] };
+  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], trig: [], lies: [], truths: {}, cbi: ['', '', '', ''] };
   try { var raw = localStorage.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
   function save() { DB.ts = Date.now(); try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {} cloudSave(); }
 
@@ -212,6 +212,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     DB.log = log;
     var ll = (DB.lies || []).slice(); (rem.lies || []).forEach(function (x) { if (ll.indexOf(x) < 0) ll.push(x); }); DB.lies = ll;
     DB.truths = Object.assign({}, rem.truths || {}, DB.truths || {});
+    var tg = (DB.trig || []).slice(); (rem.trig || []).forEach(function (x) { if (tg.indexOf(x) < 0) tg.push(x); }); DB.trig = tg;
     var pl = (DB.places || []).slice(); (rem.places || []).forEach(function (x) { if (pl.indexOf(x) < 0) pl.push(x); }); DB.places = pl;
     try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {}
   }
@@ -334,6 +335,43 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       }, function (e) { N.histErr = nErr(e); if (cur === 'hist' || cur === 'home') render(); });
   }
   function nDaysSince(iso) { return Math.max(0, Math.round((new Date(todayISO()) - new Date(iso)) / 86400000)); }
+  /* ---------- Ereignisse in Notion (Muster erkennen) ---------- */
+  var EV_DS = '62d7bafb-963a-4aab-9eac-892019389b72';
+  var WD = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
+  var CONN_NAMES = { love: 'Mensch', cross: 'Kreuz', lies: 'Lügen erkennen', cost: 'Kosten und Nutzen', why: 'Warum' };
+  function pad(n) { return ('0' + n).slice(-2); }
+  function isoLocal(d) { var o = -d.getTimezoneOffset(), sg = o >= 0 ? '+' : '-'; o = Math.abs(o); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00' + sg + pad(Math.floor(o / 60)) + ':' + pad(o % 60); }
+  function dayPart(h) { return h < 5 ? 'Nacht (0-5)' : h < 11 ? 'Morgen (5-11)' : h < 14 ? 'Mittag (11-14)' : h < 18 ? 'Nachmittag (14-18)' : h < 22 ? 'Abend (18-22)' : 'Spät (22-24)'; }
+  function clean(x) { return String(x).replace(/[,\n]+/g, ' ').trim().slice(0, 90); }
+  function evProps(held) {
+    var d = new Date(), q = {
+      'Ereignis': (held ? 'Urge ausgehalten ' : 'Rückfall ') + pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '. ' + pad(d.getHours()) + ':' + pad(d.getMinutes()),
+      'Ausgang': held ? 'Ausgehalten' : 'Gefallen',
+      'date:Zeitpunkt:start': isoLocal(d), 'date:Zeitpunkt:is_datetime': 1,
+      'Wochentag': WD[d.getDay()], 'Tageszeit': dayPart(d.getHours()), 'Uhrzeit': pad(d.getHours()) + ':' + pad(d.getMinutes())
+    };
+    if (D.strength) q['Stärke vorher'] = D.strength;
+    if (held && D.after) q['Stärke nachher'] = D.after;
+    if (D.place) q['Ort'] = clean(D.place);
+    if (D.alone !== undefined) q['Allein'] = D.alone ? 'Ja' : 'Nein';
+    if (D.svn !== undefined) q['Stufe'] = SVN[D.svn][0];
+    if (D.mode) q['Zustand'] = D.mode === 'dorsal' ? 'Dorsal' : 'Fight Mode';
+    if (D.breathSec) q['Atemdauer Sekunden'] = D.breathSec;
+    if ((D.trig || []).length) q['Auslöser'] = D.trig.map(clean);
+    var w = Object.keys(D.conn || {}).map(function (k) { return CONN_NAMES[k]; }).filter(Boolean);
+    if (w.length) q['Wege'] = w;
+    if ((D.liesSel || []).length) q['Lügen'] = D.liesSel.map(clean).join('; ');
+    return q;
+  }
+  // Ereignisse werden erst gemerkt und dann gesendet, damit nichts verloren geht, wenn Notion gerade nicht antwortet.
+  var evBusy = false;
+  function nEvent(held) { DB.pend = (DB.pend || []).concat([evProps(held)]); save(); flushEv(); }
+  function flushEv() {
+    if (!N.mcp || evBusy || !(DB.pend || []).length) return;
+    evBusy = true;
+    N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: EV_DS }, pages: [{ properties: DB.pend[0] }] }, { cache: false })
+      .then(function () { DB.pend.shift(); save(); evBusy = false; flushEv(); }, function () { evBusy = false; });
+  }
   var S = {};
   /* ---------- Recovery Zone eintragen ---------- */
   var ZONES = [
@@ -389,7 +427,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   };
 
   function hhmm() { return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
-  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); wpLoad(); } else { N.off = true; if (cur === 'home') render(); } }, function () {}); } catch (e) {}
+  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); wpLoad(); flushEv(); } else { N.off = true; if (cur === 'home') render(); } }, function () {}); } catch (e) {}
 
   var D = {};           // Daten dieses Durchlaufs
   var stack = [];       // Verlauf für Zurück
@@ -555,6 +593,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   };
 
   var SENT = ['Mein System ist im Überlebensmodus.', 'Es ist normal, in dieses Schutzmuster zu verfallen.', 'Möge ich fähig sein, meine ventrale Energie zu aktivieren.'];
+  var TRIG0 = ['Gedanken an eine Frau aus meinem Umfeld', 'Muss zum nächsten Termin', 'Kritik', 'Überforderung'];
+  function allTrig() { return TRIG0.concat(DB.trig || []); }
+  function trigBox() {
+    D.trig = D.trig || [];
+    return '<div class="chips">' + allTrig().map(function (t) { return '<button class="chip' + (D.trig.indexOf(t) >= 0 ? ' sel' : '') + '" data-trig="' + esc(t) + '">' + esc(t) + '</button>'; }).join('') + '</div>' +
+      '<div class="row"><input type="text" id="newtrig" placeholder="Eigenen Auslöser eintragen" maxlength="60" aria-label="Eigener Auslöser"><button class="btn ghost small" data-act="addTrig">Hinzufügen</button></div>';
+  }
   var PRAY = ['Beten', 'Such Gott. Ein kurzes Gebet reicht.'];
   var MOVE = ['Schnell bewegen', 'Beweg dich so schnell du kannst, bis der Druck sinkt.'];
   var MODE_STEPS = {
@@ -563,7 +608,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       { h: 'Raum und Farben wahrnehmen', p: 'Schau dich um. Benenne, was du an Farben und Dingen im Raum siehst.' },
       { h: 'Skill nutzen', p: 'Nutze einen Skill zur Emotionsregulation, zum Beispiel einen Knetball.' },
       { h: 'Gemeinschaft suchen', p: 'Geh zu Menschen oder ruf jemanden an.' }],
-    fight: [{ t: 'breath' }, { h: 'Aussprechen', p: 'Sag laut, was dich gerade stresst.' }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent' }, { h: MOVE[0], p: MOVE[1] }]
+    fight: [{ t: 'breath' }, { h: 'Aussprechen', p: 'Sag laut, was dich gerade stresst.', trig: true }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent' }, { h: MOVE[0], p: MOVE[1] }]
   };
   function MSTEPS() { return MODE_STEPS[D.mode] || []; }
   function afterBreath() { var j = (D.mi || 0) + 1; go(j < MSTEPS().length ? 'm' + j : 'wave', true); }
@@ -574,7 +619,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (st.t === 'breath') return S.breathpick();
     var kick = D.mode === 'dorsal' ? 'Dorsal' : 'Fight Mode';
     if (st.t === 'sent') return '<div class="stack"><p class="kicker">' + kick + '</p><h2>Sag die Sätze laut.</h2><div>' + SENT.map(function (x) { return '<div class="sentence">' + x + '</div>'; }).join('') + '</div></div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
-    return '<div class="stack"><p class="kicker">' + kick + '</p><h2>' + esc(st.h) + '</h2><p class="lead" style="margin:0">' + esc(st.p) + '</p>' + (st.img ? '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">' : '') + '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+    return '<div class="stack"><p class="kicker">' + kick + '</p><h2>' + esc(st.h) + '</h2><p class="lead" style="margin:0">' + esc(st.p) + '</p>' + (st.trig ? '<p style="font-weight:600;margin:8px 0 0">Was stresst dich?</p>' + trigBox() : '') + (st.img ? '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">' : '') + '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
   }
   for (var mi = 0; mi < 7; mi++) (function (i) { S['m' + i] = function () { return modeStep(i); }; })(mi);
   S.state = function () {
@@ -823,13 +868,28 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     ['Die Scham ist die Falle.', 'Die Stimme, die flüstert „Du bist unverzeihlich“, will dich von Gottes Liebe trennen. Glaub ihr nicht.'],
     ['Geh sofort zu Christus.', 'Er wendet sich nicht ab. Er steht mit dir im Dreck, schaut dich barmherzig an und vergibt bedingungslos. Versteck dich nicht.'],
     ['Sag jemandem Bescheid.', 'Ein Rechenschaftspartner oder deine Gemeinschaft, damit du nicht allein damit bist.'],
+    ['Was war davor los?', 'Wähle, was zutrifft.'],
     ['Mitgefühl statt Selbstverurteilung.', 'Sag die drei Sätze langsam.']
   ];
+  function fallForm() {
+    var q = 'font-weight:600;margin:10px 0 0';
+    return '<p style="' + q.replace('10px', '2px') + '">Wo warst du?</p>' +
+      '<div class="chips">' + allPlaces().map(function (p) { return '<button class="chip' + (D.place === p ? ' sel' : '') + '" data-place="' + esc(p) + '">' + esc(p) + '</button>'; }).join('') + '</div>' +
+      (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40">' : '') +
+      '<p style="' + q + '">Warst du allein?</p>' +
+      '<div class="seg"><button class="chip' + (D.alone === true ? ' sel' : '') + '" data-alone="1">Ja</button><button class="chip' + (D.alone === false ? ' sel' : '') + '" data-alone="0">Nein</button></div>' +
+      '<p style="' + q + '">Wo hast du gestanden?</p>' +
+      '<div class="chips">' + SVN.map(function (x, j) { return '<button class="chip' + (D.svn === j ? ' sel' : '') + '" data-svn="' + j + '">' + x[0] + '</button>'; }).join('') + '</div>' +
+      '<p style="' + q + '">Wie stark war der Urge? <b id="frv">' + (D.strength || 5) + '</b> von 10</p>' +
+      '<input type="range" id="frng" min="1" max="10" value="' + (D.strength || 5) + '" aria-label="Stärke des Urge von 1 bis 10">' +
+      '<p style="' + q + '">Was hat ihn ausgelöst?</p>' + trigBox();
+  }
   S.fall = function () {
     var i = D.fx || 0, f = FALL[i], extra = '';
     if (i === 1) extra = '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">';
     if (i === 2) extra = msgBox('fmsg');
-    if (i === 3) extra = '<div>' + ['Dies ist ein Augenblick des Leidens.', 'Leid gehört zum Leben.', 'Möge ich mir geben, was ich brauche.'].map(function (s) { return '<div class="sentence">' + s + '</div>'; }).join('') + '</div>';
+    if (i === 3) extra = fallForm();
+    if (i === 4) extra = '<div>' + ['Dies ist ein Augenblick des Leidens.', 'Leid gehört zum Leben.', 'Möge ich mir geben, was ich brauche.'].map(function (s) { return '<div class="sentence">' + s + '</div>'; }).join('') + '</div>';
     var last = i === FALL.length - 1;
     return '<div class="stack"><p class="kicker">Wenn ich gefallen bin</p><h2>' + esc(f[0]) + '</h2><p class="lead" style="margin:0">' + esc(f[1]) + '</p>' + extra +
       '<div class="dots" style="justify-content:flex-start">' + FALL.map(function (_, j) { return '<i class="' + (j <= i ? 'on' : '') + '"></i>'; }).join('') + '</div></div>' +
@@ -885,6 +945,10 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (cur === 'breath') runBreath();
     if (cur === 'wave') runWave();
     if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; wpChanged(); }); }
+    var nt = document.getElementById('newtrig');
+    if (nt) { nt.value = D.newtrig || ''; nt.addEventListener('input', function () { D.newtrig = nt.value; }); }
+    var fr = document.getElementById('frng');
+    if (fr) fr.addEventListener('input', function () { D.strength = +fr.value; document.getElementById('frv').textContent = fr.value; });
     var np = document.getElementById('newplace');
     if (np) np.addEventListener('input', function () { D.custom = np.value; });
     if (cur === 'cost') { var cb = document.getElementById('cbtxt'); cb.addEventListener('input', function () { DB.cbi[D.cbx || 0] = cb.value; save(); }); }
@@ -903,7 +967,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     planHome: function () { D = { standalone: true }; go('plan'); },
     breathSkip: function () { afterBreath(); },
     crossNext: function () { D.cx = (D.cx || 0) + 1; render(); },
-    fallNext: function () { D.fx = (D.fx || 0) + 1; render(); },
+    fallNext: function () { if (D.fx === 3) commitPlace(); D.fx = (D.fx || 0) + 1; render(); },
     cbNext: function () { D.cbx = (D.cbx || 0) + 1; render(); window.scrollTo(0, 0); },
     liesNext: function () { if ((D.liesSel || []).length) { D.lx = 1; render(); window.scrollTo(0, 0); } },
     liesSkip: function () { D.lx = 0; history_pop(); },
@@ -922,14 +986,25 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       try { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }); } catch (e) { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }
     },
     finish: function () {
-      DB.log.push({ t: Date.now(), before: D.strength, after: D.after, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held' });
-      save(); N.note = '';
+      DB.log.push({ t: Date.now(), before: D.strength, after: D.after, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held', svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
+      save(); N.note = ''; nEvent(true);
       nLog(hhmm() + ' Urge ausgehalten, Stärke ' + D.strength + ' → ' + D.after + (D.place ? ', ' + D.place : ''));
       stack = []; cur = 'end'; render();
     },
     zoneSave: zSave,
     nRetry: function () { N.histErr = ''; nLoadHist(); wpLoad(); render(); },
-    fallSave: function () { DB.log.push({ t: Date.now(), outcome: 'fell' }); save(); nLog(hhmm() + ' Rückfall'); home(); }
+    addTrig: function () {
+      var v = (D.newtrig || '').trim().slice(0, 60); if (!v) return;
+      var have = allTrig().filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
+      if (!have) { DB.trig = (DB.trig || []).concat(v); have = v; save(); }
+      D.trig = D.trig || []; if (D.trig.indexOf(have) < 0) D.trig.push(have);
+      D.newtrig = ''; render();
+    },
+    fallSave: function () {
+      commitPlace();
+      DB.log.push({ t: Date.now(), outcome: 'fell', place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
+      save(); nEvent(false); nLog(hhmm() + ' Rückfall'); home();
+    }
   };
   function history_pop() { cur = stack.pop() || 'connect'; render(); }
 
@@ -947,11 +1022,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (el.dataset.go === 'lies') { D.lx = 0; N.liesErr = ''; }
     if (el.dataset.go === 'cost') D.cbx = 0;
     if (el.dataset.go) { if (el.dataset.go === 'fall') D = {}; go(el.dataset.go); return; }
+    if (el.dataset.trig !== undefined) { var tg = el.dataset.trig, ti = (D.trig = D.trig || []).indexOf(tg); if (ti >= 0) D.trig.splice(ti, 1); else D.trig.push(tg); render(); return; }
     if (el.dataset.place !== undefined) { D.place = el.dataset.place; render(); return; }
     if (el.dataset.alone !== undefined) { D.alone = el.dataset.alone === '1'; render(); return; }
     if (el.dataset.svn !== undefined) { D.svn = +el.dataset.svn; render(); return; }
     if (el.dataset.mode) { D.mode = el.dataset.mode; render(); return; }
-    if (el.dataset.min) { D.mins = +el.dataset.min; go('breath'); return; }
+    if (el.dataset.min) { D.mins = +el.dataset.min; D.breathSec = Math.round(D.mins * 60); go('breath'); return; }
     if (el.dataset.pick !== undefined) { D.next = DB.plan[+el.dataset.pick]; render(); return; }
     if (el.dataset.del !== undefined) { DB.plan.splice(+el.dataset.del, 1); wpChanged(); render(); return; }
   });

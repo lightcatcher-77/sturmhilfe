@@ -243,20 +243,29 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     }
     return 'Notion hat gerade nicht geantwortet' + (c ? ' (' + c + ')' : '') + (d ? ': ' + d : '') + '.';
   }
+  // Alle Tage bis heute über die gespeicherte Ansicht "Zonen" (Ansichts-Abfragen haben kein Notion-Kontingent, SQL und Zeilen schon).
+  var NV = { url: 'view://4078dc05-3cb0-8152-bb46-000cc20fc515', at: 0, p: null };
+  function nView() {
+    if (NV.p && Date.now() - NV.at < 15000) return NV.p;
+    NV.at = Date.now();
+    NV.p = N.mcp.callTool('Notion', 'notion-query-data-sources', { data: { mode: 'view', view_url: NV.url, page_size: 100 } }, { cache: false })
+      .then(function (r) { var p = nData(r); return (p && p.results) || []; }, function (e) { NV.p = null; throw e; });
+    return NV.p;
+  }
+  function nFresh() { NV.p = null; }
   function nToday(iso) {
-    return N.mcp.callTool('Notion', 'notion-query-data-sources', { data: { mode: 'rows', data_source_url: N.ds, limit: 1,
-      filter: { type: 'group', operator: 'and', filters: [{ type: 'property', property: 'Datum', propertyType: 'date', operator: 'date_is', value: { type: 'exact', value: iso || todayISO() } }] } } }, { cache: false })
-      .then(function (r) { var p = nData(r); return p && p.results && p.results[0] || null; });
+    return nView().then(function (rows) { var d = iso || todayISO(); return rows.filter(function (r) { return r['date:Datum:start'] === d; })[0] || null; });
   }
   // Hängt eine Zeile an das Feld "Notiz" der heutigen Zeile an.
   function nLog(line) {
     if (!N.mcp) return;
     N.note = 'Wird in Notion gespeichert …';
+    nFresh();
     nToday().then(function (row) {
       if (!row) throw { code: 'no_row' };
       var old = (row['Notiz'] || '').trim();
       return N.mcp.callTool('Notion', 'notion-update-page', { page_id: row.url, command: 'update_properties', properties: { 'Notiz': old ? old + '\n' + line : line } }, { cache: false });
-    }).then(function () { N.note = 'In Notion gespeichert.'; nLoadHist(); if (cur === 'end') render(); },
+    }).then(function () { N.note = 'In Notion gespeichert.'; nFresh(); nLoadHist(); if (cur === 'end') render(); },
       function (e) { N.note = e && e.code === 'no_row' ? 'Für heute gibt es in Notion keine Zeile. Nur auf diesem Gerät gespeichert.' : nErr(e) + ' Nur auf diesem Gerät gespeichert.'; if (cur === 'end') render(); });
   }
   /* ---------- Mein Warum und Mein Plan in Notion ---------- */
@@ -302,11 +311,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function nLoadHist() {
     if (!N.mcp) return;
     N.hist = null; N.histErr = '';
-    N.mcp.callTool('Notion', 'notion-query-data-sources', { data: { mode: 'rows', data_source_url: N.ds, limit: 30,
-      sort: [{ property: 'Datum', direction: 'descending' }],
-      filter: { type: 'group', operator: 'and', filters: [{ type: 'property', property: 'Datum', propertyType: 'date', operator: 'date_is_on_or_before', value: { type: 'exact', value: todayISO() } }] } } }, { cache: false })
-      .then(function (r) {
-        var p = nData(r);
+    nView().then(function (rows) {
+        var p = { results: rows.slice(0, 30) };
         N.hist = (p && p.results || []).map(function (row) {
           var ok = 0, bad = 0;
           ZONE.forEach(function (k) { if (/✅/.test(row[k] || '')) ok++; else if (/❌/.test(row[k] || '')) bad++; });
@@ -330,7 +336,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function zLoad() {
     Z.row = null; Z.err = ''; Z.msg = '';
     if (!N.mcp) { Z.err = 'Notion ist hier nicht verfügbar. Öffne die App über den Artifact-Link in Claude.'; render(); return; }
-    Z.loading = true; render();
+    Z.loading = true; render(); nFresh();
     var want = Z.day;
     nToday(zIso()).then(function (row) {
       if (want !== Z.day) return;
@@ -346,7 +352,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     ZONE.forEach(function (k) { props[k] = Z.vals[k] || STATE.open; });
     Z.saving = true; Z.msg = ''; render();
     N.mcp.callTool('Notion', 'notion-update-page', { page_id: Z.row.url, command: 'update_properties', properties: props }, { cache: false })
-      .then(function () { Z.saving = false; Z.msg = 'In Notion gespeichert.'; nLoadHist(); render(); },
+      .then(function () { Z.saving = false; Z.msg = 'In Notion gespeichert.'; nFresh(); nLoadHist(); render(); },
         function (e) { Z.saving = false; Z.msg = nErr(e) + ' Nichts wurde gespeichert.'; render(); });
   }
   S.zone = function () {

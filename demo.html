@@ -132,6 +132,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .track .mark::before { content: ""; position: absolute; left: 50%; top: -22px; width: 2px; height: 10px; background: var(--muted); }
 
 /* Kreuz */
+.jesus { width: 100%; max-height: 48vh; object-fit: cover; object-position: 50% 30%; border-radius: 18px; border: 1px solid var(--line); display: block; }
 .cross { text-align: center; display: grid; gap: 18px; justify-items: center; padding-top: 8px; }
 .cross svg { width: 70px; height: 96px; stroke: var(--warm); stroke-width: 3; fill: none; stroke-linecap: round; }
 .dots { display: flex; gap: 8px; justify-content: center; }
@@ -812,6 +813,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   ];
   S.fall = function () {
     var i = D.fx || 0, f = FALL[i], extra = '';
+    if (i === 1) extra = '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">';
     if (i === 2) extra = msgBox();
     if (i === 3) extra = '<div>' + ['Dies ist ein Augenblick des Leidens.', 'Leid gehört zum Leben.', 'Möge ich mir geben, was ich brauche.'].map(function (s) { return '<div class="sentence">' + s + '</div>'; }).join('') + '</div>';
     var last = i === FALL.length - 1;

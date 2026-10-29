@@ -804,7 +804,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<svg viewBox="0 0 60 80" aria-hidden="true"><path d="M30 4v72M12 24h36"/></svg>' +
       '<div class="csteps">' + CROSS.map(function (c, j) {
         return '<div class="cstep" style="animation-delay:' + (0.4 + j * 3.2) + 's"><h2 style="color:var(--warm)">' + esc(c[0]) + '</h2><p class="lead" style="margin:6px 0 0">' + esc(c[1]) + '</p></div>';
-      }).join('') + '</div></div>' +
+      }).join('') + '</div>' +
+      '<img class="jesus cstep" style="animation-delay:' + (0.4 + CROSS.length * 3.2) + 's" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()"></div>' +
       '<div class="grow"></div><div class="foot"><button class="btn warm" data-act="connDone" data-k="cross">Fertig</button></div>';
   };
 

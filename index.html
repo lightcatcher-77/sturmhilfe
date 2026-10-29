@@ -426,6 +426,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     todayRow = by[isoMinus(0)];
     var lines = [];
     var st = streak();
+    if (st && !st.atLeast && st.days === 0) lines.push('Heute gab es einen Rückfall. Du bist trotzdem hier, und das zählt.');
+    else if (st && !st.atLeast && st.days === 1) lines.push('Gestern gab es einen Rückfall. Heute ist ein neuer Anfang.');
     if (st && st.days >= 2) lines.push(st.days + (st.atLeast ? ' Tage oder mehr' : ' Tage') + ' seit dem letzten Rückfall.');
     if (N.hist && good) lines.push('An ' + good + ' von 7 Tagen hast du etwas Gutes für dich getan.');
     if (held) lines.push(held === 1 ? 'Du hast schon einen Sturm ausgehalten.' : 'Du hast schon ' + held + ' Stürme ausgehalten.');

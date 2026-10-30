@@ -121,7 +121,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .wave { position: absolute; left: -10%; right: -10%; bottom: 0; height: 10%; background: linear-gradient(#58c4a6, #2f8f78); border-radius: 50% 50% 0 0 / 28px 28px 0 0; transition: height 4s ease-in-out; }
 
 /* Wellen-Anzeige */
-.sea { position: relative; height: 150px; overflow: hidden; border-radius: 16px; background: var(--surface2); }
+.sea { position: relative; height: 150px; overflow: hidden; border-radius: 16px; background: var(--surface2); isolation: isolate; transform: translateZ(0); -webkit-mask-image: -webkit-radial-gradient(#fff, #000); }
 .sea i { position: absolute; left: -20%; right: -20%; bottom: 0; height: 70%; border-radius: 50% 50% 0 0 / 30px 30px 0 0; background: linear-gradient(#58c4a6, #2f8f78); opacity: .6; animation: swell 10s ease-in-out infinite; }
 .sea i + i { opacity: .9; height: 55%; animation-duration: 13s; animation-direction: reverse; }
 .homewave { flex: 1; min-height: 90px; position: relative; overflow: hidden; margin: 8px calc(50% - 50vw) 0; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 35%); mask-image: linear-gradient(to bottom, transparent, #000 35%); }
@@ -141,7 +141,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 
 
 /* Szenen: sanft animierte Visualisierungen im Stil der Wellen-Anzeige */
-.scene { position: relative; height: 150px; width: 100%; overflow: hidden; border-radius: 16px; background: var(--surface2); }
+.scene { position: relative; height: 150px; width: 100%; overflow: hidden; border-radius: 16px; background: var(--surface2); isolation: isolate; transform: translateZ(0); -webkit-mask-image: -webkit-radial-gradient(#fff, #000); }
 .scene i, .scene b, .scene u { position: absolute; display: block; }
 .sc-breath i { left: 50%; top: 50%; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%; background: linear-gradient(#58c4a6, #2f8f78); opacity: .35; animation: sc-breathe 10s ease-in-out infinite; }
 .sc-breath i + i { width: 70px; height: 70px; margin: -35px 0 0 -35px; opacity: .85; }
@@ -173,6 +173,45 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 @keyframes sc-dash { to { transform: translateX(420%); } }
 @media (prefers-reduced-motion: reduce) { .scene i, .scene b, .scene u { animation: none !important; } }
 
+/* Biochemie: Dopamin-Baseline als Linie, die sich zeichnet; Zeilen leuchten im Takt (Loop 12 s) */
+.chem { width: 100%; background: var(--surface2); border-radius: 16px; padding: 10px 8px 4px; }
+.chem svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chem .ref { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 3 4; opacity: .6; }
+.chem .lbl { fill: var(--muted); font: 500 10px var(--sans); }
+.chem .crave { fill: var(--danger); opacity: 0; animation: ch-crave 12s ease-in-out infinite; }
+.chem .line { fill: none; stroke: var(--accent); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 100; stroke-dashoffset: 100; animation: ch-draw 12s linear infinite; }
+.chem .tick { stroke: var(--warm); stroke-width: 1.5; stroke-dasharray: 2 3; opacity: 0; animation: ch-tick 12s linear infinite; }
+.chem .tlbl { fill: var(--warm); opacity: 0; animation: ch-tick 12s linear infinite; }
+.chem .dot { display: none; fill: var(--accent); opacity: 0; animation: ch-dot 12s linear infinite; }
+@supports (offset-path: path("M0 0")) {
+  .chem .dot { display: block; offset-path: path("M12 36 C50 36 66 82 108 82 L146 82 C162 82 172 54 192 54 C218 54 228 108 254 108 L308 108"); offset-rotate: 0deg; }
+}
+@keyframes ch-draw { 0% { stroke-dashoffset: 100; opacity: 1; } 70%, 92% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes ch-dot { 0% { offset-distance: 0%; opacity: 1; } 70% { offset-distance: 100%; opacity: 1; } 76%, 100% { offset-distance: 100%; opacity: 0; } }
+@keyframes ch-crave { 0%, 14% { opacity: 0; } 22% { opacity: .22; } 30% { opacity: .1; } 38% { opacity: .22; } 44%, 100% { opacity: 0; } }
+@keyframes ch-tick { 0%, 40% { opacity: 0; } 46%, 90% { opacity: 1; } 100% { opacity: 0; } }
+.chem-rows { display: grid; gap: 12px; margin-top: 18px; }
+.chem-rows p { margin: 0; display: grid; grid-template-columns: 10px 1fr; gap: 12px; align-items: baseline; line-height: 1.35; opacity: .5; animation: ch-row 12s ease-in-out infinite; }
+.chem-rows p::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.chem-rows p:nth-child(1)::before { background: var(--danger); }
+.chem-rows p:nth-child(2)::before { background: var(--warm); }
+.chem-rows p:nth-child(2) { animation-name: ch-row2; }
+.chem-rows p:nth-child(3) { animation-name: ch-row3; }
+.chem-rows b { font-weight: 600; }
+@keyframes ch-row { 0% { opacity: 1; } 36% { opacity: 1; } 46%, 92% { opacity: .5; } 100% { opacity: 1; } }
+@keyframes ch-row2 { 0%, 36% { opacity: .5; } 46%, 62% { opacity: 1; } 72%, 100% { opacity: .5; } }
+@keyframes ch-row3 { 0%, 62% { opacity: .5; } 74%, 92% { opacity: 1; } 100% { opacity: .5; } }
+@media (prefers-reduced-motion: reduce) {
+  .chem .line, .chem .dot, .chem .crave, .chem .tick, .chem .tlbl, .chem-rows p { animation: none !important; }
+  .chem .line { stroke-dashoffset: 0; } .chem .tick, .chem .tlbl { opacity: 1; } .chem .crave { opacity: .18; } .chem .dot { display: none; } .chem-rows p { opacity: 1; }
+}
+
+/* Blasen */
+.bubbles { display: flex; flex-wrap: wrap; gap: 12px 10px; justify-content: center; padding: 14px 0 4px; min-height: 190px; align-content: flex-start; }
+.bub { border: 1px solid #2bc6c0; background: rgba(43, 198, 192, .16); color: var(--fg); border-radius: 999px; padding: 12px 18px; min-height: 44px; max-width: 100%; text-align: center; animation: bob var(--d, 5s) ease-in-out var(--dl, 0s) infinite alternate; }
+.bub.sel { background: #2bc6c0; color: #05302f; border-color: #2bc6c0; font-weight: 600; box-shadow: 0 0 18px rgba(43, 198, 192, .45); }
+@keyframes bob { 0% { transform: translate(0, 0); } 50% { transform: translate(calc(var(--dx, 8px) * .4), calc(var(--dy, -16px) * 1.1)); } 100% { transform: translate(var(--dx, 8px), var(--dy, -16px)); } }
+@media (prefers-reduced-motion: reduce) { .bub { animation: none; } }
 /* Kreuz */
 .csteps { display: grid; gap: 22px; width: 100%; }
 .cstep { opacity: 0; transform: translateY(10px); animation: cfade 1.4s ease forwards; }
@@ -238,7 +277,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   var K = 'sturmhilfe.v1';
   var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
   var FALL_MSG = 'Ich bin gefallen. Ich verstecke mich nicht und sage dir deshalb Bescheid. Bitte bete für mich und frag später nach, wie es mir geht.';
-  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], trig: [], lies: [], truths: {}, cbi: ['', '', '', ''] };
+  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], bubbles: ['Sicherheit bieten'], trig: [], miss: [], lies: [], truths: {}, cbi: ['', '', '', ''] };
   try { var raw = localStorage.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
   function save() { DB.ts = Date.now(); try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {} cloudSave(); }
 
@@ -257,8 +296,10 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     log.sort(function (a, b) { return a.t - b.t; });
     if ((rem.ts || 0) > (DB.ts || 0)) { DB.why = rem.why || ''; DB.plan = rem.plan || DB.plan; DB.msg = rem.msg || DB.msg; DB.fmsg = rem.fmsg || DB.fmsg; DB.cbi = rem.cbi || DB.cbi; DB.ts = rem.ts; }
     DB.log = log;
+    var bb = (DB.bubbles || []).slice(); (rem.bubbles || []).forEach(function (x) { if (bb.indexOf(x) < 0) bb.push(x); }); DB.bubbles = bb;
     var ll = (DB.lies || []).slice(); (rem.lies || []).forEach(function (x) { if (ll.indexOf(x) < 0) ll.push(x); }); DB.lies = ll;
     DB.truths = Object.assign({}, rem.truths || {}, DB.truths || {});
+    var ms = (DB.miss || []).slice(); (rem.miss || []).forEach(function (x) { if (ms.indexOf(x) < 0) ms.push(x); }); DB.miss = ms;
     var tg = (DB.trig || []).slice(); (rem.trig || []).forEach(function (x) { if (tg.indexOf(x) < 0) tg.push(x); }); DB.trig = tg;
     var pl = (DB.places || []).slice(); (rem.places || []).forEach(function (x) { if (pl.indexOf(x) < 0) pl.push(x); }); DB.places = pl;
     try { localStorage.setItem(K, JSON.stringify(DB)); } catch (e) {}
@@ -405,20 +446,70 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (D.mode) q['Zustand'] = D.mode === 'dorsal' ? 'Dorsal' : 'Fight Mode';
     if (D.breathSec) q['Atemdauer Sekunden'] = D.breathSec;
     if ((D.trig || []).length) q['Auslöser'] = D.trig.map(clean);
+    if (!held && (D.fp || []).length) q['Rückfall bei'] = D.fp.slice();
+    if ((D.miss || []).length) q['Gefehlt'] = D.miss.map(clean);
     var w = Object.keys(D.conn || {}).map(function (k) { return CONN_NAMES[k]; }).filter(Boolean);
     if (w.length) q['Wege'] = w;
-    if ((D.liesSel || []).length) q['Lügen'] = D.liesSel.map(clean).join('; ');
+    if ((D.liesSel || []).length) q['Lügen'] = D.liesSel.map(clean);
+    if ((D.loveSel || []).length) q['Ich will sein'] = D.loveSel.map(clean);
     return q;
+  }
+  // Notion legt neue Auswahl-Optionen nicht selbst an: Vor dem Eintragen werden fehlende Optionen in der Datenbank ergänzt.
+  var SEL = { 'Ich will sein': 'MULTI_SELECT', 'Ort': 'SELECT', 'Auslöser': 'MULTI_SELECT', 'Gefehlt': 'MULTI_SELECT', 'Lügen': 'MULTI_SELECT' };
+  function nEvSchema() {
+    return N.mcp.callTool('Notion', 'notion-fetch', { id: 'collection://' + EV_DS }, { cache: false }).then(function (r) {
+      var pl = nData(r), t = String((pl && pl.text) || (typeof pl === 'string' ? pl : ''));
+      var m = t.match(/<data-source-state>\s*([\s\S]*?)\s*<\/data-source-state>/);
+      return JSON.parse(m[1]).schema;
+    });
+  }
+  function nEnsureOpts(q) {
+    var need = {};
+    Object.keys(SEL).forEach(function (k) { if (q[k] == null) return; need[k] = [].concat(q[k]); });
+    if (!Object.keys(need).length) return Promise.resolve();
+    return nEvSchema().then(function (sc) {
+      var st = [];
+      Object.keys(need).forEach(function (k) {
+        var have = (sc[k] && sc[k].options) || [], names = have.map(function (o) { return o.name; });
+        var add = need[k].filter(function (x) { return names.indexOf(x) < 0; });
+        if (!add.length) return;
+        var qt = function (x) { return "'" + String(x).replace(/'/g, "''") + "'"; };
+        var all = have.map(function (o) { return qt(o.name) + ':' + (o.color || 'default'); }).concat(add.map(function (x) { return qt(x) + ':default'; }));
+        st.push('ALTER COLUMN "' + k + '" SET ' + SEL[k] + '(' + all.join(', ') + ')');
+      });
+      if (!st.length) return;
+      return N.mcp.callTool('Notion', 'notion-update-data-source', { data_source_id: 'collection://' + EV_DS, statements: st.join('; ') }, { cache: false });
+    });
   }
   // Ereignisse werden erst gemerkt und dann gesendet, damit nichts verloren geht, wenn Notion gerade nicht antwortet.
   var evBusy = false;
-  function nEvent(held) { DB.pend = (DB.pend || []).concat([evProps(held)]); save(); flushEv(); }
+  function nEvent(held) { DB.pend = (DB.pend || []).concat([{ p: evProps(held), n: 0 }]); save(); flushEv(); }
   function flushEv() {
     if (!N.mcp || evBusy || !(DB.pend || []).length) return;
     evBusy = true;
-    N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: EV_DS }, pages: [{ properties: DB.pend[0] }] }, { cache: false })
-      .then(function () { DB.pend.shift(); save(); evBusy = false; flushEv(); }, function () { evBusy = false; });
+    var it = DB.pend[0];
+    nEnsureOpts(it.p).then(null, function () {}).then(function () {
+      return N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: EV_DS }, pages: [{ properties: it.p }] }, { cache: false });
+    }).then(function () { DB.pend.shift(); N.evErr = ''; save(); evBusy = false; if (cur === 'home' || cur === 'end') render(); flushEv(); },
+      function (e) {
+        evBusy = false; N.evErr = nErr(e); it.n = (it.n || 0) + 1;
+        if (it.n >= 3) { DB.failed = (DB.failed || []).concat([it]); DB.pend.shift(); }
+        save(); if (cur === 'home' || cur === 'end') render();
+      });
   }
+  // Setzt die gewählten Punkte der Zone Enthaltsamkeit in der heutigen Zeile auf Rückschlag.
+  function nMarkFall(items) {
+    if (!N.mcp || !items.length) return;
+    N.markNote = '';
+    nFresh();
+    nToday().then(function (row) {
+      if (!row) throw { code: 'no_row' };
+      var pr = {}; items.forEach(function (k) { pr[k] = STATE.bad; });
+      return N.mcp.callTool('Notion', 'notion-update-page', { page_id: row.url, command: 'update_properties', properties: pr }, { cache: false });
+    }).then(function () { N.markNote = 'In der Recovery Zone von heute als Rückschlag eingetragen: ' + items.join(', ') + '.'; nFresh(); nLoadHist(); if (cur === 'home') render(); },
+      function (e) { N.markNote = e && e.code === 'no_row' ? 'Für heute gibt es in der Recovery Zone keine Zeile, daher wurde dort nichts als Rückschlag eingetragen.' : 'In der Recovery Zone konnte nichts eingetragen werden. ' + nErr(e); if (cur === 'home') render(); });
+  }
+  function evStatus() { return N.evErr && (DB.pend || []).length ? '<p class="note" role="status">Ein Eintrag konnte noch nicht nach Notion geschrieben werden. ' + esc(N.evErr) + ' Es wird beim nächsten Öffnen erneut versucht.</p>' : ''; }
   var S = {};
   /* ---------- Recovery Zone eintragen ---------- */
   var ZONES = [
@@ -491,7 +582,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 
   var PHASES = ['Erkennen', 'Verbinden', 'Antworten'];
   var PHASE_OF = { strength: 0, place: 0, biochem: 0, svn: 0, state: 0, m0: 1, m1: 1, m2: 1, m3: 1, m4: 1, m5: 1, m6: 1, breathpick: 1, breath: 1, wave: 1, connect: 1, love: 1, cross: 1, why: 1, lies: 1, cost: 1, plan: 2, flag: 2, done: 2, end: 2 };
-  var FLOW = ['strength', 'place', 'biochem', 'svn', 'state', 'm0', 'wave', 'connect', 'plan', 'flag', 'done', 'end'];
+  var FLOW = ['strength', 'place', 'biochem', 'svn', 'm0', 'wave', 'connect', 'plan', 'flag', 'done', 'end'];
 
   function go(name, noPush) {
     stopTimer();
@@ -502,6 +593,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
   function next() {
     if (/^m\d+$/.test(cur)) { var j = +cur.slice(1) + 1; go(j < MSTEPS().length ? 'm' + j : 'wave'); return; }
+    if (cur === 'svn' && D.mode) { go('m0'); return; }
     var i = FLOW.indexOf(cur); go(FLOW[i + 1]);
   }
   function home() { stopTimer(); stack = []; D = {}; cur = 'home'; render(); }
@@ -564,7 +656,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="kicker">Im Sturm der Lust</p>' +
       '<h1>Der Sturm geht vorbei.</h1>' +
       '<p class="lead">Du musst ihn nicht bekämpfen. Du musst ihn nur durchstehen, Schritt für Schritt.</p>' +
-      encourage() +
+      encourage() + evStatus() + (N.markNote ? '<p class="note" role="status">' + esc(N.markNote) + '</p>' : '') +
       '</div>' +
       '<div class="homewave" aria-hidden="true"><svg viewBox="0 0 1200 100" preserveAspectRatio="none"><path d="M0 50 Q75 25 150 50 T300 50 T450 50 T600 50 T750 50 T900 50 T1050 50 T1200 50 V100 H0Z" fill="#4cc9a4" fill-opacity=".10"/></svg><svg viewBox="0 0 1200 100" preserveAspectRatio="none"><path d="M0 50 Q75 25 150 50 T300 50 T450 50 T600 50 T750 50 T900 50 T1050 50 T1200 50 V100 H0Z" fill="#4cc9a4" fill-opacity=".16"/></svg><svg viewBox="0 0 1200 100" preserveAspectRatio="none"><path d="M0 50 Q75 25 150 50 T300 50 T450 50 T600 50 T750 50 T900 50 T1050 50 T1200 50 V100 H0Z" fill="#4cc9a4" fill-opacity=".26"/></svg></div>' +
       '<div class="foot">' +
@@ -604,6 +696,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (known) { D.place = known; return; }
     DB.places = (DB.places || []).concat(v); D.place = v; save();
   }
+  function liesBox() {
+    D.liesSel = D.liesSel || [];
+    return (N.liesBusy && !N.lies ? '<p class="note">Lade deine Gedanken aus Notion …</p>' : '') + (N.liesErr ? '<p class="note">' + esc(N.liesErr) + '</p>' : '') +
+      '<div class="chips">' + allLies().map(function (l) { return '<button class="chip' + (D.liesSel.indexOf(l) >= 0 ? ' sel' : '') + '" data-lie="' + esc(l) + '">' + esc(l) + '</button>'; }).join('') + '</div>' +
+      '<div class="row"><input type="text" id="newlie" placeholder="Neue Lüge hinzufügen" aria-label="Neue Lüge" maxlength="120"><button class="btn ghost small" data-act="addLie">Hinzufügen</button></div>' +
+      (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '');
+  }
   S.place = function () {
     return '<div class="stack"><h2>Gut erkannt. Jetzt prüfen wir die Lage.</h2>' +
       '<p class="lead" style="margin:0">Wo bist du gerade? Sei so genau wie möglich.</p>' +
@@ -611,18 +710,32 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen, z. B. Bei Oma" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40">' : '') +
       '<p style="margin-top:10px;font-weight:600">Bist du gerade allein?</p>' +
       '<div class="seg"><button class="chip' + (D.alone === true ? ' sel' : '') + '" data-alone="1">Ja</button><button class="chip' + (D.alone === false ? ' sel' : '') + '" data-alone="0">Nein</button></div>' +
+      '<p style="margin-top:10px;font-weight:600">Aus welchem Zustand kommt die Lust?</p>' +
+      '<button class="choice' + (D.mode === 'dorsal' ? ' sel' : '') + '" data-pmode="dorsal"><b>Dorsal</b><span>Rückzug, schwer, leer, abgeschaltet</span></button>' +
+      '<button class="choice' + (D.mode === 'fight' ? ' sel' : '') + '" data-pmode="fight"><b>Fight Mode</b><span>Unter Strom, gestresst, Druck, Wut</span></button>' +
+      '<p style="margin-top:10px;font-weight:600">Was hat den Urge ausgelöst?</p>' + trigBox() +
+      '<p style="margin-top:10px;font-weight:600">Welche Lügen erzählt dir dein Gehirn gerade?</p>' + liesBox() +
+      '<p style="margin-top:10px;font-weight:600">Was fehlt dir gerade?</p>' + missBox() +
       '</div><div class="grow"></div>' +
-      '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+      '<div class="foot"><button class="btn" data-act="next"' + (D.mode ? '' : ' disabled') + '>Weiter</button>' + (D.mode ? '' : '<p class="note" style="text-align:center">Wähle zuerst den Zustand.</p>') + '</div>';
   };
 
   S.biochem = function () {
     return '<div class="stack"><p class="kicker">Was gerade in dir passiert</p>' +
       '<h2>Das ist Biochemie und kein Charakterfehler.</h2>' +
-      '<ul class="list">' +
-      '<li>Deine Dopamin-Baseline ist abgesunken. Dynorphine erzeugen Unruhe, Herzrasen und Craving. Dein präfrontaler Kortex ist gerade offline.</li>' +
-      '<li>Nachgeben bringt keine Lust mehr, nur kurze Erleichterung von der Dynorphin-Welle. Danach folgen Leere, Scham und Wut, und die Baseline sinkt noch tiefer.</li>' +
-      '<li>Willenskraft allein reicht im Akutmoment nicht. Warum es so weit kam, klärst du später. Jetzt zählt der Ablauf.</li>' +
-      '</ul></div><div class="grow"></div>' +
+      '<div class="chem" role="img" aria-label="Diagramm: Die Dopamin-Baseline sinkt, das Craving steigt. Nachgeben bringt kurze Erleichterung, danach sinkt die Baseline noch tiefer.">' +
+      '<svg viewBox="0 0 320 130" aria-hidden="true">' +
+      '<line class="ref" x1="12" y1="36" x2="308" y2="36"/><text class="lbl" x="12" y="26">Normal</text><text class="lbl" x="12" y="124">Dopamin-Baseline</text>' +
+      '<rect class="crave" x="108" y="20" width="76" height="90" rx="10"/>' +
+      '<line class="tick" x1="192" y1="20" x2="192" y2="116"/><text class="tlbl" x="196" y="30" font-size="10" font-weight="600">Nachgeben</text>' +
+      '<path class="line" pathLength="100" d="M12 36 C50 36 66 82 108 82 L146 82 C162 82 172 54 192 54 C218 54 228 108 254 108 L308 108"/>' +
+      '<circle class="dot" r="6" cx="0" cy="0"/>' +
+      '</svg></div>' +
+      '<div class="chem-rows">' +
+      '<p><span><b>Dopamin sinkt, Craving steigt.</b> Dein Kortex ist offline.</span></p>' +
+      '<p><span><b>Nachgeben</b> bringt kurz Ruhe, dann Leere und Scham.</span></p>' +
+      '<p><span><b>Jetzt zählt der Ablauf,</b> nicht Willenskraft.</span></p>' +
+      '</div></div><div class="grow"></div>' +
       '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
   };
 
@@ -650,6 +763,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
   var SCENES = {'breath': '<i></i><i></i>', 'speak': '<b></b><i></i><i></i><i></i>', 'book': '<i></i><i></i><i></i><i></i><i></i><i></i><i></i>', 'sun': '<b></b><u></u><u></u>', 'colors': '<i></i><i></i><i></i>', 'ball': '<b></b><i></i>', 'people': '<i></i><i></i><i></i>', 'bolt': '<i></i><i></i><i></i><i></i>'};
   function icon(k) { return SCENES[k] ? '<div class="scene sc-' + k + '" aria-hidden="true">' + SCENES[k] + '</div>' : ''; }
+  var MISS0 = ['Zeit mit Gott', 'Gemeinschaft', 'Nähe', 'Quality Time', 'Positive Bestätigung', 'Ruhe'];
+  function allMiss() { return MISS0.concat(DB.miss || []); }
+  function missBox() {
+    D.miss = D.miss || [];
+    return '<div class="chips">' + allMiss().map(function (t) { return '<button class="chip' + (D.miss.indexOf(t) >= 0 ? ' sel' : '') + '" data-miss="' + esc(t) + '">' + esc(t) + '</button>'; }).join('') + '</div>' +
+      '<div class="row"><input type="text" id="newmiss" placeholder="Neue Kategorie eintragen" maxlength="40" aria-label="Neue Kategorie"><button class="btn ghost small" data-act="addMiss">Hinzufügen</button></div>';
+  }
   var PRAY = ['Beten', 'Such Gott. Ein kurzes Gebet reicht.'];
   var MOVE = ['Schnell bewegen', 'Beweg dich so schnell du kannst, bis der Druck sinkt.'];
   var MODE_STEPS = {
@@ -658,7 +778,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       { ic: 'colors', h: 'Raum und Farben wahrnehmen', p: 'Schau dich um. Benenne, was du an Farben und Dingen im Raum siehst.' },
       { ic: 'ball', h: 'Skill nutzen', p: 'Nutze einen Skill zur Emotionsregulation, zum Beispiel einen Knetball.' },
       { ic: 'people', h: 'Gemeinschaft suchen', p: 'Geh zu Menschen oder ruf jemanden an.' }],
-    fight: [{ t: 'breath' }, { ic: 'speak', h: 'Aussprechen', p: 'Sag laut, was dich gerade stresst.', trig: true }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent', ic: 'book' }, { ic: 'bolt', h: MOVE[0], p: MOVE[1] }]
+    fight: [{ t: 'breath' }, { ic: 'speak', h: 'Aussprechen', p: 'Sag laut, was dich gerade stresst.' }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent', ic: 'book' }, { ic: 'bolt', h: MOVE[0], p: MOVE[1] }]
   };
   function MSTEPS() { return MODE_STEPS[D.mode] || []; }
   function afterBreath() { var j = (D.mi || 0) + 1; go(j < MSTEPS().length ? 'm' + j : 'wave', true); }
@@ -741,7 +861,9 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<button class="choice' + (c.why ? ' done' : '') + '" data-go="why"><b>Mein Warum</b><span>' + (DB.why ? 'Meine Gründe lesen und erneuern' : 'Meine Gründe aufschreiben') + '</span></button>' +
       (N.liesLogNote ? '<p class="note" role="status">' + esc(N.liesLogNote) + '</p>' : '') +
       '</div><div class="grow"></div>' +
-      '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+      (Object.keys(c).length ?
+        '<div class="foot"><button class="btn" data-act="finish">Fertig</button><button class="btn ghost" data-act="next">Weiter mit Plan und Bescheid geben</button></div>' :
+        '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>');
   };
 
   /* ---------- Lügen erkennen (Gedanken aus Notion, eigene Lügen dauerhaft) ---------- */
@@ -826,11 +948,16 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function markConn(k) { D.conn = D.conn || {}; D.conn[k] = true; }
 
   S.love = function () {
+    var sel = D.loveSel = D.loveSel || [], list = DB.bubbles || [];
     return '<div class="stack"><p class="kicker">Zu einem Menschen, den ich liebe</p>' +
       '<div class="verse">Hol deine zukünftige Partnerin vor Augen.</div>' +
       '<p class="lead" style="margin:0">Spür die Wärme und bleib dort. Lass dir Zeit.</p>' +
       '<div class="card"><p class="serif" style="font-size:22px;line-height:1.3">Welcher Mensch möchte ich für sie sein?</p></div>' +
-      '<p class="note">Ohne Scham. Es geht nicht darum, perfekt zu sein, sondern darum, wer du für sie werden willst.</p></div>' +
+      '<div class="bubbles">' + list.map(function (b, k) {
+        return '<button class="bub' + (sel.indexOf(b) >= 0 ? ' sel' : '') + '" data-bub="' + esc(b) + '" style="--d:' + (4 + (k * 7) % 4) + 's;--dl:-' + ((k * 13) % 7) + 's;--dx:' + ((((k * 5) % 13) - 6) * 2) + 'px;--dy:-' + (16 + (k * 3) % 12) + 'px">' + esc(b) + '</button>';
+      }).join('') + '</div>' +
+      '<div class="row"><input type="text" id="newbub" placeholder="Neue Blase, z. B. geduldig sein" aria-label="Neue Blase" maxlength="40"><button class="btn small" data-act="addBub" style="width:auto">Hinzufügen</button></div>' +
+      '<p class="note">Tippe an, was du für sie sein willst. Neue Blasen bleiben dauerhaft gespeichert.</p></div>' +
       '<div class="grow"></div><div class="foot"><button class="btn" data-act="connDone" data-k="love">Fertig</button></div>';
   };
 
@@ -906,7 +1033,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="kicker">Geschafft</p><h1>Du hast den Sturm ausgehalten.</h1>' +
       '<p class="lead">Das war dein ' + n + '. ausgehaltener Sturm. Jedes Mal, wenn du ihn aushältst, wird der alte Kreislauf schwächer.</p>' +
       (D.next ? '<div class="card"><p class="note" style="margin-bottom:4px">Als Nächstes</p><p class="serif" style="font-size:22px">' + esc(D.next) + '</p></div>' : '') +
-      (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') +
+      (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') + evStatus() +
       '</div>' +
       '<div class="foot"><button class="btn" data-act="home">Fertig</button></div>';
   };
@@ -920,16 +1047,23 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   ];
   function fallForm() {
     var q = 'font-weight:600;margin:10px 0 0';
-    return '<p style="' + q.replace('10px', '2px') + '">Wo warst du?</p>' +
+    return '<p style="' + q.replace('10px', '2px') + '">Worin bist du gefallen?</p>' +
+      '<div class="chips">' + ZONES[0][1].map(function (k) { return '<button class="chip' + ((D.fp || []).indexOf(k) >= 0 ? ' sel' : '') + '" data-fp="' + esc(k) + '">' + esc(k) + '</button>'; }).join('') + '</div>' +
+      '<p style="' + q + '">Wo warst du?</p>' +
       '<div class="chips">' + allPlaces().map(function (p) { return '<button class="chip' + (D.place === p ? ' sel' : '') + '" data-place="' + esc(p) + '">' + esc(p) + '</button>'; }).join('') + '</div>' +
       (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40">' : '') +
       '<p style="' + q + '">Warst du allein?</p>' +
       '<div class="seg"><button class="chip' + (D.alone === true ? ' sel' : '') + '" data-alone="1">Ja</button><button class="chip' + (D.alone === false ? ' sel' : '') + '" data-alone="0">Nein</button></div>' +
       '<p style="' + q + '">Wo hast du gestanden?</p>' +
       '<div class="chips">' + SVN.map(function (x, j) { return '<button class="chip' + (D.svn === j ? ' sel' : '') + '" data-svn="' + j + '">' + x[0] + '</button>'; }).join('') + '</div>' +
+      '<p style="' + q + '">Aus welchem Zustand kam die Lust?</p>' +
+      '<button class="choice' + (D.mode === 'dorsal' ? ' sel' : '') + '" data-pmode="dorsal"><b>Dorsal</b><span>Rückzug, schwer, leer, abgeschaltet</span></button>' +
+      '<button class="choice' + (D.mode === 'fight' ? ' sel' : '') + '" data-pmode="fight"><b>Fight Mode</b><span>Unter Strom, gestresst, Druck, Wut</span></button>' +
       '<p style="' + q + '">Wie stark war der Urge? <b id="frv">' + (D.strength || 5) + '</b> von 10</p>' +
       '<input type="range" id="frng" min="1" max="10" value="' + (D.strength || 5) + '" aria-label="Stärke des Urge von 1 bis 10">' +
-      '<p style="' + q + '">Was hat ihn ausgelöst?</p>' + trigBox();
+      '<p style="' + q + '">Was hat ihn ausgelöst?</p>' + trigBox() +
+      '<p style="' + q + '">Welche Lügen hat dir dein Gehirn erzählt?</p>' + liesBox() +
+      '<p style="' + q + '">Was hat dir gefehlt?</p>' + missBox();
   }
   S.fall = function () {
     var i = D.fx || 0, f = FALL[i], extra = '';
@@ -994,6 +1128,11 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; wpChanged(); }); }
     var nt = document.getElementById('newtrig');
     if (nt) { nt.value = D.newtrig || ''; nt.addEventListener('input', function () { D.newtrig = nt.value; }); }
+    var nl = document.getElementById('newlie');
+    if (nl && (cur === 'place' || cur === 'fall')) { nl.value = D.newlie || ''; nl.addEventListener('input', function () { D.newlie = nl.value; }); }
+    if (cur === 'place' || cur === 'fall') nLoadLies();
+    var nm = document.getElementById('newmiss');
+    if (nm) { nm.value = D.newmiss || ''; nm.addEventListener('input', function () { D.newmiss = nm.value; }); }
     var fr = document.getElementById('frng');
     if (fr) fr.addEventListener('input', function () { D.strength = +fr.value; document.getElementById('frv').textContent = fr.value; });
     var np = document.getElementById('newplace');
@@ -1015,6 +1154,14 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     breathSkip: function () { afterBreath(); },
     crossNext: function () { D.cx = (D.cx || 0) + 1; render(); },
     fallNext: function () { if (D.fx === 3) commitPlace(); D.fx = (D.fx || 0) + 1; render(); },
+    addBub: function () {
+      var i = document.getElementById('newbub'), v = i.value.trim().slice(0, 40); if (!v) return;
+      var known = (DB.bubbles || []).filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
+      D.loveSel = D.loveSel || [];
+      if (!known) { DB.bubbles = (DB.bubbles || []).concat(v); save(); if (N.mcp) nEnsureOpts({ 'Ich will sein': [clean(v)] }).catch(function () {}); }
+      var use = known || v; if (D.loveSel.indexOf(use) < 0) D.loveSel.push(use);
+      render();
+    },
     cbNext: function () { D.cbx = (D.cbx || 0) + 1; render(); window.scrollTo(0, 0); },
     liesNext: function () { if ((D.liesSel || []).length) { D.lx = 1; render(); window.scrollTo(0, 0); } },
     liesSkip: function () { D.lx = 0; history_pop(); },
@@ -1023,7 +1170,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       var known = allLies().filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
       D.liesSel = D.liesSel || [];
       if (known) { if (D.liesSel.indexOf(known) < 0) D.liesSel.push(known); D.liesNote = 'Diese Lüge gibt es schon, sie ist ausgewählt.'; render(); return; }
-      DB.lies = (DB.lies || []).concat(v); save(); D.liesSel.push(v); D.liesNote = 'Gespeichert.'; render(); nAddLie(v);
+      DB.lies = (DB.lies || []).concat(v); save(); D.liesSel.push(v); D.liesNote = 'Gespeichert.'; D.newlie = ''; render(); nAddLie(v);
     },
     connDone: function (el) { if (el.getAttribute('data-k') === 'lies') { N.liesLogNote = ''; nLogLies(D.liesSel || []); } markConn(el.getAttribute('data-k')); D.cx = 0; D.lx = 0; D.cbx = 0; history_pop(); },
     addPlan: function () { var i = document.getElementById('newplan'), v = i.value.trim(); if (v) { DB.plan.push(v); wpChanged(); render(); } },
@@ -1033,13 +1180,20 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       try { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }); } catch (e) { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }
     },
     finish: function () {
-      DB.log.push({ t: Date.now(), before: D.strength, after: D.after, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held', svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
+      DB.log.push({ t: Date.now(), before: D.strength, after: D.after || null, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held', miss: D.miss || [], svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
       save(); N.note = ''; nEvent(true);
-      nLog(hhmm() + ' Urge ausgehalten, Stärke ' + D.strength + ' → ' + D.after + (D.place ? ', ' + D.place : ''));
+      nLog(hhmm() + ' Urge ausgehalten, Stärke ' + D.strength + (D.after ? ' → ' + D.after : '') + (D.place ? ', ' + D.place : ''));
       stack = []; cur = 'end'; render();
     },
     zoneSave: zSave,
     nRetry: function () { N.histErr = ''; nLoadHist(); wpLoad(); render(); },
+    addMiss: function () {
+      var v = (D.newmiss || '').trim().slice(0, 40); if (!v) return;
+      var have = allMiss().filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
+      if (!have) { DB.miss = (DB.miss || []).concat(v); have = v; save(); }
+      D.miss = D.miss || []; if (D.miss.indexOf(have) < 0) D.miss.push(have);
+      D.newmiss = ''; render();
+    },
     addTrig: function () {
       var v = (D.newtrig || '').trim().slice(0, 60); if (!v) return;
       var have = allTrig().filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
@@ -1049,8 +1203,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     },
     fallSave: function () {
       commitPlace();
-      DB.log.push({ t: Date.now(), outcome: 'fell', place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
-      save(); nEvent(false); nLog(hhmm() + ' Rückfall'); home();
+      DB.log.push({ t: Date.now(), outcome: 'fell', fp: D.fp || [], place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [], miss: D.miss || [] });
+      save(); nEvent(false); nLog(hhmm() + ' Rückfall' + ((D.fp || []).length ? ': ' + D.fp.join(', ') : '')); nMarkFall(D.fp || []); home();
     }
   };
   function history_pop() { cur = stack.pop() || 'connect'; render(); }
@@ -1063,17 +1217,21 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (el.dataset.act) { ACT[el.dataset.act](el); return; }
     if (el.dataset.go === 'zone') { D = {}; Z.day = 0; Z.msg = ''; go('zone'); zLoad(); return; }
     if (el.dataset.lie !== undefined) { var li = el.dataset.lie, ix = (D.liesSel = D.liesSel || []).indexOf(li); if (ix >= 0) D.liesSel.splice(ix, 1); else D.liesSel.push(li); D.liesNote = ''; render(); return; }
+    if (el.dataset.bub !== undefined) { var bu = el.dataset.bub, bi = (D.loveSel = D.loveSel || []).indexOf(bu); if (bi >= 0) D.loveSel.splice(bi, 1); else D.loveSel.push(bu); render(); return; }
     if (el.dataset.zday !== undefined) { Z.day = +el.dataset.zday; zLoad(); return; }
     if (el.dataset.zs) { var pr = el.dataset.zs.split('|'); Z.vals[pr[0]] = STATE[pr[1]]; Z.msg = ''; render(); return; }
     if (el.dataset.zall) { ZONES.forEach(function (z) { if (z[0] === el.dataset.zall) z[1].forEach(function (k) { Z.vals[k] = STATE.ok; }); }); Z.msg = ''; render(); return; }
     if (el.dataset.go === 'lies') { D.lx = 0; N.liesErr = ''; }
     if (el.dataset.go === 'cost') D.cbx = 0;
     if (el.dataset.go) { if (el.dataset.go === 'fall') D = {}; go(el.dataset.go); return; }
+    if (el.dataset.miss !== undefined) { var mk = el.dataset.miss, mi = (D.miss = D.miss || []).indexOf(mk); if (mi >= 0) D.miss.splice(mi, 1); else D.miss.push(mk); render(); return; }
+    if (el.dataset.fp !== undefined) { var fk = el.dataset.fp, fi = (D.fp = D.fp || []).indexOf(fk); if (fi >= 0) D.fp.splice(fi, 1); else D.fp.push(fk); render(); return; }
     if (el.dataset.trig !== undefined) { var tg = el.dataset.trig, ti = (D.trig = D.trig || []).indexOf(tg); if (ti >= 0) D.trig.splice(ti, 1); else D.trig.push(tg); render(); return; }
     if (el.dataset.place !== undefined) { D.place = el.dataset.place; render(); return; }
     if (el.dataset.alone !== undefined) { D.alone = el.dataset.alone === '1'; render(); return; }
     if (el.dataset.svn !== undefined) { D.svn = +el.dataset.svn; render(); return; }
     if (el.dataset.mode) { D.mode = el.dataset.mode; next(); return; }
+    if (el.dataset.pmode) { D.mode = el.dataset.pmode; render(); return; }
     if (el.dataset.min) { D.mins = +el.dataset.min; D.breathSec = Math.round(D.mins * 60); go('breath'); return; }
     if (el.dataset.pick !== undefined) { D.next = DB.plan[+el.dataset.pick]; render(); return; }
     if (el.dataset.del !== undefined) { DB.plan.splice(+el.dataset.del, 1); wpChanged(); render(); return; }

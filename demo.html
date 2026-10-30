@@ -408,25 +408,50 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if ((D.liesSel || []).length) q['Lügen'] = D.liesSel.map(clean).join('; ');
     return q;
   }
+  // Notion legt neue Auswahl-Optionen nicht selbst an: Vor dem Eintragen werden fehlende Optionen in der Datenbank ergänzt.
+  var SEL = { 'Ort': 'SELECT', 'Auslöser': 'MULTI_SELECT', 'Gefehlt': 'MULTI_SELECT' };
+  function nEvSchema() {
+    return N.mcp.callTool('Notion', 'notion-fetch', { id: 'collection://' + EV_DS }, { cache: false }).then(function (r) {
+      var pl = nData(r), t = String((pl && pl.text) || (typeof pl === 'string' ? pl : ''));
+      var m = t.match(/<data-source-state>\s*([\s\S]*?)\s*<\/data-source-state>/);
+      return JSON.parse(m[1]).schema;
+    });
+  }
+  function nEnsureOpts(q) {
+    var need = {};
+    Object.keys(SEL).forEach(function (k) { if (q[k] == null) return; need[k] = [].concat(q[k]); });
+    if (!Object.keys(need).length) return Promise.resolve();
+    return nEvSchema().then(function (sc) {
+      var st = [];
+      Object.keys(need).forEach(function (k) {
+        var have = (sc[k] && sc[k].options) || [], names = have.map(function (o) { return o.name; });
+        var add = need[k].filter(function (x) { return names.indexOf(x) < 0; });
+        if (!add.length) return;
+        var qt = function (x) { return "'" + String(x).replace(/'/g, "''") + "'"; };
+        var all = have.map(function (o) { return qt(o.name) + ':' + (o.color || 'default'); }).concat(add.map(function (x) { return qt(x) + ':default'; }));
+        st.push('ALTER COLUMN "' + k + '" SET ' + SEL[k] + '(' + all.join(', ') + ')');
+      });
+      if (!st.length) return;
+      return N.mcp.callTool('Notion', 'notion-update-data-source', { data_source_id: 'collection://' + EV_DS, statements: st.join('; ') }, { cache: false });
+    });
+  }
   // Ereignisse werden erst gemerkt und dann gesendet, damit nichts verloren geht, wenn Notion gerade nicht antwortet.
   var evBusy = false;
-  function nEvent(held) { DB.pend = (DB.pend || []).concat([evProps(held)]); save(); flushEv(); }
+  function nEvent(held) { DB.pend = (DB.pend || []).concat([{ p: evProps(held), n: 0 }]); save(); flushEv(); }
   function flushEv() {
     if (!N.mcp || evBusy || !(DB.pend || []).length) return;
     evBusy = true;
-    N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: EV_DS }, pages: [{ properties: DB.pend[0] }] }, { cache: false })
-      .then(function () { DB.pend.shift(); save(); evBusy = false; flushEv(); }, function () { evBusy = false; });
+    var it = DB.pend[0];
+    nEnsureOpts(it.p).then(null, function () {}).then(function () {
+      return N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: EV_DS }, pages: [{ properties: it.p }] }, { cache: false });
+    }).then(function () { DB.pend.shift(); N.evErr = ''; save(); evBusy = false; if (cur === 'home' || cur === 'end') render(); flushEv(); },
+      function (e) {
+        evBusy = false; N.evErr = nErr(e); it.n = (it.n || 0) + 1;
+        if (it.n >= 3) { DB.failed = (DB.failed || []).concat([it]); DB.pend.shift(); }
+        save(); if (cur === 'home' || cur === 'end') render();
+      });
   }
-  // Setzt die gewählten Punkte der Zone Enthaltsamkeit in der heutigen Zeile auf Rückschlag.
-  function nMarkFall(items) {
-    if (!N.mcp || !items.length) return;
-    nFresh();
-    nToday().then(function (row) {
-      if (!row) throw { code: 'no_row' };
-      var pr = {}; items.forEach(function (k) { pr[k] = STATE.bad; });
-      return N.mcp.callTool('Notion', 'notion-update-page', { page_id: row.url, command: 'update_properties', properties: pr }, { cache: false });
-    }).then(function () { nFresh(); nLoadHist(); }, function () {});
-  }
+  function evStatus() { return N.evErr && (DB.pend || []).length ? '<p class="note" role="status">Ein Eintrag konnte noch nicht nach Notion geschrieben werden. ' + esc(N.evErr) + ' Es wird beim nächsten Öffnen erneut versucht.</p>' : ''; }
   var S = {};
   /* ---------- Recovery Zone eintragen ---------- */
   var ZONES = [
@@ -572,7 +597,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="kicker">Im Sturm der Lust</p>' +
       '<h1>Der Sturm geht vorbei.</h1>' +
       '<p class="lead">Du musst ihn nicht bekämpfen. Du musst ihn nur durchstehen, Schritt für Schritt.</p>' +
-      encourage() +
+      encourage() + evStatus() +
       '</div>' +
       '<div class="foot">' +
       '<button class="btn" data-act="start">Ich spüre einen Urge</button>' +
@@ -922,7 +947,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="kicker">Geschafft</p><h1>Du hast den Sturm ausgehalten.</h1>' +
       '<p class="lead">Das war dein ' + n + '. ausgehaltener Sturm. Jedes Mal, wenn du ihn aushältst, wird der alte Kreislauf schwächer.</p>' +
       (D.next ? '<div class="card"><p class="note" style="margin-bottom:4px">Als Nächstes</p><p class="serif" style="font-size:22px">' + esc(D.next) + '</p></div>' : '') +
-      (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') +
+      (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') + evStatus() +
       '</div>' +
       '<div class="foot"><button class="btn" data-act="home">Fertig</button></div>';
   };

@@ -451,6 +451,18 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
         save(); if (cur === 'home' || cur === 'end') render();
       });
   }
+  // Setzt die gewählten Punkte der Zone Enthaltsamkeit in der heutigen Zeile auf Rückschlag.
+  function nMarkFall(items) {
+    if (!N.mcp || !items.length) return;
+    N.markNote = '';
+    nFresh();
+    nToday().then(function (row) {
+      if (!row) throw { code: 'no_row' };
+      var pr = {}; items.forEach(function (k) { pr[k] = STATE.bad; });
+      return N.mcp.callTool('Notion', 'notion-update-page', { page_id: row.url, command: 'update_properties', properties: pr }, { cache: false });
+    }).then(function () { N.markNote = 'In der Recovery Zone von heute als Rückschlag eingetragen: ' + items.join(', ') + '.'; nFresh(); nLoadHist(); if (cur === 'home') render(); },
+      function (e) { N.markNote = e && e.code === 'no_row' ? 'Für heute gibt es in der Recovery Zone keine Zeile, daher wurde dort nichts als Rückschlag eingetragen.' : 'In der Recovery Zone konnte nichts eingetragen werden. ' + nErr(e); if (cur === 'home') render(); });
+  }
   function evStatus() { return N.evErr && (DB.pend || []).length ? '<p class="note" role="status">Ein Eintrag konnte noch nicht nach Notion geschrieben werden. ' + esc(N.evErr) + ' Es wird beim nächsten Öffnen erneut versucht.</p>' : ''; }
   var S = {};
   /* ---------- Recovery Zone eintragen ---------- */
@@ -597,7 +609,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="kicker">Im Sturm der Lust</p>' +
       '<h1>Der Sturm geht vorbei.</h1>' +
       '<p class="lead">Du musst ihn nicht bekämpfen. Du musst ihn nur durchstehen, Schritt für Schritt.</p>' +
-      encourage() + evStatus() +
+      encourage() + evStatus() + (N.markNote ? '<p class="note" role="status">' + esc(N.markNote) + '</p>' : '') +
       '</div>' +
       '<div class="foot">' +
       '<button class="btn" data-act="start">Ich spüre einen Urge</button>' +

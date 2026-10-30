@@ -121,7 +121,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .wave { position: absolute; left: -10%; right: -10%; bottom: 0; height: 10%; background: linear-gradient(#58c4a6, #2f8f78); border-radius: 50% 50% 0 0 / 28px 28px 0 0; transition: height 4s ease-in-out; }
 
 /* Wellen-Anzeige */
-.sea { position: relative; height: 150px; overflow: hidden; border-radius: 16px; background: var(--surface2); }
+.sea { position: relative; height: 150px; overflow: hidden; border-radius: 16px; background: var(--surface2); isolation: isolate; transform: translateZ(0); -webkit-mask-image: -webkit-radial-gradient(#fff, #000); }
 .sea i { position: absolute; left: -20%; right: -20%; bottom: 0; height: 70%; border-radius: 50% 50% 0 0 / 30px 30px 0 0; background: linear-gradient(#58c4a6, #2f8f78); opacity: .6; animation: swell 10s ease-in-out infinite; }
 .sea i + i { opacity: .9; height: 55%; animation-duration: 13s; animation-direction: reverse; }
 .homewave { flex: 1; min-height: 90px; position: relative; overflow: hidden; margin: 8px calc(50% - 50vw) 0; -webkit-mask-image: linear-gradient(to bottom, transparent, #000 35%); mask-image: linear-gradient(to bottom, transparent, #000 35%); }
@@ -141,7 +141,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 
 
 /* Szenen: sanft animierte Visualisierungen im Stil der Wellen-Anzeige */
-.scene { position: relative; height: 150px; width: 100%; overflow: hidden; border-radius: 16px; background: var(--surface2); }
+.scene { position: relative; height: 150px; width: 100%; overflow: hidden; border-radius: 16px; background: var(--surface2); isolation: isolate; transform: translateZ(0); -webkit-mask-image: -webkit-radial-gradient(#fff, #000); }
 .scene i, .scene b, .scene u { position: absolute; display: block; }
 .sc-breath i { left: 50%; top: 50%; width: 110px; height: 110px; margin: -55px 0 0 -55px; border-radius: 50%; background: linear-gradient(#58c4a6, #2f8f78); opacity: .35; animation: sc-breathe 10s ease-in-out infinite; }
 .sc-breath i + i { width: 70px; height: 70px; margin: -35px 0 0 -35px; opacity: .85; }

@@ -233,7 +233,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   var K = 'sturmhilfe.v1';
   var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
   var FALL_MSG = 'Ich bin gefallen. Ich verstecke mich nicht und sage dir deshalb Bescheid. Bitte bete für mich und frag später nach, wie es mir geht.';
-  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], trig: [], lies: ['Lieber Masturbieren als Pornos', 'Nur dieses eine Mal', 'Ich brauche das gegen Stress', 'Ich bin eh schon gescheitert', 'Morgen fange ich neu an', 'Es ist egal', 'Ich habe es mir verdient', 'Nur kurz schauen', 'Zu müde zum Kämpfen', 'Ist doch nicht so schlimm', 'Ich habe es im Griff', 'Es merkt ja keiner'], truths: {}, cbi: ['', '', '', ''] };
+  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], trig: [], miss: [], lies: ['Lieber Masturbieren als Pornos', 'Nur dieses eine Mal', 'Ich brauche das gegen Stress', 'Ich bin eh schon gescheitert', 'Morgen fange ich neu an', 'Es ist egal', 'Ich habe es mir verdient', 'Nur kurz schauen', 'Zu müde zum Kämpfen', 'Ist doch nicht so schlimm', 'Ich habe es im Griff', 'Es merkt ja keiner'], truths: {}, cbi: ['', '', '', ''] };
   try { var raw = MEM.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
   function save() { DB.ts = Date.now(); try { MEM.setItem(K, JSON.stringify(DB)); } catch (e) {} cloudSave(); }
 
@@ -254,6 +254,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     DB.log = log;
     var ll = (DB.lies || []).slice(); (rem.lies || []).forEach(function (x) { if (ll.indexOf(x) < 0) ll.push(x); }); DB.lies = ll;
     DB.truths = Object.assign({}, rem.truths || {}, DB.truths || {});
+    var ms = (DB.miss || []).slice(); (rem.miss || []).forEach(function (x) { if (ms.indexOf(x) < 0) ms.push(x); }); DB.miss = ms;
     var tg = (DB.trig || []).slice(); (rem.trig || []).forEach(function (x) { if (tg.indexOf(x) < 0) tg.push(x); }); DB.trig = tg;
     var pl = (DB.places || []).slice(); (rem.places || []).forEach(function (x) { if (pl.indexOf(x) < 0) pl.push(x); }); DB.places = pl;
     try { MEM.setItem(K, JSON.stringify(DB)); } catch (e) {}
@@ -401,6 +402,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (D.breathSec) q['Atemdauer Sekunden'] = D.breathSec;
     if ((D.trig || []).length) q['Auslöser'] = D.trig.map(clean);
     if (!held && (D.fp || []).length) q['Rückfall bei'] = D.fp.slice();
+    if (!held && (D.miss || []).length) q['Gefehlt'] = D.miss.map(clean);
     var w = Object.keys(D.conn || {}).map(function (k) { return CONN_NAMES[k]; }).filter(Boolean);
     if (w.length) q['Wege'] = w;
     if ((D.liesSel || []).length) q['Lügen'] = D.liesSel.map(clean).join('; ');
@@ -655,6 +657,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
   var SCENES = {'breath': '<i></i><i></i>', 'speak': '<b></b><i></i><i></i><i></i>', 'book': '<i></i><i></i><i></i><i></i><i></i><i></i><i></i>', 'sun': '<b></b><u></u><u></u>', 'colors': '<i></i><i></i><i></i>', 'ball': '<b></b><i></i>', 'people': '<i></i><i></i><i></i>', 'bolt': '<i></i><i></i><i></i><i></i>'};
   function icon(k) { return SCENES[k] ? '<div class="scene sc-' + k + '" aria-hidden="true">' + SCENES[k] + '</div>' : ''; }
+  var MISS0 = ['Zeit mit Gott', 'Gemeinschaft', 'Nähe', 'Quality Time', 'Positive Bestätigung', 'Ruhe'];
+  function allMiss() { return MISS0.concat(DB.miss || []); }
+  function missBox() {
+    D.miss = D.miss || [];
+    return '<div class="chips">' + allMiss().map(function (t) { return '<button class="chip' + (D.miss.indexOf(t) >= 0 ? ' sel' : '') + '" data-miss="' + esc(t) + '">' + esc(t) + '</button>'; }).join('') + '</div>' +
+      '<div class="row"><input type="text" id="newmiss" placeholder="Neue Kategorie eintragen" maxlength="40" aria-label="Neue Kategorie"><button class="btn ghost small" data-act="addMiss">Hinzufügen</button></div>';
+  }
   var PRAY = ['Beten', 'Such Gott. Ein kurzes Gebet reicht.'];
   var MOVE = ['Schnell bewegen', 'Beweg dich so schnell du kannst, bis der Druck sinkt.'];
   var MODE_STEPS = {
@@ -936,7 +945,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<div class="chips">' + SVN.map(function (x, j) { return '<button class="chip' + (D.svn === j ? ' sel' : '') + '" data-svn="' + j + '">' + x[0] + '</button>'; }).join('') + '</div>' +
       '<p style="' + q + '">Wie stark war der Urge? <b id="frv">' + (D.strength || 5) + '</b> von 10</p>' +
       '<input type="range" id="frng" min="1" max="10" value="' + (D.strength || 5) + '" aria-label="Stärke des Urge von 1 bis 10">' +
-      '<p style="' + q + '">Was hat ihn ausgelöst?</p>' + trigBox();
+      '<p style="' + q + '">Was hat ihn ausgelöst?</p>' + trigBox() +
+      '<p style="' + q + '">Was hat dir gefehlt?</p>' + missBox();
   }
   S.fall = function () {
     var i = D.fx || 0, f = FALL[i], extra = '';
@@ -1001,6 +1011,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; wpChanged(); }); }
     var nt = document.getElementById('newtrig');
     if (nt) { nt.value = D.newtrig || ''; nt.addEventListener('input', function () { D.newtrig = nt.value; }); }
+    var nm = document.getElementById('newmiss');
+    if (nm) { nm.value = D.newmiss || ''; nm.addEventListener('input', function () { D.newmiss = nm.value; }); }
     var fr = document.getElementById('frng');
     if (fr) fr.addEventListener('input', function () { D.strength = +fr.value; document.getElementById('frv').textContent = fr.value; });
     var np = document.getElementById('newplace');
@@ -1047,6 +1059,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     },
     zoneSave: zSave,
     nRetry: function () { N.histErr = ''; nLoadHist(); wpLoad(); render(); },
+    addMiss: function () {
+      var v = (D.newmiss || '').trim().slice(0, 40); if (!v) return;
+      var have = allMiss().filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
+      if (!have) { DB.miss = (DB.miss || []).concat(v); have = v; save(); }
+      D.miss = D.miss || []; if (D.miss.indexOf(have) < 0) D.miss.push(have);
+      D.newmiss = ''; render();
+    },
     addTrig: function () {
       var v = (D.newtrig || '').trim().slice(0, 60); if (!v) return;
       var have = allTrig().filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
@@ -1056,7 +1075,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     },
     fallSave: function () {
       commitPlace();
-      DB.log.push({ t: Date.now(), outcome: 'fell', fp: D.fp || [], place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
+      DB.log.push({ t: Date.now(), outcome: 'fell', fp: D.fp || [], place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [], miss: D.miss || [] });
       save(); nEvent(false); nLog(hhmm() + ' Rückfall' + ((D.fp || []).length ? ': ' + D.fp.join(', ') : '')); nMarkFall(D.fp || []); home();
     }
   };
@@ -1076,6 +1095,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (el.dataset.go === 'lies') { D.lx = 0; N.liesErr = ''; }
     if (el.dataset.go === 'cost') D.cbx = 0;
     if (el.dataset.go) { if (el.dataset.go === 'fall') D = {}; go(el.dataset.go); return; }
+    if (el.dataset.miss !== undefined) { var mk = el.dataset.miss, mi = (D.miss = D.miss || []).indexOf(mk); if (mi >= 0) D.miss.splice(mi, 1); else D.miss.push(mk); render(); return; }
     if (el.dataset.fp !== undefined) { var fk = el.dataset.fp, fi = (D.fp = D.fp || []).indexOf(fk); if (fi >= 0) D.fp.splice(fi, 1); else D.fp.push(fk); render(); return; }
     if (el.dataset.trig !== undefined) { var tg = el.dataset.trig, ti = (D.trig = D.trig || []).indexOf(tg); if (ti >= 0) D.trig.splice(ti, 1); else D.trig.push(tg); render(); return; }
     if (el.dataset.place !== undefined) { D.place = el.dataset.place; render(); return; }

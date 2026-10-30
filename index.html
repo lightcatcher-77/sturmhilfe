@@ -397,6 +397,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (D.mode) q['Zustand'] = D.mode === 'dorsal' ? 'Dorsal' : 'Fight Mode';
     if (D.breathSec) q['Atemdauer Sekunden'] = D.breathSec;
     if ((D.trig || []).length) q['Auslöser'] = D.trig.map(clean);
+    if (!held && (D.fp || []).length) q['Rückfall bei'] = D.fp.slice();
     var w = Object.keys(D.conn || {}).map(function (k) { return CONN_NAMES[k]; }).filter(Boolean);
     if (w.length) q['Wege'] = w;
     if ((D.liesSel || []).length) q['Lügen'] = D.liesSel.map(clean).join('; ');
@@ -410,6 +411,16 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     evBusy = true;
     N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: EV_DS }, pages: [{ properties: DB.pend[0] }] }, { cache: false })
       .then(function () { DB.pend.shift(); save(); evBusy = false; flushEv(); }, function () { evBusy = false; });
+  }
+  // Setzt die gewählten Punkte der Zone Enthaltsamkeit in der heutigen Zeile auf Rückschlag.
+  function nMarkFall(items) {
+    if (!N.mcp || !items.length) return;
+    nFresh();
+    nToday().then(function (row) {
+      if (!row) throw { code: 'no_row' };
+      var pr = {}; items.forEach(function (k) { pr[k] = STATE.bad; });
+      return N.mcp.callTool('Notion', 'notion-update-page', { page_id: row.url, command: 'update_properties', properties: pr }, { cache: false });
+    }).then(function () { nFresh(); nLoadHist(); }, function () {});
   }
   var S = {};
   /* ---------- Recovery Zone eintragen ---------- */
@@ -911,7 +922,9 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   ];
   function fallForm() {
     var q = 'font-weight:600;margin:10px 0 0';
-    return '<p style="' + q.replace('10px', '2px') + '">Wo warst du?</p>' +
+    return '<p style="' + q.replace('10px', '2px') + '">Worin bist du gefallen?</p>' +
+      '<div class="chips">' + ZONES[0][1].map(function (k) { return '<button class="chip' + ((D.fp || []).indexOf(k) >= 0 ? ' sel' : '') + '" data-fp="' + esc(k) + '">' + esc(k) + '</button>'; }).join('') + '</div>' +
+      '<p style="' + q + '">Wo warst du?</p>' +
       '<div class="chips">' + allPlaces().map(function (p) { return '<button class="chip' + (D.place === p ? ' sel' : '') + '" data-place="' + esc(p) + '">' + esc(p) + '</button>'; }).join('') + '</div>' +
       (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40">' : '') +
       '<p style="' + q + '">Warst du allein?</p>' +
@@ -1040,8 +1053,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     },
     fallSave: function () {
       commitPlace();
-      DB.log.push({ t: Date.now(), outcome: 'fell', place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
-      save(); nEvent(false); nLog(hhmm() + ' Rückfall'); home();
+      DB.log.push({ t: Date.now(), outcome: 'fell', fp: D.fp || [], place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
+      save(); nEvent(false); nLog(hhmm() + ' Rückfall' + ((D.fp || []).length ? ': ' + D.fp.join(', ') : '')); nMarkFall(D.fp || []); home();
     }
   };
   function history_pop() { cur = stack.pop() || 'connect'; render(); }
@@ -1060,6 +1073,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (el.dataset.go === 'lies') { D.lx = 0; N.liesErr = ''; }
     if (el.dataset.go === 'cost') D.cbx = 0;
     if (el.dataset.go) { if (el.dataset.go === 'fall') D = {}; go(el.dataset.go); return; }
+    if (el.dataset.fp !== undefined) { var fk = el.dataset.fp, fi = (D.fp = D.fp || []).indexOf(fk); if (fi >= 0) D.fp.splice(fi, 1); else D.fp.push(fk); render(); return; }
     if (el.dataset.trig !== undefined) { var tg = el.dataset.trig, ti = (D.trig = D.trig || []).indexOf(tg); if (ti >= 0) D.trig.splice(ti, 1); else D.trig.push(tg); render(); return; }
     if (el.dataset.place !== undefined) { D.place = el.dataset.place; render(); return; }
     if (el.dataset.alone !== undefined) { D.alone = el.dataset.alone === '1'; render(); return; }

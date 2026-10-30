@@ -399,7 +399,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (D.breathSec) q['Atemdauer Sekunden'] = D.breathSec;
     if ((D.trig || []).length) q['Auslöser'] = D.trig.map(clean);
     if (!held && (D.fp || []).length) q['Rückfall bei'] = D.fp.slice();
-    if (!held && (D.miss || []).length) q['Gefehlt'] = D.miss.map(clean);
+    if ((D.miss || []).length) q['Gefehlt'] = D.miss.map(clean);
     var w = Object.keys(D.conn || {}).map(function (k) { return CONN_NAMES[k]; }).filter(Boolean);
     if (w.length) q['Wege'] = w;
     if ((D.liesSel || []).length) q['Lügen'] = D.liesSel.map(clean).join('; ');
@@ -615,6 +615,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen, z. B. Bei Oma" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40">' : '') +
       '<p style="margin-top:10px;font-weight:600">Bist du gerade allein?</p>' +
       '<div class="seg"><button class="chip' + (D.alone === true ? ' sel' : '') + '" data-alone="1">Ja</button><button class="chip' + (D.alone === false ? ' sel' : '') + '" data-alone="0">Nein</button></div>' +
+      '<p style="margin-top:10px;font-weight:600">Was fehlt dir gerade?</p>' + missBox() +
       '</div><div class="grow"></div>' +
       '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
   };
@@ -1049,7 +1050,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       try { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }); } catch (e) { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }
     },
     finish: function () {
-      DB.log.push({ t: Date.now(), before: D.strength, after: D.after, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held', svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
+      DB.log.push({ t: Date.now(), before: D.strength, after: D.after, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held', miss: D.miss || [], svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
       save(); N.note = ''; nEvent(true);
       nLog(hhmm() + ' Urge ausgehalten, Stärke ' + D.strength + ' → ' + D.after + (D.place ? ', ' + D.place : ''));
       stack = []; cur = 'end'; render();

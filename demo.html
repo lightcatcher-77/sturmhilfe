@@ -994,9 +994,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<div class="seg"><button class="chip' + (D.alone === true ? ' sel' : '') + '" data-alone="1">Ja</button><button class="chip' + (D.alone === false ? ' sel' : '') + '" data-alone="0">Nein</button></div>' +
       '<p style="' + q + '">Wo hast du gestanden?</p>' +
       '<div class="chips">' + SVN.map(function (x, j) { return '<button class="chip' + (D.svn === j ? ' sel' : '') + '" data-svn="' + j + '">' + x[0] + '</button>'; }).join('') + '</div>' +
+      '<p style="' + q + '">Aus welchem Zustand kam die Lust?</p>' +
+      '<button class="choice' + (D.mode === 'dorsal' ? ' sel' : '') + '" data-pmode="dorsal"><b>Dorsal</b><span>Rückzug, schwer, leer, abgeschaltet</span></button>' +
+      '<button class="choice' + (D.mode === 'fight' ? ' sel' : '') + '" data-pmode="fight"><b>Fight Mode</b><span>Unter Strom, gestresst, Druck, Wut</span></button>' +
       '<p style="' + q + '">Wie stark war der Urge? <b id="frv">' + (D.strength || 5) + '</b> von 10</p>' +
       '<input type="range" id="frng" min="1" max="10" value="' + (D.strength || 5) + '" aria-label="Stärke des Urge von 1 bis 10">' +
       '<p style="' + q + '">Was hat ihn ausgelöst?</p>' + trigBox() +
+      '<p style="' + q + '">Welche Lügen hat dir dein Gehirn erzählt?</p>' + liesBox() +
       '<p style="' + q + '">Was hat dir gefehlt?</p>' + missBox();
   }
   S.fall = function () {
@@ -1063,8 +1067,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var nt = document.getElementById('newtrig');
     if (nt) { nt.value = D.newtrig || ''; nt.addEventListener('input', function () { D.newtrig = nt.value; }); }
     var nl = document.getElementById('newlie');
-    if (nl && cur === 'place') { nl.value = D.newlie || ''; nl.addEventListener('input', function () { D.newlie = nl.value; }); }
-    if (cur === 'place') nLoadLies();
+    if (nl && (cur === 'place' || cur === 'fall')) { nl.value = D.newlie || ''; nl.addEventListener('input', function () { D.newlie = nl.value; }); }
+    if (cur === 'place' || cur === 'fall') nLoadLies();
     var nm = document.getElementById('newmiss');
     if (nm) { nm.value = D.newmiss || ''; nm.addEventListener('input', function () { D.newmiss = nm.value; }); }
     var fr = document.getElementById('frng');

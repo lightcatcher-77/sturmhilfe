@@ -145,7 +145,7 @@ h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -.01em; text-
     return [
       { id: uid(), title: 'Ich spüre einen Urge', note: 'Hauptablauf in drei Phasen. Ein Zurück-Pfeil führt einen Schritt zurück, das X bricht ab.', steps: [
         S('Stärke', 'Wie stark ist der Urge? Blob und Regler 1 bis 10.', 'Weiter', 'slider', 'Erkennen'),
-        S('Ort', 'Wo bist du? Chips für den Ort, eigene Orte unter „Woanders“ (dauerhaft gespeichert), dazu: allein ja oder nein und „Was fehlt dir gerade?“ (Zeit mit Gott, Gemeinschaft, Nähe, Quality Time, Positive Bestätigung, Ruhe, plus freies Feld für neue Kategorien). Wird in Notion als „Gefehlt“ getrackt.', 'Weiter', 'chips', 'Erkennen'),
+        S('Ort', 'Wo bist du? Chips für den Ort, eigene Orte unter „Woanders“ (dauerhaft gespeichert), dazu: allein ja oder nein, „Was hat den Urge ausgelöst?“ (Gedanken an eine Frau aus meinem Umfeld, Muss zum nächsten Termin, Kritik, Überforderung, plus freies Feld, eigene Einträge bleiben gespeichert) und „Was fehlt dir gerade?“ (Zeit mit Gott, Gemeinschaft, Nähe, Quality Time, Positive Bestätigung, Ruhe, plus freies Feld für neue Kategorien). Wird in Notion als „Gefehlt“ getrackt.', 'Weiter', 'chips', 'Erkennen'),
         S('Biochemie', 'Dopamin, Dynorphin, Willenskraft: drei kurze Punkte.', 'Weiter', 'list', 'Erkennen'),
         S('Sehen, Wollen, Nehmen', 'Drei Stufen wählen. Darunter erscheint die passende Antwort.', 'Weiter', 'choices', 'Erkennen'),
         S('Zustand', 'Nur zwei Kästen mit Beschreibung: Dorsal oder Fight Mode. Kein Weiter-Button: Die Wahl eines Modus führt direkt zur nächsten Folie, den Schritten des gewählten Modus (siehe die zwei Abläufe darunter).', '', 'choices', 'Erkennen'),
@@ -178,7 +178,7 @@ h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -.01em; text-
       { id: uid(), title: 'Modus Fight Mode', note: 'Folgt auf „Zustand“, wenn Fight Mode gewählt ist. Danach geht es mit „Welle reiten“ weiter. Jede Folie hat eine sanft animierte Szene im Stil der Welle bei „Welle reiten“ (Beten das Jesus-Bild).', steps: [
         S('Atem wählen', '30 Sekunden, 1, 2 oder 3 Minuten.', 'Überspringen', 'choices', 'Verbinden'),
         S('Atmen', 'Vollbild. Vier Sekunden ein, sechs aus, Welle und Countdown.', 'Überspringen', 'timer', 'Verbinden', 'Vollbild'),
-        S('Aussprechen', 'Laut sagen, was mich gerade stresst. Auswahlfeld mit Beispielen (Gedanken an eine Frau aus meinem Umfeld, Muss zum nächsten Termin, Kritik, Überforderung) und freiem Feld. Eigene Einträge bleiben für die Zukunft gespeichert.', 'Weiter', 'chips', 'Verbinden', 'schreibt Notion'),
+        S('Aussprechen', 'Laut sagen, was mich gerade stresst. Die Auswahl der Auslöser steht jetzt auf der Folie „Ort“.', 'Weiter', 'text', 'Verbinden'),
         S('Beten', 'Such Gott. Ein kurzes Gebet reicht. Darunter das Bild von Christus am Kreuz.', 'Weiter', 'text', 'Verbinden'),
         S('Die drei Sätze', 'Die drei Sätze laut sagen.', 'Weiter', 'text', 'Verbinden'),
         S('Schnell bewegen', 'So schnell bewegen, bis der Druck sinkt.', 'Weiter', 'text', 'Verbinden')
@@ -187,7 +187,7 @@ h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -.01em; text-
         S('Die Scham ist die Falle', 'Kurzer Text, glaub der Stimme nicht.', 'Weiter', 'text'),
         S('Geh zu Christus', 'Er wendet sich nicht ab.', 'Weiter', 'text'),
         S('Sag jemandem Bescheid', 'Eigene Nachricht für den Rückfall zum Kopieren: „Ich bin gefallen. Ich verstecke mich nicht und sage dir deshalb Bescheid.“ Getrennt von der Urge-Nachricht, beide bearbeitbar.', 'Weiter', 'input'),
-        S('Was war davor los?', 'Optional, für die Muster in Notion: Worin bist du gefallen (Auswahl aus der Zone Enthaltsamkeit: Bilder, Edging, Pornografie, Masturbation, wird in der Recovery Zone von heute als Rückschlag eingetragen), Ort, allein, Stufe (Sehen, Wollen, Nehmen), Stärke des Urge, Auslöser (gleiche Auswahl wie bei „Aussprechen“) und „Was hat dir gefehlt?“ (Zeit mit Gott, Gemeinschaft, Nähe, Quality Time, Positive Bestätigung, Ruhe, plus freies Feld für neue Kategorien, die gespeichert bleiben). Alles wird als Auswahl-Eigenschaft in Notion gepflegt und ist auswertbar.', 'Weiter', 'chips', '', 'schreibt Notion'),
+        S('Was war davor los?', 'Optional, für die Muster in Notion: Worin bist du gefallen (Auswahl aus der Zone Enthaltsamkeit: Bilder, Edging, Pornografie, Masturbation, wird in der Recovery Zone von heute als Rückschlag eingetragen), Ort, allein, Stufe (Sehen, Wollen, Nehmen), Stärke des Urge, Auslöser (gleiche Auswahl wie bei „Ort“) und „Was hat dir gefehlt?“ (Zeit mit Gott, Gemeinschaft, Nähe, Quality Time, Positive Bestätigung, Ruhe, plus freies Feld für neue Kategorien, die gespeichert bleiben). Alles wird als Auswahl-Eigenschaft in Notion gepflegt und ist auswertbar.', 'Weiter', 'chips', '', 'schreibt Notion'),
         S('Mitgefühl', 'Die drei Sätze langsam sagen.', 'Als Rückfall speichern / Nicht speichern', 'text', '', 'schreibt Notion')
       ] },
       { id: uid(), title: 'Recovery Zone eintragen', note: 'Heute oder gestern, direkt in die Notion-Datenbank.', steps: [

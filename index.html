@@ -615,6 +615,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen, z. B. Bei Oma" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40">' : '') +
       '<p style="margin-top:10px;font-weight:600">Bist du gerade allein?</p>' +
       '<div class="seg"><button class="chip' + (D.alone === true ? ' sel' : '') + '" data-alone="1">Ja</button><button class="chip' + (D.alone === false ? ' sel' : '') + '" data-alone="0">Nein</button></div>' +
+      '<p style="margin-top:10px;font-weight:600">Was hat den Urge ausgelöst?</p>' + trigBox() +
       '<p style="margin-top:10px;font-weight:600">Was fehlt dir gerade?</p>' + missBox() +
       '</div><div class="grow"></div>' +
       '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
@@ -670,7 +671,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       { ic: 'colors', h: 'Raum und Farben wahrnehmen', p: 'Schau dich um. Benenne, was du an Farben und Dingen im Raum siehst.' },
       { ic: 'ball', h: 'Skill nutzen', p: 'Nutze einen Skill zur Emotionsregulation, zum Beispiel einen Knetball.' },
       { ic: 'people', h: 'Gemeinschaft suchen', p: 'Geh zu Menschen oder ruf jemanden an.' }],
-    fight: [{ t: 'breath' }, { ic: 'speak', h: 'Aussprechen', p: 'Sag laut, was dich gerade stresst.', trig: true }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent', ic: 'book' }, { ic: 'bolt', h: MOVE[0], p: MOVE[1] }]
+    fight: [{ t: 'breath' }, { ic: 'speak', h: 'Aussprechen', p: 'Sag laut, was dich gerade stresst.' }, { h: PRAY[0], p: PRAY[1], img: true }, { t: 'sent', ic: 'book' }, { ic: 'bolt', h: MOVE[0], p: MOVE[1] }]
   };
   function MSTEPS() { return MODE_STEPS[D.mode] || []; }
   function afterBreath() { var j = (D.mi || 0) + 1; go(j < MSTEPS().length ? 'm' + j : 'wave', true); }

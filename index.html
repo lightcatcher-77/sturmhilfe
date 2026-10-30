@@ -402,11 +402,11 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if ((D.miss || []).length) q['Gefehlt'] = D.miss.map(clean);
     var w = Object.keys(D.conn || {}).map(function (k) { return CONN_NAMES[k]; }).filter(Boolean);
     if (w.length) q['Wege'] = w;
-    if ((D.liesSel || []).length) q['Lügen'] = D.liesSel.map(clean).join('; ');
+    if ((D.liesSel || []).length) q['Lügen'] = D.liesSel.map(clean);
     return q;
   }
   // Notion legt neue Auswahl-Optionen nicht selbst an: Vor dem Eintragen werden fehlende Optionen in der Datenbank ergänzt.
-  var SEL = { 'Ort': 'SELECT', 'Auslöser': 'MULTI_SELECT', 'Gefehlt': 'MULTI_SELECT' };
+  var SEL = { 'Ort': 'SELECT', 'Auslöser': 'MULTI_SELECT', 'Gefehlt': 'MULTI_SELECT', 'Lügen': 'MULTI_SELECT' };
   function nEvSchema() {
     return N.mcp.callTool('Notion', 'notion-fetch', { id: 'collection://' + EV_DS }, { cache: false }).then(function (r) {
       var pl = nData(r), t = String((pl && pl.text) || (typeof pl === 'string' ? pl : ''));
@@ -544,6 +544,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
   function next() {
     if (/^m\d+$/.test(cur)) { var j = +cur.slice(1) + 1; go(j < MSTEPS().length ? 'm' + j : 'wave'); return; }
+    if (cur === 'svn' && D.mode) { go('m0'); return; }
     var i = FLOW.indexOf(cur); go(FLOW[i + 1]);
   }
   function home() { stopTimer(); stack = []; D = {}; cur = 'home'; render(); }
@@ -645,6 +646,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (known) { D.place = known; return; }
     DB.places = (DB.places || []).concat(v); D.place = v; save();
   }
+  function liesBox() {
+    D.liesSel = D.liesSel || [];
+    return (N.liesBusy && !N.lies ? '<p class="note">Lade deine Gedanken aus Notion …</p>' : '') + (N.liesErr ? '<p class="note">' + esc(N.liesErr) + '</p>' : '') +
+      '<div class="chips">' + allLies().map(function (l) { return '<button class="chip' + (D.liesSel.indexOf(l) >= 0 ? ' sel' : '') + '" data-lie="' + esc(l) + '">' + esc(l) + '</button>'; }).join('') + '</div>' +
+      '<div class="row"><input type="text" id="newlie" placeholder="Neue Lüge hinzufügen" aria-label="Neue Lüge" maxlength="120"><button class="btn ghost small" data-act="addLie">Hinzufügen</button></div>' +
+      (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '');
+  }
   S.place = function () {
     return '<div class="stack"><h2>Gut erkannt. Jetzt prüfen wir die Lage.</h2>' +
       '<p class="lead" style="margin:0">Wo bist du gerade? Sei so genau wie möglich.</p>' +
@@ -652,7 +660,11 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       (D.place === 'Woanders' ? '<input type="text" id="newplace" placeholder="Ort eintragen, z. B. Bei Oma" value="' + esc(D.custom || '') + '" aria-label="Neuer Ort" maxlength="40">' : '') +
       '<p style="margin-top:10px;font-weight:600">Bist du gerade allein?</p>' +
       '<div class="seg"><button class="chip' + (D.alone === true ? ' sel' : '') + '" data-alone="1">Ja</button><button class="chip' + (D.alone === false ? ' sel' : '') + '" data-alone="0">Nein</button></div>' +
+      '<p style="margin-top:10px;font-weight:600">Aus welchem Zustand kommt die Lust?</p>' +
+      '<button class="choice' + (D.mode === 'dorsal' ? ' sel' : '') + '" data-pmode="dorsal"><b>Dorsal</b><span>Rückzug, schwer, leer, abgeschaltet</span></button>' +
+      '<button class="choice' + (D.mode === 'fight' ? ' sel' : '') + '" data-pmode="fight"><b>Fight Mode</b><span>Unter Strom, gestresst, Druck, Wut</span></button>' +
       '<p style="margin-top:10px;font-weight:600">Was hat den Urge ausgelöst?</p>' + trigBox() +
+      '<p style="margin-top:10px;font-weight:600">Welche Lügen erzählt dir dein Gehirn gerade?</p>' + liesBox() +
       '<p style="margin-top:10px;font-weight:600">Was fehlt dir gerade?</p>' + missBox() +
       '</div><div class="grow"></div>' +
       '<div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
@@ -1047,6 +1059,9 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; wpChanged(); }); }
     var nt = document.getElementById('newtrig');
     if (nt) { nt.value = D.newtrig || ''; nt.addEventListener('input', function () { D.newtrig = nt.value; }); }
+    var nl = document.getElementById('newlie');
+    if (nl && cur === 'place') { nl.value = D.newlie || ''; nl.addEventListener('input', function () { D.newlie = nl.value; }); }
+    if (cur === 'place') nLoadLies();
     var nm = document.getElementById('newmiss');
     if (nm) { nm.value = D.newmiss || ''; nm.addEventListener('input', function () { D.newmiss = nm.value; }); }
     var fr = document.getElementById('frng');
@@ -1078,7 +1093,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       var known = allLies().filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
       D.liesSel = D.liesSel || [];
       if (known) { if (D.liesSel.indexOf(known) < 0) D.liesSel.push(known); D.liesNote = 'Diese Lüge gibt es schon, sie ist ausgewählt.'; render(); return; }
-      DB.lies = (DB.lies || []).concat(v); save(); D.liesSel.push(v); D.liesNote = 'Gespeichert.'; render(); nAddLie(v);
+      DB.lies = (DB.lies || []).concat(v); save(); D.liesSel.push(v); D.liesNote = 'Gespeichert.'; D.newlie = ''; render(); nAddLie(v);
     },
     connDone: function (el) { if (el.getAttribute('data-k') === 'lies') { N.liesLogNote = ''; nLogLies(D.liesSel || []); } markConn(el.getAttribute('data-k')); D.cx = 0; D.lx = 0; D.cbx = 0; history_pop(); },
     addPlan: function () { var i = document.getElementById('newplan'), v = i.value.trim(); if (v) { DB.plan.push(v); wpChanged(); render(); } },
@@ -1138,6 +1153,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (el.dataset.alone !== undefined) { D.alone = el.dataset.alone === '1'; render(); return; }
     if (el.dataset.svn !== undefined) { D.svn = +el.dataset.svn; render(); return; }
     if (el.dataset.mode) { D.mode = el.dataset.mode; next(); return; }
+    if (el.dataset.pmode) { D.mode = el.dataset.pmode; render(); return; }
     if (el.dataset.min) { D.mins = +el.dataset.min; D.breathSec = Math.round(D.mins * 60); go('breath'); return; }
     if (el.dataset.pick !== undefined) { D.next = DB.plan[+el.dataset.pick]; render(); return; }
     if (el.dataset.del !== undefined) { DB.plan.splice(+el.dataset.del, 1); wpChanged(); render(); return; }

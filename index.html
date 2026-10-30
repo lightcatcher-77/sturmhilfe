@@ -407,7 +407,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if ((D.trig || []).length) q['Auslöser'] = D.trig.map(clean);
     var w = Object.keys(D.conn || {}).map(function (k) { return CONN_NAMES[k]; }).filter(Boolean);
     if (w.length) q['Wege'] = w;
-    if ((D.liesSel || []).length) q['Lügen'] = D.liesSel.map(clean).join('; ');
+    // "Lügen" ist eine Relation zur Gedanken-Statistik: die Namen werden erst beim Senden in Seiten-URLs aufgelöst.
+    if ((D.liesSel || []).length) q['_lies'] = D.liesSel.slice();
     return q;
   }
   // Ereignisse werden erst gemerkt und dann gesendet, damit nichts verloren geht, wenn Notion gerade nicht antwortet.
@@ -415,8 +416,14 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function nEvent(held) { DB.pend = (DB.pend || []).concat([evProps(held)]); save(); flushEv(); }
   function flushEv() {
     if (!N.mcp || evBusy || !(DB.pend || []).length) return;
+    var props = {}, ev = DB.pend[0];
+    Object.keys(ev).forEach(function (k) { if (k !== '_lies') props[k] = ev[k]; });
+    var urls = (ev._lies || []).map(function (l) { return (N.liesMap || {})[l]; }).filter(Boolean);
+    // Solange die Gedanken-Liste noch nicht geladen ist, nicht senden, sonst gingen die Lügen verloren.
+    if ((ev._lies || []).length && !N.liesMap && !N.liesErr) { nLoadLies(); return; }
+    if (urls.length) props['Lügen'] = urls;
     evBusy = true;
-    N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: EV_DS }, pages: [{ properties: DB.pend[0] }] }, { cache: false })
+    N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: EV_DS }, pages: [{ properties: props }] }, { cache: false })
       .then(function () { DB.pend.shift(); save(); evBusy = false; flushEv(); }, function () { evBusy = false; });
   }
   var S = {};
@@ -762,7 +769,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
         N.lies = rows.map(function (x) { return (x['Gedanke'] || '').trim(); }).filter(Boolean);
       },
         function (e) { N.liesErr = nErr(e); })
-      .then(function () { N.liesBusy = false; if (cur === 'lies') render(); });
+      .then(function () { N.liesBusy = false; if (cur === 'lies') render(); flushEv(); });
   }
   function nAddLie(v) {
     if (!N.mcp) return;

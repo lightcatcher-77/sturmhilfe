@@ -198,6 +198,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   .chem .line { stroke-dashoffset: 0; } .chem .tick, .chem .tlbl { opacity: 1; } .chem .crave { opacity: .18; } .chem .dot { display: none; } .chem-rows p { opacity: 1; }
 }
 
+/* Blasen */
+.bubbles { display: flex; flex-wrap: wrap; gap: 12px 10px; justify-content: center; padding: 14px 0 4px; min-height: 190px; align-content: flex-start; }
+.bub { border: 1px solid #2bc6c0; background: rgba(43, 198, 192, .16); color: var(--fg); border-radius: 999px; padding: 12px 18px; min-height: 44px; max-width: 100%; text-align: center; animation: bob var(--d, 5s) ease-in-out var(--dl, 0s) infinite alternate; }
+.bub.sel { background: #2bc6c0; color: #05302f; border-color: #2bc6c0; font-weight: 600; box-shadow: 0 0 18px rgba(43, 198, 192, .45); }
+@keyframes bob { 0% { transform: translate(0, 0); } 50% { transform: translate(calc(var(--dx, 8px) * .4), calc(var(--dy, -16px) * 1.1)); } 100% { transform: translate(var(--dx, 8px), var(--dy, -16px)); } }
+@media (prefers-reduced-motion: reduce) { .bub { animation: none; } }
 /* Kreuz */
 .csteps { display: grid; gap: 22px; width: 100%; }
 .cstep { opacity: 0; transform: translateY(10px); animation: cfade 1.4s ease forwards; }
@@ -266,7 +272,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   var K = 'sturmhilfe.v1';
   var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
   var FALL_MSG = 'Ich bin gefallen. Ich verstecke mich nicht und sage dir deshalb Bescheid. Bitte bete für mich und frag später nach, wie es mir geht.';
-  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], trig: [], miss: [], lies: ['Lieber Masturbieren als Pornos', 'Nur dieses eine Mal', 'Ich brauche das gegen Stress', 'Ich bin eh schon gescheitert', 'Morgen fange ich neu an', 'Es ist egal', 'Ich habe es mir verdient', 'Nur kurz schauen', 'Zu müde zum Kämpfen', 'Ist doch nicht so schlimm', 'Ich habe es im Griff', 'Es merkt ja keiner'], truths: {}, cbi: ['', '', '', ''] };
+  var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], bubbles: ['Sicherheit bieten'], trig: [], miss: [], lies: ['Lieber Masturbieren als Pornos', 'Nur dieses eine Mal', 'Ich brauche das gegen Stress', 'Ich bin eh schon gescheitert', 'Morgen fange ich neu an', 'Es ist egal', 'Ich habe es mir verdient', 'Nur kurz schauen', 'Zu müde zum Kämpfen', 'Ist doch nicht so schlimm', 'Ich habe es im Griff', 'Es merkt ja keiner'], truths: {}, cbi: ['', '', '', ''] };
   try { var raw = MEM.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}
   function save() { DB.ts = Date.now(); try { MEM.setItem(K, JSON.stringify(DB)); } catch (e) {} cloudSave(); }
 
@@ -285,6 +291,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     log.sort(function (a, b) { return a.t - b.t; });
     if ((rem.ts || 0) > (DB.ts || 0)) { DB.why = rem.why || ''; DB.plan = rem.plan || DB.plan; DB.msg = rem.msg || DB.msg; DB.fmsg = rem.fmsg || DB.fmsg; DB.cbi = rem.cbi || DB.cbi; DB.ts = rem.ts; }
     DB.log = log;
+    var bb = (DB.bubbles || []).slice(); (rem.bubbles || []).forEach(function (x) { if (bb.indexOf(x) < 0) bb.push(x); }); DB.bubbles = bb;
     var ll = (DB.lies || []).slice(); (rem.lies || []).forEach(function (x) { if (ll.indexOf(x) < 0) ll.push(x); }); DB.lies = ll;
     DB.truths = Object.assign({}, rem.truths || {}, DB.truths || {});
     var ms = (DB.miss || []).slice(); (rem.miss || []).forEach(function (x) { if (ms.indexOf(x) < 0) ms.push(x); }); DB.miss = ms;
@@ -439,10 +446,11 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var w = Object.keys(D.conn || {}).map(function (k) { return CONN_NAMES[k]; }).filter(Boolean);
     if (w.length) q['Wege'] = w;
     if ((D.liesSel || []).length) q['Lügen'] = D.liesSel.map(clean);
+    if ((D.loveSel || []).length) q['Ich will sein'] = D.loveSel.map(clean);
     return q;
   }
   // Notion legt neue Auswahl-Optionen nicht selbst an: Vor dem Eintragen werden fehlende Optionen in der Datenbank ergänzt.
-  var SEL = { 'Ort': 'SELECT', 'Auslöser': 'MULTI_SELECT', 'Gefehlt': 'MULTI_SELECT', 'Lügen': 'MULTI_SELECT' };
+  var SEL = { 'Ich will sein': 'MULTI_SELECT', 'Ort': 'SELECT', 'Auslöser': 'MULTI_SELECT', 'Gefehlt': 'MULTI_SELECT', 'Lügen': 'MULTI_SELECT' };
   function nEvSchema() {
     return N.mcp.callTool('Notion', 'notion-fetch', { id: 'collection://' + EV_DS }, { cache: false }).then(function (r) {
       var pl = nData(r), t = String((pl && pl.text) || (typeof pl === 'string' ? pl : ''));
@@ -934,11 +942,16 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function markConn(k) { D.conn = D.conn || {}; D.conn[k] = true; }
 
   S.love = function () {
+    var sel = D.loveSel = D.loveSel || [], list = DB.bubbles || [];
     return '<div class="stack"><p class="kicker">Zu einem Menschen, den ich liebe</p>' +
       '<div class="verse">Hol deine zukünftige Partnerin vor Augen.</div>' +
       '<p class="lead" style="margin:0">Spür die Wärme und bleib dort. Lass dir Zeit.</p>' +
       '<div class="card"><p class="serif" style="font-size:22px;line-height:1.3">Welcher Mensch möchte ich für sie sein?</p></div>' +
-      '<p class="note">Ohne Scham. Es geht nicht darum, perfekt zu sein, sondern darum, wer du für sie werden willst.</p></div>' +
+      '<div class="bubbles">' + list.map(function (b, k) {
+        return '<button class="bub' + (sel.indexOf(b) >= 0 ? ' sel' : '') + '" data-bub="' + esc(b) + '" style="--d:' + (4 + (k * 7) % 4) + 's;--dl:-' + ((k * 13) % 7) + 's;--dx:' + ((((k * 5) % 13) - 6) * 2) + 'px;--dy:-' + (16 + (k * 3) % 12) + 'px">' + esc(b) + '</button>';
+      }).join('') + '</div>' +
+      '<div class="row"><input type="text" id="newbub" placeholder="Neue Blase, z. B. geduldig sein" aria-label="Neue Blase" maxlength="40"><button class="btn small" data-act="addBub" style="width:auto">Hinzufügen</button></div>' +
+      '<p class="note">Tippe an, was du für sie sein willst. Neue Blasen bleiben dauerhaft gespeichert.</p></div>' +
       '<div class="grow"></div><div class="foot"><button class="btn" data-act="connDone" data-k="love">Fertig</button></div>';
   };
 
@@ -1135,6 +1148,14 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     breathSkip: function () { afterBreath(); },
     crossNext: function () { D.cx = (D.cx || 0) + 1; render(); },
     fallNext: function () { if (D.fx === 3) commitPlace(); D.fx = (D.fx || 0) + 1; render(); },
+    addBub: function () {
+      var i = document.getElementById('newbub'), v = i.value.trim().slice(0, 40); if (!v) return;
+      var known = (DB.bubbles || []).filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
+      D.loveSel = D.loveSel || [];
+      if (!known) { DB.bubbles = (DB.bubbles || []).concat(v); save(); if (N.mcp) nEnsureOpts({ 'Ich will sein': [clean(v)] }).catch(function () {}); }
+      var use = known || v; if (D.loveSel.indexOf(use) < 0) D.loveSel.push(use);
+      render();
+    },
     cbNext: function () { D.cbx = (D.cbx || 0) + 1; render(); window.scrollTo(0, 0); },
     liesNext: function () { if ((D.liesSel || []).length) { D.lx = 1; render(); window.scrollTo(0, 0); } },
     liesSkip: function () { D.lx = 0; history_pop(); },
@@ -1190,6 +1211,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (el.dataset.act) { ACT[el.dataset.act](el); return; }
     if (el.dataset.go === 'zone') { D = {}; Z.day = 0; Z.msg = ''; go('zone'); zLoad(); return; }
     if (el.dataset.lie !== undefined) { var li = el.dataset.lie, ix = (D.liesSel = D.liesSel || []).indexOf(li); if (ix >= 0) D.liesSel.splice(ix, 1); else D.liesSel.push(li); D.liesNote = ''; render(); return; }
+    if (el.dataset.bub !== undefined) { var bu = el.dataset.bub, bi = (D.loveSel = D.loveSel || []).indexOf(bu); if (bi >= 0) D.loveSel.splice(bi, 1); else D.loveSel.push(bu); render(); return; }
     if (el.dataset.zday !== undefined) { Z.day = +el.dataset.zday; zLoad(); return; }
     if (el.dataset.zs) { var pr = el.dataset.zs.split('|'); Z.vals[pr[0]] = STATE[pr[1]]; Z.msg = ''; render(); return; }
     if (el.dataset.zall) { ZONES.forEach(function (z) { if (z[0] === el.dataset.zall) z[1].forEach(function (k) { Z.vals[k] = STATE.ok; }); }); Z.msg = ''; render(); return; }

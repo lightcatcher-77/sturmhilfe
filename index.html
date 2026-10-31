@@ -491,15 +491,19 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (!N.mcp || evBusy || !(DB.pend || []).length) return;
     evBusy = true;
     var it = DB.pend[0];
-    nEnsureOpts(it.p).then(null, function () {}).then(function () {
+    // Hängt Notion länger als 60 Sekunden, wird der Versuch abgebrochen und später erneut gestartet, statt ewig zu warten.
+    var lim = new Promise(function (_, rej) { setTimeout(function () { rej({ code: 'timeout' }); }, 60000); });
+    Promise.race([nEnsureOpts(it.p).then(null, function () {}).then(function () {
       return N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: EV_DS }, pages: [{ properties: it.p }] }, { cache: false });
-    }).then(function () { DB.pend.shift(); N.evErr = ''; save(); evBusy = false; if (cur === 'home' || cur === 'end') render(); flushEv(); },
+    }), lim]).then(function () { DB.pend.shift(); N.evErr = ''; save(); evBusy = false; if (cur === 'home' || cur === 'end' || cur === 'fallend') render(); flushEv(); },
       function (e) {
-        evBusy = false; N.evErr = nErr(e); it.n = (it.n || 0) + 1;
+        evBusy = false; N.evErr = e && e.code === 'timeout' ? 'Notion hat nicht rechtzeitig geantwortet.' : nErr(e); it.n = (it.n || 0) + 1; it.err = N.evErr;
         if (it.n >= 3) { DB.failed = (DB.failed || []).concat([it]); DB.pend.shift(); }
-        save(); if (cur === 'home' || cur === 'end') render();
+        save(); if (cur === 'home' || cur === 'end' || cur === 'fallend') render();
+        if ((DB.pend || []).length) setTimeout(flushEv, 8000);
       });
   }
+  function evRetry() { N.reTried = false; N.evErr = ''; flushEv(); if (cur === 'home' || cur === 'end' || cur === 'fallend') render(); }
   // Setzt die gewählten Punkte der Zone Enthaltsamkeit in der heutigen Zeile auf Rückschlag.
   function nMarkFall(items) {
     if (!N.mcp || !items.length) return;
@@ -512,7 +516,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     }).then(function () { N.markNote = 'In der Recovery Zone von heute als Rückschlag eingetragen: ' + items.join(', ') + '.'; nFresh(); nLoadHist(); if (cur === 'home') render(); },
       function (e) { N.markNote = e && e.code === 'no_row' ? 'Für heute gibt es in der Recovery Zone keine Zeile, daher wurde dort nichts als Rückschlag eingetragen.' : 'In der Recovery Zone konnte nichts eingetragen werden. ' + nErr(e); if (cur === 'home') render(); });
   }
-  function evStatus() { return N.evErr && (DB.pend || []).length ? '<p class="note" role="status">Ein Eintrag konnte noch nicht nach Notion geschrieben werden. ' + esc(N.evErr) + ' Es wird beim nächsten Öffnen erneut versucht.</p>' : ''; }
+  // Zeigt, solange ein Ereignis noch nicht in Notion steht, einen Hinweis (nicht schließen), und bei endgültigem Scheitern den Grund mit Knopf zum erneuten Senden.
+  function evStatus() {
+    var p = (DB.pend || []).length, f = (DB.failed || []).length, out = '';
+    if (p) out += '<p class="note" role="status">' + (p === 1 ? 'Ein Eintrag wird' : p + ' Einträge werden') + ' noch nach Notion geschrieben. Bitte schließe die App erst, wenn dieser Hinweis verschwunden ist.' + (N.evErr ? ' Letzter Fehler: ' + esc(N.evErr) : '') + '</p>';
+    if (f) out += '<div class="card stack"><p class="note" role="status">' + (f === 1 ? 'Ein Eintrag konnte' : f + ' Einträge konnten') + ' nicht nach Notion geschrieben werden' + (DB.failed[f - 1].err ? ': ' + esc(DB.failed[f - 1].err) : '.') + '</p><button class="btn ghost small" data-act="evRetry" style="width:auto">Erneut senden</button></div>';
+    return out;
+  }
   var S = {};
   /* ---------- Recovery Zone eintragen ---------- */
   var ZONES = [
@@ -1267,6 +1277,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       stack = []; cur = 'end'; render();
     },
     zoneSave: zSave,
+    evRetry: evRetry,
     nRetry: function () { N.histErr = ''; nLoadHist(); wpLoad(); render(); },
     addMiss: function () {
       var v = (D.newmiss || '').trim().slice(0, 40); if (!v) return;

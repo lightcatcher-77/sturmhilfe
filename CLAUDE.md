@@ -9,6 +9,9 @@ Die App liegt in `index.html` und zusätzlich als drei veröffentlichte Claude-A
 
 Vorgehen: Artefakt mit `Artifact read` lesen, die gleichen Änderungen auf die gespeicherte Datei anwenden (Live und Demo unterscheiden sich von `index.html` nur im Wrapper, bei Demo zusätzlich in den Stellen mit `MEM`, `if (false)` und der Lügenliste), Syntax mit `node --check` prüfen und unter derselben URL veröffentlichen.
 
+## GitHub Pages
+Die GitHub Page (`https://lightcatcher-77.github.io/sturmhilfe/`) muss aktuell nicht aktualisiert werden. Kein Merge nach `main`, kein Pull Request und kein Hinweis darauf nötig, nur wenn ausdrücklich verlangt. Maßgeblich sind zurzeit die Artefakte; `index.html` im Repo wird trotzdem mitgepflegt.
+
 ## Lügen und Wahrheiten
 - Lügen kommen aus der Notion-Datenbank „Gedanken-Statistik“ (Spalte `Gedanke`), die Wahrheit steht in der Spalte `Wahrheit`.
 - Fallback sind die Texte in `LIE_TRUTHS` in `index.html`. Neue Lüge: in Notion anlegen, `LIE_TRUTHS` ergänzen und im Demo-Artefakt in `DB.lies` aufnehmen.

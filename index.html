@@ -299,6 +299,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var bb = (DB.bubbles || []).slice(); (rem.bubbles || []).forEach(function (x) { if (bb.indexOf(x) < 0) bb.push(x); }); DB.bubbles = bb;
     var ll = (DB.lies || []).slice(); (rem.lies || []).forEach(function (x) { if (ll.indexOf(x) < 0) ll.push(x); }); DB.lies = ll;
     DB.truths = Object.assign({}, rem.truths || {}, DB.truths || {});
+    DB.genTruths = Object.assign({}, rem.genTruths || {}, DB.genTruths || {});
     var ms = (DB.miss || []).slice(); (rem.miss || []).forEach(function (x) { if (ms.indexOf(x) < 0) ms.push(x); }); DB.miss = ms;
     var tg = (DB.trig || []).slice(); (rem.trig || []).forEach(function (x) { if (tg.indexOf(x) < 0) tg.push(x); }); DB.trig = tg;
     var pl = (DB.places || []).slice(); (rem.places || []).forEach(function (x) { if (pl.indexOf(x) < 0) pl.push(x); }); DB.places = pl;
@@ -606,8 +607,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       for (var i = 0; i < 3; i++) h += '<div class="phase ' + (i === p ? 'on' : i < p ? 'done' : '') + '"><i></i>' + PHASES[i] + '</div>';
     }
     document.getElementById('phases').innerHTML = h;
-    document.getElementById('back').hidden = (cur === 'home' || cur === 'end' || cur === 'breath' || !stack.length);
-    document.getElementById('close').hidden = (cur === 'home' || cur === 'end');
+    document.getElementById('back').hidden = (cur === 'home' || cur === 'end' || cur === 'fallend' || cur === 'breath' || !stack.length);
+    document.getElementById('close').hidden = (cur === 'home' || cur === 'end' || cur === 'fallend');
   }
 
   /* ---------- Screens ---------- */
@@ -701,7 +702,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return (N.liesBusy && !N.lies ? '<p class="note">Lade deine Gedanken aus Notion …</p>' : '') + (N.liesErr ? '<p class="note">' + esc(N.liesErr) + '</p>' : '') +
       '<div class="chips">' + allLies().map(function (l) { return '<button class="chip' + (D.liesSel.indexOf(l) >= 0 ? ' sel' : '') + '" data-lie="' + esc(l) + '">' + esc(l) + '</button>'; }).join('') + '</div>' +
       '<div class="row"><input type="text" id="newlie" placeholder="Neue Lüge hinzufügen" aria-label="Neue Lüge" maxlength="120"><button class="btn ghost small" data-act="addLie">Hinzufügen</button></div>' +
-      (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '');
+      trBox() + (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '');
   }
   S.place = function () {
     return '<div class="stack"><h2>Gut erkannt. Jetzt prüfen wir die Lage.</h2>' +
@@ -868,6 +869,76 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 
   /* ---------- Lügen erkennen (Gedanken aus Notion, eigene Lügen dauerhaft) ---------- */
   var LIES_VIEW = 'view://c2aa066d-043f-4194-9e2d-4059aecba3f4', LIES_DS = 'eb11de36-ac3b-49ff-a832-271db0ecd1dd';
+  // Passende Wahrheit zu jeder Lüge. Eigene Antworten aus „Lügen erkennen“ (DB.truths) werden zusätzlich gezeigt.
+  var LIE_TRUTHS = {
+    'Lieber Masturbieren als Pornos': 'Beides nährt denselben Kreislauf. Es gibt kein kleineres Übel, nur den nächsten Schritt von Sehen zu Nehmen (Jakobus 1,15). Christus ruft mich in die Freiheit, nicht in einen Kompromiss.',
+    'Nur dieses eine Mal': 'Es bleibt nie bei einem Mal, das hat mir die Erfahrung gezeigt. „Die Gnade genügt dir“ (2. Korinther 12,9). Gott gibt mir jetzt die Kraft, Nein zu sagen.',
+    'Ich brauche das gegen Stress': 'Es löst den Stress nicht, es bringt Leere und Scham dazu. Meine Last darf ich bei Jesus abladen: „Kommt her zu mir, alle, die ihr mühselig und beladen seid“ (Matthäus 11,28).',
+    'Ich bin eh schon gescheitert': 'Ein Fall macht mich nicht zum Gescheiterten. „Der Gerechte fällt siebenmal und steht wieder auf“ (Sprüche 24,16). Gottes Barmherzigkeit ist jeden Morgen neu (Klagelieder 3,22-23).',
+    'Morgen fange ich neu an': 'Gott schenkt mir den Neuanfang heute, im jetzigen Moment. „Heute, wenn ihr seine Stimme hört, verhärtet eure Herzen nicht“ (Hebräer 3,15).',
+    'Es ist egal': 'Es ist Gott nicht egal, denn ich bin ihm nicht egal. Mein Leib ist ein Tempel des Heiligen Geistes (1. Korinther 6,19), und mein Herz, meine Zukunft und meine Beziehungen sind es wert, geschützt zu werden.',
+    'Ich habe es mir verdient': 'Ich verdiene Liebe und Ruhe, und die finde ich bei Gott, nicht in diesem Verlangen. Es verspricht Belohnung und liefert Leere. Er sättigt, was wirklich hungrig ist (Psalm 107,9).',
+    'Nur kurz schauen': 'Kurz schauen ist Schritt eins von Sehen, Wollen, Nehmen. „Ich habe einen Bund geschlossen mit meinen Augen“ (Hiob 31,1). Ich wende den Blick jetzt ab und schaue zu Jesus.',
+    'Zu müde zum Kämpfen': 'Ich muss nicht aus eigener Kraft kämpfen. „Meine Kraft ist in den Schwachen mächtig“ (2. Korinther 12,9). Müdigkeit ist ein Grund, mich auszuruhen und Gott festzuhalten, nicht nachzugeben.',
+    'Ist doch nicht so schlimm': 'Es zerstört, was ich eigentlich will: echte Nähe, Reinheit, Freiheit. Der Preis ist Scham und Leere, und Gott will mir mehr geben als das.',
+    'Ich habe es im Griff': 'Wenn ich es im Griff hätte, bräuchte ich diesen Moment nicht. Stark bin ich, wenn ich Hilfe annehme: „Wenn ich schwach bin, dann bin ich stark“ (2. Korinther 12,10). Ich sage Bescheid und gehe den Ablauf.',
+    'Es merkt ja keiner': 'Gott sieht mich, und das ist keine Drohung, sondern Liebe: „Du bist ein Gott, der mich sieht“ (1. Mose 16,13). Was im Verborgenen bleibt, wächst; was ich ins Licht bringe, verliert seine Macht (1. Johannes 1,7).',
+    'Sie ist ein Objekt / eine Funktion.': 'Sie wird zu etwas, das mir etwas gibt, statt ein Mensch mit eigener Geschichte, eigenem Willen und eigener Würde zu sein.',
+    'Sie gehört mir in diesem Moment.': 'Ich verfüge über sie, obwohl sie Gottes Tochter ist und niemandem gehört.',
+    'Es schadet ja niemandem.': 'Es verändert, wie ich ihr und anderen Frauen real begegne.',
+    'Endlich gibt mir jemand Liebe, ohne dass ich sie an mich reißen muss':'Echte Liebe entsteht in Treue und Wahrheit, nicht im Konsum. Gott liebt mich schon jetzt bedingungslos (Römer 5,8), und die Frau, die ich einmal lieben werde, wird mehr Würde verdienen als ein Bildschirm.'
+  };
+  function truthsFor(lies) {
+    return (lies || []).map(function (l) {
+      var own = ((DB.truths || {})[l] || '').trim(), pre = (N.truthMap || {})[l] || (DB.genTruths || {})[l] || LIE_TRUTHS[l] || '';
+      return { lie: l, pre: pre, own: own };
+    }).filter(function (x) { return x.pre || x.own; });
+  }
+  // Zeigt am Ende des Ablaufs die gewählten Lügen mit der passenden Wahrheit.
+  function truthCards(lies) {
+    var t = truthsFor(lies); if (!t.length) return '';
+    return '<div class="stack"><p class="kicker">Lüge und Wahrheit</p>' + t.map(function (x) {
+      return '<div class="card stack"><p class="note" style="margin:0">Die Lüge</p><p style="margin:0;text-decoration:line-through;opacity:.7">„' + esc(x.lie) + '“</p>' +
+        '<p class="note" style="margin:6px 0 0">Die Wahrheit</p>' + (x.pre ? '<p class="serif" style="font-size:19px;line-height:1.35;margin:0">' + esc(x.pre) + '</p>' : '') +
+        (x.own ? '<p style="margin:0"><b>Deine Worte:</b> ' + esc(x.own).replace(/\n/g, '<br>') + '</p>' : '') + '</div>';
+    }).join('') + '</div>';
+  }
+  /* ---------- Wahrheit zu neuer Lüge von Claude erzeugen (nur wenn die Seite `sample` hat), bearbeiten, in Notion ergänzen ---------- */
+  var TR = { sample: null };
+  try { if (window.claude && claude.use) claude.use('sample').then(function (s) { TR.sample = s || null; }, function () {}); } catch (e) {}
+  function trRender() { if (cur === 'place' || cur === 'fall' || cur === 'lies') render(); }
+  function trGen(lie) {
+    if (!TR.sample) return;
+    D.tr = { lie: lie, text: '', busy: true, err: '' };
+    trRender();
+    var ex = ['Nur dieses eine Mal', 'Ich bin eh schon gescheitert', 'Es merkt ja keiner'].map(function (k) { return 'Lüge: ' + k + '\nWahrheit: ' + LIE_TRUTHS[k]; }).join('\n\n');
+    var prompt = 'Eine Person überwindet eine Pornografie-Sucht und will sich in einem Urge ehrlich die Wahrheit sagen. Schreibe zu der folgenden Lüge, die ihr Gehirn ihr einredet, eine passende Wahrheit. ' +
+      'Regeln: Deutsch, Ich-Form, zwei bis drei Sätze, ruhig, ohne Scham und ohne Vorwurf, mit christlichem Hintergrund und einer passenden Bibelstelle in Klammern (nur eine echte Stelle, die du sicher kennst). Nichts Anstößiges. Antworte nur mit dem Text der Wahrheit, ohne Anführungszeichen und ohne Einleitung.\n\n' +
+      'So sehen die bisherigen aus:\n\n' + ex + '\n\nJetzt die neue Lüge:\nLüge: ' + lie + '\nWahrheit:';
+    TR.sample(prompt, { cache: false }).then(function (r) {
+      if (!D.tr || D.tr.lie !== lie) return;
+      D.tr.text = String(r.text || '').trim().replace(/^Wahrheit:\s*/i, '').replace(/^[„"“]|[“"”]$/g, ''); D.tr.busy = false; trRender();
+    }, function (e) {
+      if (!D.tr || D.tr.lie !== lie) return;
+      D.tr.busy = false; D.tr.err = e && e.code === 'not_granted' ? 'Claude wurde dafür nicht erlaubt. Du kannst die Wahrheit selbst schreiben.' : 'Die Wahrheit konnte gerade nicht erzeugt werden. Du kannst sie selbst schreiben oder neu erzeugen.'; trRender();
+    });
+  }
+  function trBox() {
+    var t = D.tr; if (!t) return '';
+    return '<div class="card stack"><p class="note" style="margin:0">Wahrheit zu</p><p class="serif" style="font-size:19px;line-height:1.3;margin:0">„' + esc(t.lie) + '“</p>' +
+      (t.busy ? '<p class="note">Claude schreibt eine Wahrheit …</p>' : '<textarea id="trtxt" style="min-height:110px" placeholder="Die Wahrheit ist …" aria-label="Wahrheit zu: ' + esc(t.lie) + '">' + esc(t.text) + '</textarea>') +
+      (t.err ? '<p class="note" role="status">' + esc(t.err) + '</p>' : '') +
+      '<div class="row"><button class="btn small" data-act="trSave"' + (t.busy || !t.text.trim() ? ' disabled' : '') + ' style="width:auto">Speichern</button><button class="btn ghost small" data-act="trGen"' + (t.busy ? ' disabled' : '') + '>Neu erzeugen</button><button class="link muted" data-act="trLater">Später</button></div></div>';
+  }
+  // Schreibt die Wahrheit in die Spalte „Wahrheit“ der Lüge in Notion (wartet, bis die Lüge dort angelegt ist).
+  function nSetTruth(lie, text) {
+    if (!N.mcp) return;
+    var url = (N.liesMap || {})[lie];
+    if (!url) { N.pendTruth = N.pendTruth || {}; N.pendTruth[lie] = text; return; }
+    N.mcp.callTool('Notion', 'notion-update-page', { page_id: url, command: 'update_properties', properties: { 'Wahrheit': text } }, { cache: false })
+      .then(function () { N.truthMap = N.truthMap || {}; N.truthMap[lie] = text; D.liesNote = 'Lüge und Wahrheit sind in Notion ergänzt.'; trRender(); },
+        function () { D.liesNote = 'Die Wahrheit ist nur in der App gespeichert, Notion hat nicht geantwortet.'; trRender(); });
+  }
   function allLies() {
     var out = [], seen = {};
     (N.lies || []).concat(DB.lies || []).forEach(function (x) { var k = String(x).toLowerCase(); if (x && !seen[k]) { seen[k] = 1; out.push(x); } });
@@ -880,7 +951,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       .then(function (r) {
         var p = nData(r), rows = (p && p.results) || [];
         N.liesMap = N.liesMap || {};
-        rows.forEach(function (x) { var t = (x['Gedanke'] || '').trim(); if (t && x.url) N.liesMap[t] = x.url; });
+        rows.forEach(function (x) { var t = (x['Gedanke'] || '').trim(); if (t && x.url) N.liesMap[t] = x.url; N.truthMap = N.truthMap || {}; if (t && x['Wahrheit']) N.truthMap[t] = String(x['Wahrheit']).trim(); });
         N.lies = rows.map(function (x) { return (x['Gedanke'] || '').trim(); }).filter(Boolean);
       },
         function (e) { N.liesErr = nErr(e); })
@@ -889,7 +960,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function nAddLie(v) {
     if (!N.mcp) return;
     N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: LIES_DS }, pages: [{ properties: { 'Gedanke': v } }] }, { cache: false })
-      .then(function (r) { var pp = nData(r), pg = pp && pp.pages && pp.pages[0]; if (pg && pg.url) { N.liesMap = N.liesMap || {}; N.liesMap[v] = pg.url; } N.lies = (N.lies || []).concat(v); DB.lies = (DB.lies || []).filter(function (x) { return x !== v; }); save(); D.liesNote = 'In Notion gespeichert.'; if (cur === 'lies') render(); },
+      .then(function (r) { var pp = nData(r), pg = pp && pp.pages && pp.pages[0]; if (pg && pg.url) { N.liesMap = N.liesMap || {}; N.liesMap[v] = pg.url; } N.lies = (N.lies || []).concat(v); DB.lies = (DB.lies || []).filter(function (x) { return x !== v; }); save(); D.liesNote = 'In Notion gespeichert.'; if (cur === 'lies') render(); if (N.pendTruth && N.pendTruth[v]) { var pt = N.pendTruth[v]; delete N.pendTruth[v]; nSetTruth(v, pt); } },
         function () { D.liesNote = 'Nur in der App gespeichert, Notion hat nicht geantwortet.'; if (cur === 'lies') render(); });
   }
   // Trägt die gewählten Lügen in die Spalte "Manipulationen" der heutigen Zeile ein (zählt in der Gedanken-Statistik mit).
@@ -910,23 +981,14 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
   S.lies = function () {
     D.liesSel = D.liesSel || [];
-    if (D.lx === 1) {
-      return '<div class="stack"><p class="kicker">Lügen erkennen</p><h2>Wie ersetzt du diese Lügen durch Wahrheit?</h2>' +
-        '<p class="lead" style="margin:0">Wahrheit gibt dir Perspektive und Kraft. Deine Antworten bleiben gespeichert und stehen beim nächsten Mal wieder da.</p>' +
-        D.liesSel.map(function (l, i) {
-          return '<div class="card stack"><p class="note" style="margin:0">Die Lüge</p><p class="serif" style="font-size:20px;line-height:1.3">„' + esc(l) + '“</p>' +
-            '<textarea data-truth="' + i + '" style="min-height:90px" placeholder="Die Wahrheit ist …" aria-label="Wahrheit zu: ' + esc(l) + '">' + esc((DB.truths || {})[l] || '') + '</textarea></div>';
-        }).join('') +
-        '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="connDone" data-k="lies">Fertig</button></div>';
-    }
     var list = allLies(), sel = D.liesSel;
     return '<div class="stack"><p class="kicker">Lügen erkennen</p><h2>Welche Lügen erzählt dir dein Gehirn gerade?</h2>' +
       '<p class="lead" style="margin:0">Das sind Lügen, die das Handeln gegen deine Werte falsch rechtfertigen. Wähle, was du gerade hörst.</p>' +
       (N.liesBusy && !N.lies ? '<p class="note">Lade deine Gedanken aus Notion …</p>' : '') + (N.liesErr ? '<p class="note">' + esc(N.liesErr) + '</p>' : '') +
       '<div class="chips">' + list.map(function (l) { return '<button class="chip' + (sel.indexOf(l) >= 0 ? ' sel' : '') + '" data-lie="' + esc(l) + '">' + esc(l) + '</button>'; }).join('') + '</div>' +
       '<div class="row"><input type="text" id="newlie" placeholder="Neue Lüge hinzufügen" aria-label="Neue Lüge" maxlength="120"><button class="btn small" data-act="addLie" style="width:auto">Hinzufügen</button></div>' +
-      (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '') +
-      '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="liesNext"' + (sel.length ? '' : ' disabled') + '>Weiter</button><button class="link muted" data-act="liesSkip">Zurück zu den Wegen</button></div>';
+      trBox() + (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '') +
+      '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="connDone" data-k="lies"' + (sel.length ? '' : ' disabled') + '>Fertig</button><button class="link muted" data-act="liesSkip">Zurück zu den Wegen</button></div>';
   };
 
   /* ---------- Kosten und Nutzen (vier Schritte) ---------- */
@@ -1033,9 +1095,18 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="kicker">Geschafft</p><h1>Du hast den Sturm ausgehalten.</h1>' +
       '<p class="lead">Das war dein ' + n + '. ausgehaltener Sturm. Jedes Mal, wenn du ihn aushältst, wird der alte Kreislauf schwächer.</p>' +
       (D.next ? '<div class="card"><p class="note" style="margin-bottom:4px">Als Nächstes</p><p class="serif" style="font-size:22px">' + esc(D.next) + '</p></div>' : '') +
+      truthCards(D.liesSel) +
       (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') + evStatus() +
       '</div>' +
       '<div class="foot"><button class="btn" data-act="home">Fertig</button></div>';
+  };
+  // Abschluss nach einem Rückfall: gewählte Lügen mit der passenden Wahrheit.
+  S.fallend = function () {
+    return '<div class="grow stack" style="align-content:center;text-align:left">' +
+      '<p class="kicker">Gespeichert</p><h1>Du bist nicht unverzeihlich.</h1>' +
+      '<p class="lead">Steh auf. Christus steht schon bei dir. Das sind die Lügen von eben und die Wahrheit dazu:</p>' +
+      truthCards(D.liesSel) + (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') + evStatus() +
+      '</div><div class="foot"><button class="btn" data-act="home">Fertig</button></div>';
   };
 
   var FALL = [
@@ -1128,6 +1199,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (cur === 'why') { var w = document.getElementById('whytxt'); w.addEventListener('input', function () { DB.why = w.value; wpChanged(); }); }
     var nt = document.getElementById('newtrig');
     if (nt) { nt.value = D.newtrig || ''; nt.addEventListener('input', function () { D.newtrig = nt.value; }); }
+    var tt = document.getElementById('trtxt'); if (tt) tt.addEventListener('input', function () { if (D.tr) D.tr.text = tt.value; });
     var nl = document.getElementById('newlie');
     if (nl && (cur === 'place' || cur === 'fall')) { nl.value = D.newlie || ''; nl.addEventListener('input', function () { D.newlie = nl.value; }); }
     if (cur === 'place' || cur === 'fall') nLoadLies();
@@ -1138,7 +1210,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var np = document.getElementById('newplace');
     if (np) np.addEventListener('input', function () { D.custom = np.value; });
     if (cur === 'cost') { var cb = document.getElementById('cbtxt'); cb.addEventListener('input', function () { DB.cbi[D.cbx || 0] = cb.value; save(); }); }
-    if (cur === 'lies') { nLoadLies(); D.lx = D.lx || 0; Array.prototype.forEach.call(document.querySelectorAll('[data-truth]'), function (t) { t.addEventListener('input', function () { DB.truths = DB.truths || {}; DB.truths[D.liesSel[+t.getAttribute('data-truth')]] = t.value; save(); }); }); }
+    if (cur === 'lies') { nLoadLies(); }
     var zn = document.getElementById('znote');
     if (zn) zn.addEventListener('input', function () { Z.note = zn.value; });
     var m = document.getElementById('msg');
@@ -1163,14 +1235,21 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       render();
     },
     cbNext: function () { D.cbx = (D.cbx || 0) + 1; render(); window.scrollTo(0, 0); },
-    liesNext: function () { if ((D.liesSel || []).length) { D.lx = 1; render(); window.scrollTo(0, 0); } },
     liesSkip: function () { D.lx = 0; history_pop(); },
+    trGen: function () { if (D.tr) trGen(D.tr.lie); },
+    trLater: function () { D.tr = null; render(); },
+    trSave: function () {
+      var t = D.tr; if (!t) return;
+      var text = String(t.text || '').trim().slice(0, 700); if (!text) return;
+      DB.genTruths = DB.genTruths || {}; DB.genTruths[t.lie] = text; save();
+      D.tr = null; D.liesNote = 'Wahrheit gespeichert.'; render(); nSetTruth(t.lie, text);
+    },
     addLie: function () {
       var i = document.getElementById('newlie'), v = i.value.trim().slice(0, 120); if (!v) return;
       var known = allLies().filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
       D.liesSel = D.liesSel || [];
       if (known) { if (D.liesSel.indexOf(known) < 0) D.liesSel.push(known); D.liesNote = 'Diese Lüge gibt es schon, sie ist ausgewählt.'; render(); return; }
-      DB.lies = (DB.lies || []).concat(v); save(); D.liesSel.push(v); D.liesNote = 'Gespeichert.'; D.newlie = ''; render(); nAddLie(v);
+      DB.lies = (DB.lies || []).concat(v); save(); D.liesSel.push(v); D.liesNote = 'Gespeichert.'; D.newlie = ''; render(); nAddLie(v); trGen(v);
     },
     connDone: function (el) { if (el.getAttribute('data-k') === 'lies') { N.liesLogNote = ''; nLogLies(D.liesSel || []); } markConn(el.getAttribute('data-k')); D.cx = 0; D.lx = 0; D.cbx = 0; history_pop(); },
     addPlan: function () { var i = document.getElementById('newplan'), v = i.value.trim(); if (v) { DB.plan.push(v); wpChanged(); render(); } },
@@ -1204,7 +1283,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     fallSave: function () {
       commitPlace();
       DB.log.push({ t: Date.now(), outcome: 'fell', fp: D.fp || [], place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [], miss: D.miss || [] });
-      save(); nEvent(false); nLog(hhmm() + ' Rückfall' + ((D.fp || []).length ? ': ' + D.fp.join(', ') : '')); nMarkFall(D.fp || []); home();
+      save(); nEvent(false); nLog(hhmm() + ' Rückfall' + ((D.fp || []).length ? ': ' + D.fp.join(', ') : '')); nMarkFall(D.fp || []);
+      if (truthsFor(D.liesSel).length) { stopTimer(); stack = []; cur = 'fallend'; render(); window.scrollTo(0, 0); } else home();
     }
   };
   function history_pop() { cur = stack.pop() || 'connect'; render(); }

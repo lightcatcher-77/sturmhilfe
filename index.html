@@ -486,6 +486,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   var evBusy = false;
   function nEvent(held) { DB.pend = (DB.pend || []).concat([{ p: evProps(held), n: 0 }]); save(); flushEv(); }
   function flushEv() {
+    // Früher endgültig fehlgeschlagene Einträge beim nächsten Verbinden erneut versuchen.
+    if (N.mcp && !N.reTried && (DB.failed || []).length) { N.reTried = true; DB.pend = (DB.pend || []).concat(DB.failed.map(function (x) { x.n = 0; return x; })); DB.failed = []; save(); }
     if (!N.mcp || evBusy || !(DB.pend || []).length) return;
     evBusy = true;
     var it = DB.pend[0];

@@ -1141,7 +1141,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
         if (!b.fresh) return;
         b.fresh = false;
         for (var t = 0; t < 60; t++) { b.x = Math.random() * Math.max(W - b.w, 0); b.y = Math.random() * Math.max(H - b.h, 0); if (fits(b, list.filter(function (o) { return !o.fresh && o !== b; }), W, H)) break; }
-        var a = Math.random() * 6.2832, v = 22 + Math.random() * 22;
+        var a = Math.random() * 6.2832, v = 7 + Math.random() * 7;
         b.vx = Math.cos(a) * v; b.vy = Math.sin(a) * v;
       });
       if (!still && dt) {

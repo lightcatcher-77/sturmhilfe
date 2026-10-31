@@ -882,11 +882,14 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     'Ist doch nicht so schlimm': 'Es zerstört, was ich eigentlich will: echte Nähe, Reinheit, Freiheit. Der Preis ist Scham und Leere, und Gott will mir mehr geben als das.',
     'Ich habe es im Griff': 'Wenn ich es im Griff hätte, bräuchte ich diesen Moment nicht. Stark bin ich, wenn ich Hilfe annehme: „Wenn ich schwach bin, dann bin ich stark“ (2. Korinther 12,10). Ich sage Bescheid und gehe den Ablauf.',
     'Es merkt ja keiner': 'Gott sieht mich, und das ist keine Drohung, sondern Liebe: „Du bist ein Gott, der mich sieht“ (1. Mose 16,13). Was im Verborgenen bleibt, wächst; was ich ins Licht bringe, verliert seine Macht (1. Johannes 1,7).',
-    'Endlich gibt mir jemand Liebe, ohne dass ich sie an mich reißen muss': 'Echte Liebe entsteht in Treue und Wahrheit, nicht im Konsum. Gott liebt mich schon jetzt bedingungslos (Römer 5,8), und die Frau, die ich einmal lieben werde, wird mehr Würde verdienen als ein Bildschirm.'
+    'Sie ist ein Objekt / eine Funktion.': 'Sie wird zu etwas, das mir etwas gibt, statt ein Mensch mit eigener Geschichte, eigenem Willen und eigener Würde zu sein.',
+    'Sie gehört mir in diesem Moment.': 'Ich verfüge über sie, obwohl sie Gottes Tochter ist und niemandem gehört.',
+    'Es schadet ja niemandem.': 'Es verändert, wie ich ihr und anderen Frauen real begegne.',
+    'Endlich gibt mir jemand Liebe, ohne dass ich sie an mich reißen muss':'Echte Liebe entsteht in Treue und Wahrheit, nicht im Konsum. Gott liebt mich schon jetzt bedingungslos (Römer 5,8), und die Frau, die ich einmal lieben werde, wird mehr Würde verdienen als ein Bildschirm.'
   };
   function truthsFor(lies) {
     return (lies || []).map(function (l) {
-      var own = ((DB.truths || {})[l] || '').trim(), pre = LIE_TRUTHS[l] || '';
+      var own = ((DB.truths || {})[l] || '').trim(), pre = (N.truthMap || {})[l] || LIE_TRUTHS[l] || '';
       return { lie: l, pre: pre, own: own };
     }).filter(function (x) { return x.pre || x.own; });
   }
@@ -911,7 +914,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       .then(function (r) {
         var p = nData(r), rows = (p && p.results) || [];
         N.liesMap = N.liesMap || {};
-        rows.forEach(function (x) { var t = (x['Gedanke'] || '').trim(); if (t && x.url) N.liesMap[t] = x.url; });
+        rows.forEach(function (x) { var t = (x['Gedanke'] || '').trim(); if (t && x.url) N.liesMap[t] = x.url; N.truthMap = N.truthMap || {}; if (t && x['Wahrheit']) N.truthMap[t] = String(x['Wahrheit']).trim(); });
         N.lies = rows.map(function (x) { return (x['Gedanke'] || '').trim(); }).filter(Boolean);
       },
         function (e) { N.liesErr = nErr(e); })

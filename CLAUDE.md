@@ -16,3 +16,4 @@ Die GitHub Page (`https://lightcatcher-77.github.io/sturmhilfe/`) muss aktuell n
 - Lügen kommen aus der Notion-Datenbank „Gedanken-Statistik“ (Spalte `Gedanke`), die Wahrheit steht in der Spalte `Wahrheit`.
 - Fallback sind die Texte in `LIE_TRUTHS` in `index.html`. Neue Lüge: in Notion anlegen, `LIE_TRUTHS` ergänzen und im Demo-Artefakt in `DB.lies` aufnehmen.
 - Abschlussbildschirme: `S.end` (ausgehalten) und `S.fallend` (Rückfall) zeigen die gewählten Lügen mit Wahrheit.
+- Neue Lügen: Im Live-Artefakt erzeugt Claude (Fähigkeit `sample`) automatisch eine Wahrheit. `sample` muss bei jedem Publish in `capabilities` mit angegeben werden, zusammen mit `db`, `user` und `mcp` (Notion), sonst wird es entfernt. Die Wahrheit ist bearbeitbar und wird mit der Lüge in Notion ergänzt (Spalte `Wahrheit`). Im Demo-Artefakt gibt es das nicht.

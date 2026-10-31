@@ -606,8 +606,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       for (var i = 0; i < 3; i++) h += '<div class="phase ' + (i === p ? 'on' : i < p ? 'done' : '') + '"><i></i>' + PHASES[i] + '</div>';
     }
     document.getElementById('phases').innerHTML = h;
-    document.getElementById('back').hidden = (cur === 'home' || cur === 'end' || cur === 'breath' || !stack.length);
-    document.getElementById('close').hidden = (cur === 'home' || cur === 'end');
+    document.getElementById('back').hidden = (cur === 'home' || cur === 'end' || cur === 'fallend' || cur === 'breath' || !stack.length);
+    document.getElementById('close').hidden = (cur === 'home' || cur === 'end' || cur === 'fallend');
   }
 
   /* ---------- Screens ---------- */
@@ -868,6 +868,37 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 
   /* ---------- Lügen erkennen (Gedanken aus Notion, eigene Lügen dauerhaft) ---------- */
   var LIES_VIEW = 'view://c2aa066d-043f-4194-9e2d-4059aecba3f4', LIES_DS = 'eb11de36-ac3b-49ff-a832-271db0ecd1dd';
+  // Passende Wahrheit zu jeder Lüge. Eigene Antworten aus „Lügen erkennen“ (DB.truths) werden zusätzlich gezeigt.
+  var LIE_TRUTHS = {
+    'Lieber Masturbieren als Pornos': 'Beides nährt denselben Kreislauf. Es gibt kein kleineres Übel, nur den nächsten Schritt von Sehen zu Nehmen (Jakobus 1,15). Christus ruft mich in die Freiheit, nicht in einen Kompromiss.',
+    'Nur dieses eine Mal': 'Es bleibt nie bei einem Mal, das hat mir die Erfahrung gezeigt. „Die Gnade genügt dir“ (2. Korinther 12,9). Gott gibt mir jetzt die Kraft, Nein zu sagen.',
+    'Ich brauche das gegen Stress': 'Es löst den Stress nicht, es bringt Leere und Scham dazu. Meine Last darf ich bei Jesus abladen: „Kommt her zu mir, alle, die ihr mühselig und beladen seid“ (Matthäus 11,28).',
+    'Ich bin eh schon gescheitert': 'Ein Fall macht mich nicht zum Gescheiterten. „Der Gerechte fällt siebenmal und steht wieder auf“ (Sprüche 24,16). Gottes Barmherzigkeit ist jeden Morgen neu (Klagelieder 3,22-23).',
+    'Morgen fange ich neu an': 'Gott schenkt mir den Neuanfang heute, im jetzigen Moment. „Heute, wenn ihr seine Stimme hört, verhärtet eure Herzen nicht“ (Hebräer 3,15).',
+    'Es ist egal': 'Es ist Gott nicht egal, denn ich bin ihm nicht egal. Mein Leib ist ein Tempel des Heiligen Geistes (1. Korinther 6,19), und mein Herz, meine Zukunft und meine Beziehungen sind es wert, geschützt zu werden.',
+    'Ich habe es mir verdient': 'Ich verdiene Liebe und Ruhe, und die finde ich bei Gott, nicht in diesem Verlangen. Es verspricht Belohnung und liefert Leere. Er sättigt, was wirklich hungrig ist (Psalm 107,9).',
+    'Nur kurz schauen': 'Kurz schauen ist Schritt eins von Sehen, Wollen, Nehmen. „Ich habe einen Bund geschlossen mit meinen Augen“ (Hiob 31,1). Ich wende den Blick jetzt ab und schaue zu Jesus.',
+    'Zu müde zum Kämpfen': 'Ich muss nicht aus eigener Kraft kämpfen. „Meine Kraft ist in den Schwachen mächtig“ (2. Korinther 12,9). Müdigkeit ist ein Grund, mich auszuruhen und Gott festzuhalten, nicht nachzugeben.',
+    'Ist doch nicht so schlimm': 'Es zerstört, was ich eigentlich will: echte Nähe, Reinheit, Freiheit. Der Preis ist Scham und Leere, und Gott will mir mehr geben als das.',
+    'Ich habe es im Griff': 'Wenn ich es im Griff hätte, bräuchte ich diesen Moment nicht. Stark bin ich, wenn ich Hilfe annehme: „Wenn ich schwach bin, dann bin ich stark“ (2. Korinther 12,10). Ich sage Bescheid und gehe den Ablauf.',
+    'Es merkt ja keiner': 'Gott sieht mich, und das ist keine Drohung, sondern Liebe: „Du bist ein Gott, der mich sieht“ (1. Mose 16,13). Was im Verborgenen bleibt, wächst; was ich ins Licht bringe, verliert seine Macht (1. Johannes 1,7).',
+    'Endlich gibt mir jemand Liebe, ohne dass ich sie an mich reißen muss': 'Echte Liebe entsteht in Treue und Wahrheit, nicht im Konsum. Gott liebt mich schon jetzt bedingungslos (Römer 5,8), und die Frau, die ich einmal lieben werde, wird mehr Würde verdienen als ein Bildschirm.'
+  };
+  function truthsFor(lies) {
+    return (lies || []).map(function (l) {
+      var own = ((DB.truths || {})[l] || '').trim(), pre = LIE_TRUTHS[l] || '';
+      return { lie: l, pre: pre, own: own };
+    }).filter(function (x) { return x.pre || x.own; });
+  }
+  // Zeigt am Ende des Ablaufs die gewählten Lügen mit der passenden Wahrheit.
+  function truthCards(lies) {
+    var t = truthsFor(lies); if (!t.length) return '';
+    return '<div class="stack"><p class="kicker">Lüge und Wahrheit</p>' + t.map(function (x) {
+      return '<div class="card stack"><p class="note" style="margin:0">Die Lüge</p><p style="margin:0;text-decoration:line-through;opacity:.7">„' + esc(x.lie) + '“</p>' +
+        '<p class="note" style="margin:6px 0 0">Die Wahrheit</p>' + (x.pre ? '<p class="serif" style="font-size:19px;line-height:1.35;margin:0">' + esc(x.pre) + '</p>' : '') +
+        (x.own ? '<p style="margin:0"><b>Deine Worte:</b> ' + esc(x.own).replace(/\n/g, '<br>') + '</p>' : '') + '</div>';
+    }).join('') + '</div>';
+  }
   function allLies() {
     var out = [], seen = {};
     (N.lies || []).concat(DB.lies || []).forEach(function (x) { var k = String(x).toLowerCase(); if (x && !seen[k]) { seen[k] = 1; out.push(x); } });
@@ -1033,9 +1064,18 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="kicker">Geschafft</p><h1>Du hast den Sturm ausgehalten.</h1>' +
       '<p class="lead">Das war dein ' + n + '. ausgehaltener Sturm. Jedes Mal, wenn du ihn aushältst, wird der alte Kreislauf schwächer.</p>' +
       (D.next ? '<div class="card"><p class="note" style="margin-bottom:4px">Als Nächstes</p><p class="serif" style="font-size:22px">' + esc(D.next) + '</p></div>' : '') +
+      truthCards(D.liesSel) +
       (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') + evStatus() +
       '</div>' +
       '<div class="foot"><button class="btn" data-act="home">Fertig</button></div>';
+  };
+  // Abschluss nach einem Rückfall: gewählte Lügen mit der passenden Wahrheit.
+  S.fallend = function () {
+    return '<div class="grow stack" style="align-content:center;text-align:left">' +
+      '<p class="kicker">Gespeichert</p><h1>Du bist nicht unverzeihlich.</h1>' +
+      '<p class="lead">Steh auf. Christus steht schon bei dir. Das sind die Lügen von eben und die Wahrheit dazu:</p>' +
+      truthCards(D.liesSel) + (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') + evStatus() +
+      '</div><div class="foot"><button class="btn" data-act="home">Fertig</button></div>';
   };
 
   var FALL = [
@@ -1204,7 +1244,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     fallSave: function () {
       commitPlace();
       DB.log.push({ t: Date.now(), outcome: 'fell', fp: D.fp || [], place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [], miss: D.miss || [] });
-      save(); nEvent(false); nLog(hhmm() + ' Rückfall' + ((D.fp || []).length ? ': ' + D.fp.join(', ') : '')); nMarkFall(D.fp || []); home();
+      save(); nEvent(false); nLog(hhmm() + ' Rückfall' + ((D.fp || []).length ? ': ' + D.fp.join(', ') : '')); nMarkFall(D.fp || []);
+      if (truthsFor(D.liesSel).length) { stopTimer(); stack = []; cur = 'fallend'; render(); window.scrollTo(0, 0); } else home();
     }
   };
   function history_pop() { cur = stack.pop() || 'connect'; render(); }

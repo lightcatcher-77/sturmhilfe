@@ -803,6 +803,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="stack"><p class="kicker">Reconnect</p>' + icon('breath') + '<h2>Atme. Wie viele Minuten?</h2>' +
       '<p class="lead" style="margin:0">Vier Sekunden ein, sechs Sekunden aus. Das senkt das Adrenalin.</p>' +
       [0.5, 1, 2, 3].map(function (m) { return '<button class="choice" data-min="' + m + '"><b>' + (m === 0.5 ? '30 Sekunden' : m + (m === 1 ? ' Minute' : ' Minuten')) + '</b></button>'; }).join('') +
+      '<button class="choice" data-act="watchBreath"><b>Achtsamkeit Atmen</b><span>Startet die Apple Watch App über den Kurzbefehl „Achtsamkeit Atmen“</span></button>' +
       '</div><div class="grow"></div>' +
       '<div class="foot"><button class="link muted" data-act="next">Überspringen</button></div>';
   };
@@ -1152,6 +1153,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     whyHome: function () { D = { standalone: true }; go('why'); },
     planHome: function () { D = { standalone: true }; go('plan'); },
     breathSkip: function () { afterBreath(); },
+    watchBreath: function () {
+      // Kurzbefehl muss auf dem iPhone exakt "Achtsamkeit Atmen" heißen und die Achtsamkeit-App auf der Watch öffnen.
+      D.breathWatch = true;
+      location.href = 'shortcuts://run-shortcut?name=' + encodeURIComponent('Achtsamkeit Atmen');
+      setTimeout(afterBreath, 600);
+    },
     crossNext: function () { D.cx = (D.cx || 0) + 1; render(); },
     fallNext: function () { if (D.fx === 3) commitPlace(); D.fx = (D.fx || 0) + 1; render(); },
     addBub: function () {

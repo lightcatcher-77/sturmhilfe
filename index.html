@@ -488,12 +488,14 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function flushEv() {
     // Früher endgültig fehlgeschlagene Einträge beim nächsten Verbinden erneut versuchen.
     if (N.mcp && !N.reTried && (DB.failed || []).length) { N.reTried = true; DB.pend = (DB.pend || []).concat(DB.failed.map(function (x) { x.n = 0; return x; })); DB.failed = []; save(); }
+    // Einträge ohne Inhalt (alte oder defekte Form) würden die Warteschlange für immer blockieren: verwerfen.
+    DB.pend = (DB.pend || []).filter(function (x) { return x && x.p && typeof x.p === 'object'; });
     if (!N.mcp || evBusy || !(DB.pend || []).length) return;
     evBusy = true;
     var it = DB.pend[0];
     // Hängt Notion länger als 60 Sekunden, wird der Versuch abgebrochen und später erneut gestartet, statt ewig zu warten.
     var lim = new Promise(function (_, rej) { setTimeout(function () { rej({ code: 'timeout' }); }, 60000); });
-    Promise.race([nEnsureOpts(it.p).then(null, function () {}).then(function () {
+    Promise.race([Promise.resolve().then(function () { return nEnsureOpts(it.p); }).then(null, function () {}).then(function () {
       return N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: EV_DS }, pages: [{ properties: it.p }] }, { cache: false });
     }), lim]).then(function () { DB.pend.shift(); N.evErr = ''; save(); evBusy = false; if (cur === 'home' || cur === 'end' || cur === 'fallend') render(); flushEv(); },
       function (e) {

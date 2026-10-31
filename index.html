@@ -944,15 +944,6 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
   S.lies = function () {
     D.liesSel = D.liesSel || [];
-    if (D.lx === 1) {
-      return '<div class="stack"><p class="kicker">Lügen erkennen</p><h2>Wie ersetzt du diese Lügen durch Wahrheit?</h2>' +
-        '<p class="lead" style="margin:0">Wahrheit gibt dir Perspektive und Kraft. Deine Antworten bleiben gespeichert und stehen beim nächsten Mal wieder da.</p>' +
-        D.liesSel.map(function (l, i) {
-          return '<div class="card stack"><p class="note" style="margin:0">Die Lüge</p><p class="serif" style="font-size:20px;line-height:1.3">„' + esc(l) + '“</p>' +
-            '<textarea data-truth="' + i + '" style="min-height:90px" placeholder="Die Wahrheit ist …" aria-label="Wahrheit zu: ' + esc(l) + '">' + esc((DB.truths || {})[l] || '') + '</textarea></div>';
-        }).join('') +
-        '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="connDone" data-k="lies">Fertig</button></div>';
-    }
     var list = allLies(), sel = D.liesSel;
     return '<div class="stack"><p class="kicker">Lügen erkennen</p><h2>Welche Lügen erzählt dir dein Gehirn gerade?</h2>' +
       '<p class="lead" style="margin:0">Das sind Lügen, die das Handeln gegen deine Werte falsch rechtfertigen. Wähle, was du gerade hörst.</p>' +
@@ -960,7 +951,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<div class="chips">' + list.map(function (l) { return '<button class="chip' + (sel.indexOf(l) >= 0 ? ' sel' : '') + '" data-lie="' + esc(l) + '">' + esc(l) + '</button>'; }).join('') + '</div>' +
       '<div class="row"><input type="text" id="newlie" placeholder="Neue Lüge hinzufügen" aria-label="Neue Lüge" maxlength="120"><button class="btn small" data-act="addLie" style="width:auto">Hinzufügen</button></div>' +
       (D.liesNote ? '<p class="note" role="status">' + esc(D.liesNote) + '</p>' : '') +
-      '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="liesNext"' + (sel.length ? '' : ' disabled') + '>Weiter</button><button class="link muted" data-act="liesSkip">Zurück zu den Wegen</button></div>';
+      '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="connDone" data-k="lies"' + (sel.length ? '' : ' disabled') + '>Fertig</button><button class="link muted" data-act="liesSkip">Zurück zu den Wegen</button></div>';
   };
 
   /* ---------- Kosten und Nutzen (vier Schritte) ---------- */
@@ -1181,7 +1172,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     var np = document.getElementById('newplace');
     if (np) np.addEventListener('input', function () { D.custom = np.value; });
     if (cur === 'cost') { var cb = document.getElementById('cbtxt'); cb.addEventListener('input', function () { DB.cbi[D.cbx || 0] = cb.value; save(); }); }
-    if (cur === 'lies') { nLoadLies(); D.lx = D.lx || 0; Array.prototype.forEach.call(document.querySelectorAll('[data-truth]'), function (t) { t.addEventListener('input', function () { DB.truths = DB.truths || {}; DB.truths[D.liesSel[+t.getAttribute('data-truth')]] = t.value; save(); }); }); }
+    if (cur === 'lies') { nLoadLies(); }
     var zn = document.getElementById('znote');
     if (zn) zn.addEventListener('input', function () { Z.note = zn.value; });
     var m = document.getElementById('msg');
@@ -1206,7 +1197,6 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       render();
     },
     cbNext: function () { D.cbx = (D.cbx || 0) + 1; render(); window.scrollTo(0, 0); },
-    liesNext: function () { if ((D.liesSel || []).length) { D.lx = 1; render(); window.scrollTo(0, 0); } },
     liesSkip: function () { D.lx = 0; history_pop(); },
     addLie: function () {
       var i = document.getElementById('newlie'), v = i.value.trim().slice(0, 120); if (!v) return;

@@ -103,6 +103,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .sentence { font-family: var(--display); font-style: italic; font-size: 21px; line-height: 1.3; padding: 12px 0; border-top: 1px solid var(--line); }
 .sentence:last-child { border-bottom: 1px solid var(--line); }
 .verse { font-family: var(--display); font-size: 26px; line-height: 1.3; }
+.dep { font-family: var(--display); font-style: italic; font-size: 19px; line-height: 1.35; text-align: center; margin: 12px 0 0; color: var(--muted); }
 .tag { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--warm); }
 
 /* Sehen Wollen Nehmen */
@@ -771,6 +772,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="chips">' + allMiss().map(function (t) { return '<button class="chip' + (D.miss.indexOf(t) >= 0 ? ' sel' : '') + '" data-miss="' + esc(t) + '">' + esc(t) + '</button>'; }).join('') + '</div>' +
       '<div class="row"><input type="text" id="newmiss" placeholder="Neue Kategorie eintragen" maxlength="40" aria-label="Neue Kategorie"><button class="btn ghost small" data-act="addMiss">Hinzufügen</button></div>';
   }
+  var DEP = '„Ich selbst werde es nie anders machen, wenn du mich mir selbst überlässt. Du selbst musst verhindern, dass ich falle und du selbst musst ändern, woran es bei mir mangelt.“';
   var PRAY = ['Beten', 'Such Gott. Ein kurzes Gebet reicht.'];
   var MOVE = ['Schnell bewegen', 'Beweg dich so schnell du kannst, bis der Druck sinkt.'];
   var MODE_STEPS = {
@@ -790,7 +792,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (st.t === 'breath') return S.breathpick();
     var kick = D.mode === 'dorsal' ? 'Dorsal' : 'Fight Mode';
     if (st.t === 'sent') return '<div class="stack"><p class="kicker">' + kick + '</p>' + icon('book') + '<h2>Sag die Sätze laut.</h2><div>' + SENT.map(function (x) { return '<div class="sentence">' + x + '</div>'; }).join('') + '</div></div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
-    return '<div class="stack"><p class="kicker">' + kick + '</p>' + icon(st.ic) + '<h2>' + esc(st.h) + '</h2><p class="lead" style="margin:0">' + esc(st.p) + '</p>' + (st.trig ? '<p style="font-weight:600;margin:8px 0 0">Was stresst dich?</p>' + trigBox() : '') + (st.img ? '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">' : '') + '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
+    return '<div class="stack"><p class="kicker">' + kick + '</p>' + icon(st.ic) + '<h2>' + esc(st.h) + '</h2><p class="lead" style="margin:0">' + esc(st.p) + '</p>' + (st.trig ? '<p style="font-weight:600;margin:8px 0 0">Was stresst dich?</p>' + trigBox() : '') + (st.img ? '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()"><p class="dep">' + esc(DEP) + '</p>' : '') + '</div><div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button></div>';
   }
   for (var mi = 0; mi < 7; mi++) (function (i) { S['m' + i] = function () { return modeStep(i); }; })(mi);
   S.state = function () {
@@ -1138,7 +1140,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
   S.fall = function () {
     var i = D.fx || 0, f = FALL[i], extra = '';
-    if (i === 1) extra = '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">';
+    if (i === 1) extra = '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()"><p class="dep">' + esc(DEP) + '</p>';
     if (i === 2) extra = msgBox('fmsg');
     if (i === 3) extra = fallForm();
     if (i === 4) extra = '<div>' + ['Dies ist ein Augenblick des Leidens.', 'Leid gehört zum Leben.', 'Möge ich mir geben, was ich brauche.'].map(function (s) { return '<div class="sentence">' + s + '</div>'; }).join('') + '</div>';

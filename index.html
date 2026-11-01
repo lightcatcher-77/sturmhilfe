@@ -1094,6 +1094,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="grow stack" style="align-content:center;text-align:left">' +
       '<p class="kicker">Geschafft</p><h1>Du hast den Sturm ausgehalten.</h1>' +
       '<p class="lead">Das war dein ' + n + '. ausgehaltener Sturm. Jedes Mal, wenn du ihn aushältst, wird der alte Kreislauf schwächer.</p>' +
+      '<div class="reply serif" style="font-size:20px;line-height:1.35">„Selig ist der Mann, der die Versuchung standhaft erträgt; denn nachdem er sich bewährt hat, wird er die Krone des Lebens empfangen, welche er denen verheissen hat, die ihn lieben.“<br><small class="note" style="font-family:var(--sans)">Jakobus 1,12</small></div>' +
       (D.next ? '<div class="card"><p class="note" style="margin-bottom:4px">Als Nächstes</p><p class="serif" style="font-size:22px">' + esc(D.next) + '</p></div>' : '') +
       truthCards(D.liesSel) +
       (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') + evStatus() +

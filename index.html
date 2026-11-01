@@ -645,7 +645,20 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (st && !st.atLeast && st.days === 0) lines.push('Heute gab es einen Rückfall. Du bist trotzdem hier, und das zählt.');
     else if (st && !st.atLeast && st.days === 1) lines.push('Heute ist ein neuer Anfang.');
     if (st && st.days >= 2) lines.push(st.days + (st.atLeast ? ' Tage oder mehr' : ' Tage') + ' seit dem letzten Rückfall.');
-    if (N.hist && good) lines.push('An ' + good + ' von 7 Tagen hast du etwas Gutes für dich getan.');
+    // Serie: Tage in Folge mit mindestens einem ✅ (der heutige Tag bricht sie nicht, solange er noch offen ist), dazu längste Serie der letzten 30 Tage und Zahl der guten Dinge diese Woche.
+    if (N.hist && N.hist.length) {
+      var run = 0, longest = 0, tmp = 0, week = 0, open = true;
+      for (var q = 0; q < 30; q++) {
+        var hq = by[isoMinus(q)], g = !!(hq && hq.ok > 0);
+        if (q < 7 && hq) week += hq.ok;
+        tmp = g ? tmp + 1 : 0; if (tmp > longest) longest = tmp;
+        if (open) { if (g) run++; else if (q > 0) open = false; }
+      }
+      var todayGood = !!(by[isoMinus(0)] && by[isoMinus(0)].ok > 0);
+      lines.push(run >= 2 ? 'Seit ' + run + ' Tagen tust du dir jeden Tag etwas Gutes.' : run === 1 ? (todayGood ? 'Heute hast du dir etwas Gutes getan.' : 'Gestern hast du dir etwas Gutes getan.') : 'Heute ist ein guter Tag, um eine neue Serie zu starten.');
+      if (longest > run && longest >= 2) lines.push('Deine längste Serie: ' + longest + ' Tage.');
+      if (week > 0) lines.push('Diese Woche hast du ' + week + (week === 1 ? ' gutes Ding' : ' gute Dinge') + ' für dich getan.');
+    }
     if (held) lines.push(held === 1 ? 'Du hast schon einen Sturm ausgehalten.' : 'Du hast schon ' + held + ' Stürme ausgehalten.');
     if (N.hist && !lines.length) lines.push('Heute ist ein guter Tag, um neu anzufangen.');
     if (N.histErr) return '<div class="card stack status"><p class="note">' + esc(N.histErr) + '</p><button class="btn ghost small" data-act="nRetry" style="width:auto">Erneut versuchen</button></div>';

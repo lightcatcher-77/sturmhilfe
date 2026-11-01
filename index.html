@@ -250,6 +250,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 .week i { width: 12px; height: 12px; border-radius: 50%; background: var(--line); }
 .week i.good { background: var(--accent); }
 .week i.hard { background: var(--warm); }
+.week i.fall { background: #e5484d; }
 .zhead { display: flex; justify-content: space-between; align-items: center; }
 .zhead .link { padding: 4px 8px; min-height: 36px; }
 .zrow { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -633,7 +634,10 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     for (var k = 6; k >= 0; k--) {
       var h = by[isoMinus(k)], cls = '';
       if (h && h.ok + h.bad > 0) { cls = h.bad ? 'hard' : 'good'; if (h.ok) good++; }
-      dots += '<i class="' + cls + '" title="' + esc(h ? h.tag || '' : '') + '"></i>';
+      // Roter Punkt: Rückfall im roten Bereich (❌ bei Enthaltsamkeit in Notion oder lokal gespeicherter Rückfall an diesem Tag).
+      var iso = isoMinus(k);
+      if ((h && h.fall) || DB.log.some(function (e) { if (e.outcome !== 'fell') return false; var d = new Date(e.t); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2) === iso; })) cls = 'fall';
+      dots += '<i class="' + cls + '" title="' + esc((h ? h.tag || '' : '') + (cls === 'fall' ? ' · Rückfall' : '')) + '"></i>';
     }
     todayRow = by[isoMinus(0)];
     var lines = [];

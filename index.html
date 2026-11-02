@@ -566,7 +566,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   };
 
   function hhmm() { return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
-  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); wpLoad(); flushEv(); } else { N.off = true; if (cur === 'home') render(); } }, function () {}); } catch (e) {}
+  try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); wpLoad(); flushEv(); flushLies(); } else { N.off = true; if (cur === 'home') render(); } }, function () {}); } catch (e) {}
 
   var D = {};           // Daten dieses Durchlaufs
   var stack = [];       // Verlauf für Zurück
@@ -963,21 +963,62 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       .then(function (r) { var pp = nData(r), pg = pp && pp.pages && pp.pages[0]; if (pg && pg.url) { N.liesMap = N.liesMap || {}; N.liesMap[v] = pg.url; } N.lies = (N.lies || []).concat(v); DB.lies = (DB.lies || []).filter(function (x) { return x !== v; }); save(); D.liesNote = 'In Notion gespeichert.'; if (cur === 'lies') render(); if (N.pendTruth && N.pendTruth[v]) { var pt = N.pendTruth[v]; delete N.pendTruth[v]; nSetTruth(v, pt); } },
         function () { D.liesNote = 'Nur in der App gespeichert, Notion hat nicht geantwortet.'; if (cur === 'lies') render(); });
   }
-  // Trägt die gewählten Lügen in die Spalte "Manipulationen" der heutigen Zeile ein (zählt in der Gedanken-Statistik mit).
+  // Trägt die gewählten Lügen in die Spalte "Manipulationen" der Zeile des Tages ein (zählt in der Gedanken-Statistik mit).
+  // Der Eintrag wird erst gemerkt (DB.pendLies) und erst nach Erfolg entfernt. Fehlende Lügen werden vorher in Notion angelegt.
+  var liesBusy = false;
+  function lieKey(x) { return String(x || '').trim().toLowerCase(); }
   function nLogLies(list) {
-    if (!N.mcp || !list.length) return;
-    var urls = list.map(function (l) { return (N.liesMap || {})[l]; }).filter(Boolean);
-    if (!urls.length) { N.liesLogNote = 'Die Lügen konnten nicht mit Notion verknüpft werden.'; return; }
-    nFresh();
-    nToday().then(function (row) {
-      if (!row) throw { code: 'no_row' };
-      var old = []; try { old = JSON.parse(row['Manipulationen'] || '[]'); } catch (e) {}
-      var norm = function (u) { return String(u).replace(/[?#].*$/, '').replace(/-/g, '').toLowerCase(); };
-      var have = old.map(norm), add = urls.filter(function (u) { return have.indexOf(norm(u)) < 0; });
-      if (!add.length) return 'same';
-      return N.mcp.callTool('Notion', 'notion-update-page', { page_id: row.url, command: 'update_properties', properties: { 'Manipulationen': old.concat(add) } }, { cache: false });
-    }).then(function () { N.liesLogNote = 'Die Lügen sind in deiner Recovery Zone von heute eingetragen.'; nFresh(); if (cur === 'connect') render(); },
-      function (e) { N.liesLogNote = e && e.code === 'no_row' ? 'Für heute gibt es in Notion keine Zeile, die Lügen wurden dort nicht eingetragen.' : nErr(e) + ' Die Lügen wurden in Notion nicht eingetragen.'; if (cur === 'connect') render(); });
+    if (!list || !list.length) return;
+    DB.pendLies = (DB.pendLies || []).concat([{ d: todayISO(), l: list.slice(), n: 0 }]); save();
+    flushLies();
+  }
+  function flushLies() {
+    if (!N.mcp || liesBusy || !(DB.pendLies || []).length) return;
+    liesBusy = true;
+    var it = DB.pendLies[0], dayRow = null;
+    var load = N.lies ? Promise.resolve() : N.mcp.callTool('Notion', 'notion-query-data-sources', { data: { mode: 'view', view_url: LIES_VIEW, page_size: 100 } }, { cache: false }).then(function (r) {
+      var rows = (nData(r) && nData(r).results) || [];
+      N.liesMap = N.liesMap || {}; N.truthMap = N.truthMap || {};
+      rows.forEach(function (x) { var t = (x['Gedanke'] || '').trim(); if (t && x.url) N.liesMap[t] = x.url; if (t && x['Wahrheit']) N.truthMap[t] = String(x['Wahrheit']).trim(); });
+      N.lies = rows.map(function (x) { return (x['Gedanke'] || '').trim(); }).filter(Boolean);
+    });
+    load.then(function () {
+      N.liesMap = N.liesMap || {};
+      var find = function (l) { if (N.liesMap[l]) return N.liesMap[l]; for (var k in N.liesMap) if (lieKey(k) === lieKey(l)) return N.liesMap[k]; return ''; };
+      // Lügen, die es in Notion noch nicht gibt (nur lokal gespeichert), werden zuerst dort angelegt.
+      return it.l.reduce(function (pr, l) {
+        return pr.then(function (urls) {
+          var u = find(l);
+          if (u) return urls.concat(u);
+          return N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: LIES_DS }, pages: [{ properties: { 'Gedanke': l } }] }, { cache: false }).then(function (r) {
+            var pp = nData(r), pg = pp && pp.pages && pp.pages[0];
+            if (!pg || !pg.url) throw { code: 'no_url' };
+            N.liesMap[l] = pg.url; N.lies = (N.lies || []).concat(l); DB.lies = (DB.lies || []).filter(function (x) { return x !== l; });
+            if (N.pendTruth && N.pendTruth[l]) { var pt = N.pendTruth[l]; delete N.pendTruth[l]; nSetTruth(l, pt); }
+            return urls.concat(pg.url);
+          });
+        });
+      }, Promise.resolve([]));
+    }).then(function (urls) {
+      nFresh();
+      return nToday(it.d).then(function (row) {
+        if (!row) throw { code: 'no_row' };
+        var old = []; try { old = JSON.parse(row['Manipulationen'] || '[]'); } catch (e) {}
+        var norm = function (u) { return String(u).replace(/[?#].*$/, '').replace(/-/g, '').toLowerCase(); };
+        var have = old.map(norm), add = urls.filter(function (u, i) { return have.indexOf(norm(u)) < 0 && urls.indexOf(u) === i; });
+        if (!add.length) return 'same';
+        return N.mcp.callTool('Notion', 'notion-update-page', { page_id: row.url, command: 'update_properties', properties: { 'Manipulationen': old.concat(add) } }, { cache: false });
+      });
+    }).then(function () {
+      DB.pendLies.shift(); N.liesLogNote = 'Die Lügen sind in deiner Recovery Zone eingetragen.'; liesBusy = false; save(); nFresh(); nLoadHist();
+      if (cur === 'connect' || cur === 'home') render(); flushLies();
+    }, function (e) {
+      liesBusy = false; it.n = (it.n || 0) + 1;
+      var noRow = e && e.code === 'no_row';
+      N.liesLogNote = (noRow ? 'Für diesen Tag gibt es in Notion keine Zeile.' : nErr(e)) + ' Die Lügen sind noch nicht in Notion eingetragen. Es wird beim nächsten Öffnen erneut versucht.';
+      if (it.n >= 8) { DB.failed = (DB.failed || []).concat([it]); DB.pendLies.shift(); }
+      save(); if (cur === 'connect' || cur === 'home') render();
+    });
   }
   S.lies = function () {
     D.liesSel = D.liesSel || [];
@@ -1260,7 +1301,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     },
     finish: function () {
       DB.log.push({ t: Date.now(), before: D.strength, after: D.after || null, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held', miss: D.miss || [], svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
-      save(); N.note = ''; nEvent(true);
+      save(); N.note = ''; nEvent(true); nLogLies(D.liesSel || []);
       nLog(hhmm() + ' Urge ausgehalten, Stärke ' + D.strength + (D.after ? ' → ' + D.after : '') + (D.place ? ', ' + D.place : ''));
       stack = []; cur = 'end'; render();
     },
@@ -1283,7 +1324,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     fallSave: function () {
       commitPlace();
       DB.log.push({ t: Date.now(), outcome: 'fell', fp: D.fp || [], place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [], miss: D.miss || [] });
-      save(); nEvent(false); nLog(hhmm() + ' Rückfall' + ((D.fp || []).length ? ': ' + D.fp.join(', ') : '')); nMarkFall(D.fp || []);
+      save(); nEvent(false); nLogLies(D.liesSel || []); nLog(hhmm() + ' Rückfall' + ((D.fp || []).length ? ': ' + D.fp.join(', ') : '')); nMarkFall(D.fp || []);
       if (truthsFor(D.liesSel).length) { stopTimer(); stack = []; cur = 'fallend'; render(); window.scrollTo(0, 0); } else home();
     }
   };

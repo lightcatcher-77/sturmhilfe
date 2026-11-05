@@ -646,18 +646,17 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (st && !st.atLeast && st.days === 0) lines.push('Heute gab es einen Rückfall. Du bist trotzdem hier, und das zählt.');
     else if (st && !st.atLeast && st.days === 1) lines.push('Heute ist ein neuer Anfang.');
     if (st && st.days >= 2) lines.push(st.days + (st.atLeast ? ' Tage oder mehr' : ' Tage') + ' seit dem letzten Rückfall.');
-    // Serie: Tage in Folge mit mindestens einem ✅ in der Selbstfürsorge (Zeit mit Gott, Lesen, Zeit draußen) (der heutige Tag bricht sie nicht, solange er noch offen ist), dazu längste Serie der letzten 30 Tage und Zahl der guten Dinge diese Woche.
+    // Serie: Tage ohne Rückfall bei Enthaltsamkeit (❌ in Notion oder lokal gespeicherter Rückfall). Die längste Serie stammt aus den letzten 30 Tagen, Tage ohne Eintrag zählen nicht mit. Dazu die Zahl der Selbstfürsorge-✅ dieser Woche.
     if (N.hist && N.hist.length) {
-      var run = 0, longest = 0, tmp = 0, week = 0, open = true;
-      for (var q = 0; q < 30; q++) {
-        var hq = by[isoMinus(q)], g = !!(hq && hq.care > 0);
-        if (q < 7 && hq) week += hq.care;
-        tmp = g ? tmp + 1 : 0; if (tmp > longest) longest = tmp;
-        if (open) { if (g) run++; else if (q > 0) open = false; }
+      var longest = 0, tmp = 0, week = 0;
+      var fellOn = function (iso) { return DB.log.some(function (e) { if (e.outcome !== 'fell') return false; var d = new Date(e.t); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2) === iso; }); };
+      for (var q = 29; q >= 0; q--) {
+        var iq = isoMinus(q), hq = by[iq];
+        if (!hq) { tmp = 0; continue; }
+        if (q < 7) week += hq.care;
+        tmp = (hq.fall || fellOn(iq)) ? 0 : tmp + 1; if (tmp > longest) longest = tmp;
       }
-      var todayGood = !!(by[isoMinus(0)] && by[isoMinus(0)].care > 0);
-      lines.push(run >= 2 ? 'Seit ' + run + ' Tagen tust du dir jeden Tag etwas Gutes.' : run === 1 ? (todayGood ? 'Heute hast du dir etwas Gutes getan.' : 'Gestern hast du dir etwas Gutes getan.') : 'Heute ist ein guter Tag, um eine neue Serie zu starten.');
-      if (longest > run && longest >= 2) lines.push('Deine längste Serie: ' + longest + ' Tage.');
+      if (st && longest > st.days && longest >= 2) lines.push('Deine längste Serie ohne Rückfall: ' + longest + ' Tage.');
       if (week > 0) lines.push('Diese Woche hast du ' + week + (week === 1 ? ' gutes Ding' : ' gute Dinge') + ' für dich getan.');
     }
     if (held) lines.push(held === 1 ? 'Du hast schon einen Sturm ausgehalten.' : 'Du hast schon ' + held + ' Stürme ausgehalten.');

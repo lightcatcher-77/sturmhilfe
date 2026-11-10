@@ -323,7 +323,9 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   /* ---------- Notion (Meine Recovery Zone) ---------- */
   var N = { ds: 'collection://1080de9a-5751-46bd-ae0b-c1087d8047b9', mcp: null, note: '' };
   var ZONE = ['Bilder', 'Edging', 'Pornografie', 'Masturbation', 'Lüstern', 'Scrollen', 'Fantasien', 'Chaos in mir', 'Zeit mit Gott', 'Lesen', 'Zeit draußen'];
-  function todayISO() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  // Tageswechsel um 5 Uhr: bis 5 Uhr morgens zählt noch der Vortag.
+  function dayISO(t) { var d = new Date((t === undefined ? Date.now() : t) - 5 * 3600000); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function todayISO() { return dayISO(); }
   // Liefert den Ergebnis-Inhalt eines Notion-Aufrufs als Objekt, egal ob payload, structuredContent oder Text.
   function nData(r) {
     var p = r && (r.payload !== undefined ? r.payload : r.structuredContent);
@@ -625,7 +627,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function streak() {
     var best = null, atLeast = false;
     var falls = DB.log.filter(function (e) { return e.outcome === 'fell'; });
-    if (falls.length) { var t = falls[falls.length - 1].t, d = new Date(t); best = nDaysSince(d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2)); }
+    if (falls.length) { best = nDaysSince(dayISO(falls[falls.length - 1].t)); }
     if (N.hist && N.hist.length) {
       var f = N.hist.filter(function (h) { return h.fall && h.date; })[0];
       if (f) { var nd = nDaysSince(f.date); if (best === null || nd < best) best = nd; }
@@ -634,7 +636,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return best === null ? null : { days: best, atLeast: atLeast };
   }
   // Ermutigende Anzeige: sieben Tage als Punkte (grün = Gutes getan, bernstein = schwerer Tag) und ein Satz, der nur Positives zählt.
-  function isoMinus(n) { var d = new Date(); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function isoMinus(n) { var d = new Date(Date.now() - 5 * 3600000); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function encourage() {
     var held = heldCount(), by = {}, good = 0, dots = '', todayRow = null;
     (N.hist || []).forEach(function (h) { by[h.date] = h; });

@@ -355,7 +355,15 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
   function nFresh() { NV.p = null; }
   function nToday(iso) {
-    return nView().then(function (rows) { var d = iso || todayISO(); return rows.filter(function (r) { return r['date:Datum:start'] === d; })[0] || null; });
+    var d = iso || todayISO();
+    return nView().then(function (rows) {
+      var hit = rows.filter(function (r) { return r['date:Datum:start'] === d; })[0];
+      if (hit) return hit;
+      // Nicht in der Ansicht (z. B. Zwischenspeicher, Zeitzone, Ansichtsfilter): direkt nach dem Datum fragen.
+      nFresh();
+      return N.mcp.callTool('Notion', 'notion-query-data-sources', { data: { mode: 'rows', data_source_url: N.ds, filter: { type: 'group', operator: 'and', filters: [{ type: 'property', property: 'Datum', propertyType: 'date', operator: 'date_is', value: { type: 'exact', value: d } }] }, limit: 5 } }, { cache: false })
+        .then(function (r) { var p = nData(r); return ((p && p.results) || []).filter(function (x) { return x['date:Datum:start'] === d; })[0] || null; });
+    });
   }
   // Hängt eine Zeile an das Feld "Notiz" der heutigen Zeile an.
   function nLog(line) {

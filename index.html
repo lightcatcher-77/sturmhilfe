@@ -420,7 +420,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
           ZONE.forEach(function (k) { if (/✅/.test(row[k] || '')) ok++; else if (/❌/.test(row[k] || '')) bad++; });
           var fall = ZONES[0][1].some(function (k) { return /❌/.test(row[k] || ''); });
           var care = ZONES[2][1].filter(function (k) { return /✅/.test(row[k] || ''); }).length;
-          return { date: row['date:Datum:start'], tag: row['Tag'], note: (row['Notiz'] || '').trim(), ok: ok, bad: bad, fall: fall, care: care };
+          var limit = ZONES[1][1].filter(function (k) { return /❌/.test(row[k] || ''); }).length;
+          return { date: row['date:Datum:start'], tag: row['Tag'], note: (row['Notiz'] || '').trim(), ok: ok, bad: bad, fall: fall, care: care, limit: limit };
         });
         if (cur === 'hist' || cur === 'home') render();
       }, function (e) { N.histErr = nErr(e); if (cur === 'hist' || cur === 'home') render(); });
@@ -634,7 +635,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     (N.hist || []).forEach(function (h) { by[h.date] = h; });
     for (var k = 6; k >= 0; k--) {
       var h = by[isoMinus(k)], cls = '';
-      if (h && h.ok + h.bad > 0) { cls = h.bad ? 'hard' : 'good'; if (h.ok) good++; }
+      // Grün, sobald in Enthaltsamkeit und Grenzen nichts gescheitert ist (auch ohne ✅); bernstein bei ❌ in Grenzen; rot bei Rückfall.
+      if (h) cls = h.limit ? 'hard' : 'good';
       // Roter Punkt: Rückfall im roten Bereich (❌ bei Enthaltsamkeit in Notion oder lokal gespeicherter Rückfall an diesem Tag).
       var iso = isoMinus(k);
       if ((h && h.fall) || DB.log.some(function (e) { if (e.outcome !== 'fell') return false; var d = new Date(e.t); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2) === iso; })) cls = 'fall';

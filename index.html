@@ -636,7 +636,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     for (var k = 6; k >= 0; k--) {
       var h = by[isoMinus(k)], cls = '';
       // Grün, sobald in Enthaltsamkeit und Grenzen nichts gescheitert ist (auch ohne ✅); bernstein bei ❌ in Grenzen; rot bei Rückfall.
-      if (h) cls = h.limit ? 'hard' : 'good';
+      // Grün oder bernstein erst, wenn der Tag vorbei ist (k > 0); heute bleibt neutral, nur ein Rückfall färbt sofort rot (siehe unten).
+      if (h && k > 0) cls = h.limit ? 'hard' : 'good';
       // Roter Punkt: Rückfall im roten Bereich (❌ bei Enthaltsamkeit in Notion oder lokal gespeicherter Rückfall an diesem Tag).
       var iso = isoMinus(k);
       if ((h && h.fall) || DB.log.some(function (e) { if (e.outcome !== 'fell') return false; var d = new Date(e.t); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2) === iso; })) cls = 'fall';

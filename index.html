@@ -428,7 +428,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
           var ok = 0, bad = 0;
           ZONE.forEach(function (k) { if (/✅/.test(row[k] || '')) ok++; else if (/❌/.test(row[k] || '')) bad++; });
           var fall = ZONES[0][1].some(function (k) { return /❌/.test(row[k] || ''); });
-          return { date: row['date:Datum:start'], tag: row['Tag'], note: (row['Notiz'] || '').trim(), ok: ok, bad: bad, fall: fall };
+          var risk = ZONES[0][1].concat(ZONES[1][1]).filter(function (k) { return /❌/.test(row[k] || ''); }).length;
+          return { date: row['date:Datum:start'], tag: row['Tag'], note: (row['Notiz'] || '').trim(), ok: ok, bad: bad, fall: fall, risk: risk };
         });
         if (cur === 'hist' || cur === 'home') render();
       }, function (e) { N.histErr = nErr(e); if (cur === 'hist' || cur === 'home') render(); });
@@ -635,14 +636,14 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     }
     return best === null ? null : { days: best, atLeast: atLeast };
   }
-  // Ermutigende Anzeige: sieben Tage als Punkte (grün = Gutes getan, bernstein = schwerer Tag) und ein Satz, der nur Positives zählt.
+  // Ermutigende Anzeige: sieben Tage als Punkte (grün = kein 🟠/🟡-Punkt gescheitert, bernstein = schwerer Tag) und ein Satz, der nur Positives zählt.
   function isoMinus(n) { var d = new Date(Date.now() - 5 * 3600000); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function encourage() {
     var held = heldCount(), by = {}, good = 0, dots = '', todayRow = null;
     (N.hist || []).forEach(function (h) { by[h.date] = h; });
     for (var k = 6; k >= 0; k--) {
       var h = by[isoMinus(k)], cls = '';
-      if (h && h.ok + h.bad > 0) { cls = h.bad ? 'hard' : 'good'; if (h.ok) good++; }
+      if (h) { cls = h.risk ? 'hard' : 'good'; if (h.ok) good++; }
       dots += '<i class="' + cls + '" title="' + esc(h ? h.tag || '' : '') + '"></i>';
     }
     todayRow = by[isoMinus(0)];

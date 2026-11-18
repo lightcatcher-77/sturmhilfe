@@ -643,7 +643,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     (N.hist || []).forEach(function (h) { by[h.date] = h; });
     for (var k = 6; k >= 0; k--) {
       var h = by[isoMinus(k)], cls = '';
-      if (h) { cls = h.risk ? 'hard' : 'good'; if (h.ok) good++; }
+      if (h) { cls = h.risk ? 'hard' : (k > 0 ? 'good' : ''); /* heute noch nicht grün, erst wenn der Tag vorbei ist */ if (h.ok) good++; }
       dots += '<i class="' + cls + '" title="' + esc(h ? h.tag || '' : '') + '"></i>';
     }
     todayRow = by[isoMinus(0)];

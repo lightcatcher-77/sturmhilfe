@@ -432,8 +432,15 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function isoLocal(d) { var o = -d.getTimezoneOffset(), sg = o >= 0 ? '+' : '-'; o = Math.abs(o); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00' + sg + pad(Math.floor(o / 60)) + ':' + pad(o % 60); }
   function dayPart(h) { return h < 5 ? 'Nacht (0-5)' : h < 11 ? 'Morgen (5-11)' : h < 14 ? 'Mittag (11-14)' : h < 18 ? 'Nachmittag (14-18)' : h < 22 ? 'Abend (18-22)' : 'Spät (22-24)'; }
   function clean(x) { return String(x).replace(/[,\n]+/g, ' ').trim().slice(0, 90); }
-  function evProps(held) {
-    var d = new Date(), q = {
+  function evTimeProps(held, t) {
+    var d = new Date(t);
+    return { 'Ereignis': (held ? 'Urge ausgehalten ' : 'Rückfall ') + pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '. ' + pad(d.getHours()) + ':' + pad(d.getMinutes()), 'date:Zeitpunkt:start': isoLocal(d), 'date:Zeitpunkt:is_datetime': 1, 'Wochentag': WD[d.getDay()], 'Tageszeit': dayPart(d.getHours()), 'Uhrzeit': pad(d.getHours()) + ':' + pad(d.getMinutes()) };
+  }
+  function evNid(it, r) {
+    try { var pp = nData(r), pg = pp && pp.pages && pp.pages[0], ref = pg && (pg.url || pg.id); if (ref && it.t) { var le = DB.log.filter(function (x) { return x.t === it.t; })[0]; if (le) le.nid = ref; } } catch (e) {}
+  }
+  function evProps(held, t) {
+    var d = new Date(t || Date.now()), q = {
       'Ereignis': (held ? 'Urge ausgehalten ' : 'Rückfall ') + pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '. ' + pad(d.getHours()) + ':' + pad(d.getMinutes()),
       'Ausgang': held ? 'Ausgehalten' : 'Gefallen',
       'date:Zeitpunkt:start': isoLocal(d), 'date:Zeitpunkt:is_datetime': 1,
@@ -484,14 +491,14 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   }
   // Ereignisse werden erst gemerkt und dann gesendet, damit nichts verloren geht, wenn Notion gerade nicht antwortet.
   var evBusy = false;
-  function nEvent(held) { DB.pend = (DB.pend || []).concat([{ p: evProps(held), n: 0 }]); save(); flushEv(); }
+  function nEvent(held, t) { DB.pend = (DB.pend || []).concat([{ p: evProps(held, t), n: 0, t: t }]); save(); flushEv(); }
   function flushEv() {
     if (!N.mcp || evBusy || !(DB.pend || []).length) return;
     evBusy = true;
     var it = DB.pend[0];
     nEnsureOpts(it.p).then(null, function () {}).then(function () {
       return N.mcp.callTool('Notion', 'notion-create-pages', { parent: { type: 'data_source_id', data_source_id: EV_DS }, pages: [{ properties: it.p }] }, { cache: false });
-    }).then(function () { DB.pend.shift(); N.evErr = ''; save(); evBusy = false; if (cur === 'home' || cur === 'end') render(); flushEv(); },
+    }).then(function (r) { evNid(it, r); DB.pend.shift(); N.evErr = ''; save(); evBusy = false; if (cur === 'home' || cur === 'end') render(); flushEv(); },
       function (e) {
         evBusy = false; N.evErr = nErr(e); it.n = (it.n || 0) + 1;
         if (it.n >= 3) { DB.failed = (DB.failed || []).concat([it]); DB.pend.shift(); }
@@ -565,7 +572,51 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<div class="grow"></div><div class="foot"><button class="btn" data-act="zoneSave"' + (Z.saving ? ' disabled' : '') + '>' + (Z.saving ? 'Speichere …' : 'In Notion speichern') + '</button><button class="link muted" data-act="home">Zurück</button></div>';
   };
 
-  function hhmm() { return new Date().toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
+  function hhmm(t) { return new Date(t || Date.now()).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }); }
+  /* ---------- Uhrzeit von Urge und Rückfall wählen und nachträglich ändern ---------- */
+  function tval(t) { var d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function dtval(t) { var d = new Date(t); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  // Nur Uhrzeit gewählt: heute, außer sie läge in der Zukunft, dann gestern.
+  function whenT() {
+    var m = /^(\d\d):(\d\d)$/.exec(D.when || ''); if (!m) return Date.now();
+    var d = new Date(); d.setHours(+m[1], +m[2], 0, 0);
+    if (d.getTime() > Date.now() + 60000) d.setDate(d.getDate() - 1);
+    return d.getTime();
+  }
+  function timeField() {
+    return '<p style="font-weight:600;margin:10px 0 0">Um wie viel Uhr war es?</p>' +
+      '<input type="time" id="whentime" value="' + esc(D.when || tval(Date.now())) + '" aria-label="Uhrzeit">' +
+      '<p class="note" style="margin:0">Standard ist jetzt. Ändere es, wenn es früher war.</p>';
+  }
+  function timeEditor(t) {
+    var open = D.edT === t, msg = D.edT === t || D.edMsgT === t ? (D.edMsg || '') : '';
+    if (!open) return '<button class="link" style="padding:6px 0;min-height:36px" data-act="editTime" data-t="' + t + '">Uhrzeit ändern</button>' + (D.edMsgT === t && D.edMsg ? '<p class="note" role="status">' + esc(D.edMsg) + '</p>' : '');
+    return '<div class="stack" style="margin-top:6px"><input type="datetime-local" id="edtime" value="' + esc(D.edVal || dtval(t)) + '" aria-label="Datum und Uhrzeit">' +
+      '<div class="row"><button class="btn small" data-act="saveTime" data-t="' + t + '">Speichern</button><button class="btn ghost small" data-act="cancelTime">Abbrechen</button></div>' +
+      (msg ? '<p class="note" role="status">' + esc(msg) + '</p>' : '') + '</div>';
+  }
+  function timeCard() {
+    if (!D.lastT) return '';
+    return '<div class="card"><p class="note" style="margin:0">Eingetragen für ' + esc(fmt(D.lastT)) + ' Uhr</p>' + timeEditor(D.lastT) + '</div>';
+  }
+  // Ändert die Zeit eines Eintrags: lokal, in der Warteschlange oder in Notion.
+  function changeTime(oldT, newT) {
+    var e = DB.log.filter(function (x) { return x.t === oldT; })[0]; if (!e) return 'Eintrag nicht gefunden.';
+    while (DB.log.some(function (x) { return x !== e && x.t === newT; })) newT++;
+    var held = e.outcome === 'held';
+    e.t = newT;
+    if (D.lastT === oldT) D.lastT = newT;
+    var pend = (DB.pend || []).filter(function (x) { return x.t === oldT; })[0];
+    if (pend) { pend.t = newT; Object.assign(pend.p, evTimeProps(held, newT)); save(); return 'Uhrzeit geändert. Der Eintrag ist noch nicht in Notion und wird mit der neuen Zeit geschrieben.'; }
+    save();
+    if (e.nid && N.mcp) {
+      N.mcp.callTool('Notion', 'notion-update-page', { page_id: e.nid, command: 'update_properties', properties: evTimeProps(held, newT) }, { cache: false })
+        .then(function () { D.edMsg = 'Uhrzeit geändert, auch in Notion.'; D.edMsgT = newT; render(); },
+          function (er) { D.edMsg = 'In der App geändert, in Notion nicht: ' + nErr(er); D.edMsgT = newT; render(); });
+      return 'Uhrzeit geändert, Notion wird aktualisiert …';
+    }
+    return 'Uhrzeit in der App geändert. Dieser Eintrag ist in Notion nicht verknüpft, dort bitte selbst anpassen.';
+  }
   try { if (window.claude && claude.use) claude.use('mcp').then(function (m) { if (m) { N.mcp = m; nLoadHist(); wpLoad(); flushEv(); } else { N.off = true; if (cur === 'home') render(); } }, function () {}); } catch (e) {}
 
   var D = {};           // Daten dieses Durchlaufs
@@ -1078,7 +1129,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<div class="blobwrap"><div class="blob" id="blob"></div></div>' +
       '<div class="strength-word" id="sw"></div>' +
       '<input type="range" id="rng2" min="1" max="10" value="' + v + '" aria-label="Stärke jetzt">' +
-      '<div class="rangelabels"><span>Leicht</span><span>Stark</span></div></div>' +
+      '<div class="rangelabels"><span>Leicht</span><span>Stark</span></div>' + timeField() + '</div>' +
       '<div class="grow"></div><div class="foot"><button class="btn" data-act="finish">Speichern</button></div>';
   };
   function blob2() {
@@ -1095,7 +1146,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<p class="kicker">Geschafft</p><h1>Du hast den Sturm ausgehalten.</h1>' +
       '<p class="lead">Das war dein ' + n + '. ausgehaltener Sturm. Jedes Mal, wenn du ihn aushältst, wird der alte Kreislauf schwächer.</p>' +
       (D.next ? '<div class="card"><p class="note" style="margin-bottom:4px">Als Nächstes</p><p class="serif" style="font-size:22px">' + esc(D.next) + '</p></div>' : '') +
-      truthCards(D.liesSel) +
+      timeCard() + truthCards(D.liesSel) +
       (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') + evStatus() +
       '</div>' +
       '<div class="foot"><button class="btn" data-act="home">Fertig</button></div>';
@@ -1105,7 +1156,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     return '<div class="grow stack" style="align-content:center;text-align:left">' +
       '<p class="kicker">Gespeichert</p><h1>Du bist nicht unverzeihlich.</h1>' +
       '<p class="lead">Steh auf. Christus steht schon bei dir. Das sind die Lügen von eben und die Wahrheit dazu:</p>' +
-      truthCards(D.liesSel) + (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') + evStatus() +
+      timeCard() + truthCards(D.liesSel) + (N.note ? '<p class="note">' + esc(N.note) + '</p>' : '') + evStatus() +
       '</div><div class="foot"><button class="btn" data-act="home">Fertig</button></div>';
   };
 
@@ -1134,7 +1185,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       '<input type="range" id="frng" min="1" max="10" value="' + (D.strength || 5) + '" aria-label="Stärke des Urge von 1 bis 10">' +
       '<p style="' + q + '">Was hat ihn ausgelöst?</p>' + trigBox() +
       '<p style="' + q + '">Welche Lügen hat dir dein Gehirn erzählt?</p>' + liesBox() +
-      '<p style="' + q + '">Was hat dir gefehlt?</p>' + missBox();
+      '<p style="' + q + '">Was hat dir gefehlt?</p>' + missBox() + timeField();
   }
   S.fall = function () {
     var i = D.fx || 0, f = FALL[i], extra = '';
@@ -1181,7 +1232,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
         (withAlone.length ? '<p class="note">' + aloneN + ' von ' + withAlone.length + ' Malen warst du allein.</p>' : '') + '</div>' : '') +
       notion +
       '<div>' + L.slice(0, 30).map(function (e) {
-        return '<div class="entry"><div><b>' + fmt(e.t) + '</b><br><small>' + esc(e.place || 'Ort offen') + (e.alone === true ? ' · allein' : e.alone === false ? ' · nicht allein' : '') + (e.before ? ' · Stärke ' + e.before + (e.after ? ' → ' + e.after : '') : '') + '</small></div><span class="pill ' + e.outcome + '">' + (e.outcome === 'held' ? 'ausgehalten' : 'Rückfall') + '</span></div>';
+        return '<div class="entry"><div><b>' + fmt(e.t) + '</b><br><small>' + esc(e.place || 'Ort offen') + (e.alone === true ? ' · allein' : e.alone === false ? ' · nicht allein' : '') + (e.before ? ' · Stärke ' + e.before + (e.after ? ' → ' + e.after : '') : '') + '</small></div><span class="pill ' + e.outcome + '">' + (e.outcome === 'held' ? 'ausgehalten' : 'Rückfall') + '</span><div style="grid-column:1/-1">' + timeEditor(e.t) + '</div></div>';
       }).join('') + '</div></div>' +
       '<div class="grow"></div><div class="foot"><button class="btn ghost" data-act="home">Zurück</button></div>';
   };
@@ -1207,6 +1258,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     if (nm) { nm.value = D.newmiss || ''; nm.addEventListener('input', function () { D.newmiss = nm.value; }); }
     var fr = document.getElementById('frng');
     if (fr) fr.addEventListener('input', function () { D.strength = +fr.value; document.getElementById('frv').textContent = fr.value; });
+    var wtm = document.getElementById('whentime'); if (wtm) wtm.addEventListener('input', function () { D.when = wtm.value; });
+    var edt = document.getElementById('edtime'); if (edt) edt.addEventListener('input', function () { D.edVal = edt.value; });
     var np = document.getElementById('newplace');
     if (np) np.addEventListener('input', function () { D.custom = np.value; });
     if (cur === 'cost') { var cb = document.getElementById('cbtxt'); cb.addEventListener('input', function () { DB.cbi[D.cbx || 0] = cb.value; save(); }); }
@@ -1259,12 +1312,20 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       try { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }); } catch (e) { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }
     },
     finish: function () {
-      DB.log.push({ t: Date.now(), before: D.strength, after: D.after || null, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held', miss: D.miss || [], svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
-      save(); N.note = ''; nEvent(true);
-      nLog(hhmm() + ' Urge ausgehalten, Stärke ' + D.strength + (D.after ? ' → ' + D.after : '') + (D.place ? ', ' + D.place : ''));
+      DB.log.push({ t: (D.lastT = whenT()), before: D.strength, after: D.after || null, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held', miss: D.miss || [], svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });
+      save(); N.note = ''; nEvent(true, D.lastT);
+      nLog(hhmm(D.lastT) + ' Urge ausgehalten, Stärke ' + D.strength + (D.after ? ' → ' + D.after : '') + (D.place ? ', ' + D.place : ''));
       stack = []; cur = 'end'; render();
     },
     zoneSave: zSave,
+    editTime: function (el) { D.edT = +el.dataset.t; D.edVal = ''; D.edMsg = ''; D.edMsgT = 0; render(); },
+    cancelTime: function () { D.edT = 0; D.edVal = ''; D.edMsg = ''; render(); },
+    saveTime: function (el) {
+      var i = document.getElementById('edtime'), v = i ? i.value : D.edVal, nt = v ? new Date(v).getTime() : NaN;
+      if (isNaN(nt)) { D.edMsg = 'Bitte Datum und Uhrzeit angeben.'; render(); return; }
+      if (nt > Date.now() + 60000) { D.edMsg = 'Die Zeit liegt in der Zukunft.'; render(); return; }
+      var msg = changeTime(+el.dataset.t, nt); D.edT = 0; D.edVal = ''; D.edMsg = msg; D.edMsgT = D.lastT === nt ? nt : nt; render();
+    },
     nRetry: function () { N.histErr = ''; nLoadHist(); wpLoad(); render(); },
     addMiss: function () {
       var v = (D.newmiss || '').trim().slice(0, 40); if (!v) return;
@@ -1282,8 +1343,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     },
     fallSave: function () {
       commitPlace();
-      DB.log.push({ t: Date.now(), outcome: 'fell', fp: D.fp || [], place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [], miss: D.miss || [] });
-      save(); nEvent(false); nLog(hhmm() + ' Rückfall' + ((D.fp || []).length ? ': ' + D.fp.join(', ') : '')); nMarkFall(D.fp || []);
+      DB.log.push({ t: (D.lastT = whenT()), outcome: 'fell', fp: D.fp || [], place: D.place || null, alone: D.alone === undefined ? null : D.alone, before: D.strength || null, svn: D.svn === undefined ? null : D.svn, trig: D.trig || [], miss: D.miss || [] });
+      save(); nEvent(false, D.lastT); nLog(hhmm(D.lastT) + ' Rückfall' + ((D.fp || []).length ? ': ' + D.fp.join(', ') : '')); nMarkFall(D.fp || []);
       if (truthsFor(D.liesSel).length) { stopTimer(); stack = []; cur = 'fallend'; render(); window.scrollTo(0, 0); } else home();
     }
   };

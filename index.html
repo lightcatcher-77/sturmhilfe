@@ -871,22 +871,22 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   var LIES_VIEW = 'view://c2aa066d-043f-4194-9e2d-4059aecba3f4', LIES_DS = 'eb11de36-ac3b-49ff-a832-271db0ecd1dd';
   // Passende Wahrheit zu jeder Lüge. Eigene Antworten aus „Lügen erkennen“ (DB.truths) werden zusätzlich gezeigt.
   var LIE_TRUTHS = {
-    'Lieber Masturbieren als Pornos': 'Beides nährt denselben Kreislauf. Es gibt kein kleineres Übel, nur den nächsten Schritt von Sehen zu Nehmen (Jakobus 1,15). Christus ruft mich in die Freiheit, nicht in einen Kompromiss.',
+    'Lieber Masturbieren als Pornos': 'Beides nährt denselben Kreislauf. Es gibt kein kleineres Übel, nur den nächsten Schritt von Sehen zu Nehmen: „Wenn die Begierde empfangen hat, gebiert sie die Sünde; die Sünde aber, wenn sie vollendet ist, gebiert den Tod“ (Jakobus 1,15). Christus ruft mich in die Freiheit, nicht in einen Kompromiss.',
     'Nur dieses eine Mal': 'Es bleibt nie bei einem Mal, das hat mir die Erfahrung gezeigt. „Die Gnade genügt dir“ (2. Korinther 12,9). Gott gibt mir jetzt die Kraft, Nein zu sagen.',
     'Ich brauche das gegen Stress': 'Es löst den Stress nicht, es bringt Leere und Scham dazu. Meine Last darf ich bei Jesus abladen: „Kommt her zu mir, alle, die ihr mühselig und beladen seid“ (Matthäus 11,28).',
-    'Ich bin eh schon gescheitert': 'Ein Fall macht mich nicht zum Gescheiterten. „Der Gerechte fällt siebenmal und steht wieder auf“ (Sprüche 24,16). Gottes Barmherzigkeit ist jeden Morgen neu (Klagelieder 3,22-23).',
+    'Ich bin eh schon gescheitert': 'Ein Fall macht mich nicht zum Gescheiterten. „Der Gerechte fällt siebenmal und steht wieder auf“ (Sprüche 24,16). Gottes Barmherzigkeit ist jeden Morgen neu: „Seine Barmherzigkeit hat noch kein Ende, sondern sie ist jeden Morgen neu, und deine Treue ist groß“ (Klagelieder 3,22-23).',
     'Morgen fange ich neu an': 'Gott schenkt mir den Neuanfang heute, im jetzigen Moment. „Heute, wenn ihr seine Stimme hört, verhärtet eure Herzen nicht“ (Hebräer 3,15).',
-    'Es ist egal': 'Es ist Gott nicht egal, denn ich bin ihm nicht egal. Mein Leib ist ein Tempel des Heiligen Geistes (1. Korinther 6,19), und mein Herz, meine Zukunft und meine Beziehungen sind es wert, geschützt zu werden.',
-    'Ich habe es mir verdient': 'Ich verdiene Liebe und Ruhe, und die finde ich bei Gott, nicht in diesem Verlangen. Es verspricht Belohnung und liefert Leere. Er sättigt, was wirklich hungrig ist (Psalm 107,9).',
+    'Es ist egal': 'Es ist Gott nicht egal, denn ich bin ihm nicht egal. „Euer Leib ist ein Tempel des Heiligen Geistes, der in euch ist und den ihr von Gott habt“ (1. Korinther 6,19). Mein Herz, meine Zukunft und meine Beziehungen sind es wert, geschützt zu werden.',
+    'Ich habe es mir verdient': 'Ich verdiene Liebe und Ruhe, und die finde ich bei Gott, nicht in diesem Verlangen. Es verspricht Belohnung und liefert Leere. Er sättigt, was wirklich hungrig ist: „Er sättigt die durstige Seele und füllt die hungrige Seele mit Gutem“ (Psalm 107,9).',
     'Nur kurz schauen': 'Kurz schauen ist Schritt eins von Sehen, Wollen, Nehmen. „Ich habe einen Bund geschlossen mit meinen Augen“ (Hiob 31,1). Ich wende den Blick jetzt ab und schaue zu Jesus.',
     'Zu müde zum Kämpfen': 'Ich muss nicht aus eigener Kraft kämpfen. „Meine Kraft ist in den Schwachen mächtig“ (2. Korinther 12,9). Müdigkeit ist ein Grund, mich auszuruhen und Gott festzuhalten, nicht nachzugeben.',
     'Ist doch nicht so schlimm': 'Es zerstört, was ich eigentlich will: echte Nähe, Reinheit, Freiheit. Der Preis ist Scham und Leere, und Gott will mir mehr geben als das.',
     'Ich habe es im Griff': 'Wenn ich es im Griff hätte, bräuchte ich diesen Moment nicht. Stark bin ich, wenn ich Hilfe annehme: „Wenn ich schwach bin, dann bin ich stark“ (2. Korinther 12,10). Ich sage Bescheid und gehe den Ablauf.',
-    'Es merkt ja keiner': 'Gott sieht mich, und das ist keine Drohung, sondern Liebe: „Du bist ein Gott, der mich sieht“ (1. Mose 16,13). Was im Verborgenen bleibt, wächst; was ich ins Licht bringe, verliert seine Macht (1. Johannes 1,7).',
+    'Es merkt ja keiner': 'Gott sieht mich, und das ist keine Drohung, sondern Liebe: „Du bist ein Gott, der mich sieht“ (1. Mose 16,13). Was im Verborgenen bleibt, wächst; was ich ins Licht bringe, verliert seine Macht: „Wenn wir im Licht wandeln, wie er im Licht ist, so haben wir Gemeinschaft untereinander, und das Blut Jesu, seines Sohnes, macht uns rein von aller Sünde“ (1. Johannes 1,7).',
     'Sie ist ein Objekt / eine Funktion.': 'Sie wird zu etwas, das mir etwas gibt, statt ein Mensch mit eigener Geschichte, eigenem Willen und eigener Würde zu sein.',
     'Sie gehört mir in diesem Moment.': 'Ich verfüge über sie, obwohl sie Gottes Tochter ist und niemandem gehört.',
     'Es schadet ja niemandem.': 'Es verändert, wie ich ihr und anderen Frauen real begegne.',
-    'Endlich gibt mir jemand Liebe, ohne dass ich sie an mich reißen muss':'Echte Liebe entsteht in Treue und Wahrheit, nicht im Konsum. Gott liebt mich schon jetzt bedingungslos (Römer 5,8), und die Frau, die ich einmal lieben werde, wird mehr Würde verdienen als ein Bildschirm.'
+    'Endlich gibt mir jemand Liebe, ohne dass ich sie an mich reißen muss':'Echte Liebe entsteht in Treue und Wahrheit, nicht im Konsum. Gott liebt mich schon jetzt bedingungslos: „Gott erweist seine Liebe zu uns darin, dass Christus für uns gestorben ist, als wir noch Sünder waren“ (Römer 5,8). Und die Frau, die ich einmal lieben werde, wird mehr Würde verdienen als ein Bildschirm.'
   };
   function truthsFor(lies) {
     return (lies || []).map(function (l) {

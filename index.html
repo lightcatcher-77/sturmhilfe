@@ -1062,11 +1062,13 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function msgBox(key) {
     key = key || 'msg';
     return '<textarea id="msg" data-key="' + key + '" style="min-height:130px" aria-label="Nachricht an Rechenschaftspartner">' + esc(DB[key] || (key === 'fmsg' ? FALL_MSG : DEFAULT_MSG)) + '</textarea>' +
-      '<div class="row" style="align-items:center"><button class="btn small" data-act="copy">Nachricht kopieren</button><span class="toast" id="toast" role="status"></span></div>';
+      '<div class="row" style="align-items:center">' +
+      (navigator.share ? '<button class="btn small" data-act="share" style="width:auto">Nachricht senden</button>' : '') +
+      '<button class="' + (navigator.share ? 'link muted' : 'btn small') + '" data-act="copy">Nachricht kopieren</button><span class="toast" id="toast" role="status"></span></div>';
   }
   S.flag = function () {
     return '<div class="stack"><p class="kicker">Respond</p><h2>Gib deinem Rechenschaftspartner Bescheid.</h2>' +
-      '<p class="lead" style="margin:0">Du bist nicht allein damit. Kopiere die Nachricht und schick sie per Messenger.</p>' + msgBox() + '</div>' +
+      '<p class="lead" style="margin:0">Du bist nicht allein damit. Schick die Nachricht direkt per Messenger oder kopiere sie.</p>' + msgBox() + '</div>' +
       '<div class="grow"></div><div class="foot"><button class="btn" data-act="next">Weiter</button><button class="link muted" data-act="next">Das möchte ich gerade nicht</button></div>';
   };
 
@@ -1253,6 +1255,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     },
     connDone: function (el) { if (el.getAttribute('data-k') === 'lies') { N.liesLogNote = ''; nLogLies(D.liesSel || []); } markConn(el.getAttribute('data-k')); D.cx = 0; D.lx = 0; D.cbx = 0; history_pop(); },
     addPlan: function () { var i = document.getElementById('newplan'), v = i.value.trim(); if (v) { DB.plan.push(v); wpChanged(); render(); } },
+    share: function () {
+      var t = document.getElementById('msg');
+      try {
+        navigator.share({ text: t.value }).catch(function (e) { if (!e || e.name !== 'AbortError') ACT.copy(); });
+      } catch (e) { ACT.copy(); }
+    },
     copy: function () {
       var t = document.getElementById('msg'), ts = document.getElementById('toast');
       function ok() { ts.textContent = 'Kopiert.'; }

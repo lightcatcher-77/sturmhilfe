@@ -20,6 +20,10 @@ h1{font-size:22px;margin:0 0 2px}h2{font-size:15px;margin:0 0 10px;color:var(--m
 .row:last-child{border:0}.row span:last-child{color:var(--mu);white-space:nowrap}
 .bar{height:6px;background:var(--line);border-radius:3px;margin-top:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--bad)}
 .grid .today{background:transparent;color:var(--tx);border:2px solid var(--tx);font-weight:700}
+details.zi summary{cursor:pointer;font-size:15px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.04em;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.zi summary::-webkit-details-marker{display:none}
+details.zi summary::after{content:"+";font-size:20px;line-height:1}
+details.zi[open] summary::after{content:"–"}
 .zi h3{font-size:16px;margin:0 0 2px}.zi h3 span{font-weight:400;color:var(--mu);font-size:13px}.zi .sub2{color:var(--mu);font-size:13px;margin:0 0 6px}.zi ul{margin:0 0 14px;padding:0;list-style:none}.zi li{font-size:14px;padding:4px 0;color:var(--mu)}.zi li b{display:block;color:var(--tx)}
 .foot{font-size:12px;color:var(--mu);margin-top:18px}
 </style></head><body><main>
@@ -28,15 +32,15 @@ h1{font-size:22px;margin:0 0 2px}h2{font-size:15px;margin:0 0 10px;color:var(--m
 <div class="card"><div class="kpis" id="kpis"></div></div>
 <div class="card"><h2>Verlauf</h2><div class="grid" id="grid"></div>
 <div class="foot">Grün = sauberer Tag (alle vier 🟠-Punkte geschafft). Rot = Rückfalltag (mindestens ein ❌ in 🟠). Der Tag mit dem dicken Rahmen ist heute und noch offen.</div></div>
-<div class="card zi"><h2>Die drei Zonen</h2>
-<p style="margin:0 0 12px;font-size:14px;color:var(--mu)">Jeder Punkt steht pro Tag auf ✅ Geschafft, ❌ Rückschlag oder Offen. Bei 🟠 und 🟡 heißt ✅: es ist nicht passiert. Bei 🟢 heißt ✅: ich habe es getan.</p>
+<details class="card zi"><summary>Erklärung der Zonen und Punkte</summary>
+<p style="margin:12px 0;font-size:14px;color:var(--mu)">Jeder Punkt steht pro Tag auf ✅ Geschafft, ❌ Rückschlag oder Offen. Bei 🟠 und 🟡 heißt ✅: es ist nicht passiert. Bei 🟢 heißt ✅: ich habe es getan.</p>
 <h3>🟠 Enthaltsamkeit <span>4 Punkte</span></h3><p class="sub2">Die Kernzone. Ein ❌ hier macht den Tag zum Rückfalltag.</p>
 <ul><li><b>Bilder</b>Keine erotischen oder sexualisierten Bilder angeschaut.</li><li><b>Edging</b>Mich nicht bis kurz vor den Höhepunkt gebracht und wieder gestoppt.</li><li><b>Pornografie</b>Keine Pornos geschaut, weder Videos noch Seiten.</li><li><b>Masturbation</b>Nicht masturbiert.</li></ul>
 <h3>🟡 Grenzen <span>4 Punkte</span></h3><p class="sub2">Die Vorstufen. Hier fängt es meist an, bevor es in der 🟠 Zone kippt.</p>
 <ul><li><b>Lüstern</b>Lüsternen Blicken und Gedanken nicht nachgegeben.</li><li><b>Scrollen</b>Nicht ziellos durch Feeds und Apps gescrollt.</li><li><b>Fantasien</b>Fantasien nicht weitergesponnen oder ausgemalt.</li><li><b>Chaos in mir</b>Mich von innerer Unruhe, Stress oder Leere nicht treiben lassen.</li></ul>
 <h3>🟢 Selbstfürsorge <span>3 Punkte</span></h3><p class="sub2">Das, was dich trägt. Hier zählt, was du tust.</p>
 <ul><li><b>Zeit mit Gott</b>Mir bewusst Zeit für Gebet, Bibel oder Stille genommen.</li><li><b>Lesen</b>Etwas Gutes gelesen.</li><li><b>Zeit draußen</b>Mich draußen aufgehalten, an der frischen Luft und in Bewegung.</li></ul>
-<div class="foot" style="margin-top:0">Die Tagesquote ist die Summe der geschafften Punkte geteilt durch 11. Ein Tag gilt als sauber, wenn alle vier 🟠-Punkte geschafft sind. Ein Rückfalltag ist ein Tag mit mindestens einem ❌ in der 🟠-Zone.</div></div>
+<div class="foot" style="margin-top:0">Die Tagesquote ist die Summe der geschafften Punkte geteilt durch 11. Ein Tag gilt als sauber, wenn alle vier 🟠-Punkte geschafft sind. Ein Rückfalltag ist ein Tag mit mindestens einem ❌ in der 🟠-Zone.</div></details>
 <div class="card"><h2>Rückschläge pro Bereich</h2><div id="zonen"></div></div>
 <div class="card"><h2>Häufigste Lügen</h2><div id="lies"></div></div>
 <div class="foot">Momentaufnahme, kein Live-Stand. Der heutige Tag (28.11.) ist noch offen und zählt nicht mit.</div>

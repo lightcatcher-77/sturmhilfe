@@ -1059,9 +1059,18 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       (D.standalone ? '<button class="btn" data-act="home">Fertig</button>' : '<button class="btn" data-act="next">Weiter</button>') + '</div>';
   };
 
+  // Auslöser und aktueller Mangel gehen mit der Nachricht an den Rechenschaftspartner mit.
+  function msgCtx() {
+    var l = [];
+    if ((D.trig || []).length) l.push('Auslöser: ' + D.trig.join(', '));
+    if ((D.miss || []).length) l.push('Was mir gerade fehlt: ' + D.miss.join(', '));
+    return l.join('\n');
+  }
   function msgBox(key) {
     key = key || 'msg';
+    var ctx = msgCtx();
     return '<textarea id="msg" data-key="' + key + '" style="min-height:130px" aria-label="Nachricht an Rechenschaftspartner">' + esc(DB[key] || (key === 'fmsg' ? FALL_MSG : DEFAULT_MSG)) + '</textarea>' +
+      (ctx ? '<p class="note" style="white-space:pre-line;margin:0">Wird mitgeschickt:\n' + esc(ctx) + '</p>' : '') +
       '<div class="row" style="align-items:center"><button class="btn small" data-act="copy">Nachricht kopieren</button><span class="toast" id="toast" role="status"></span></div>';
   }
   S.flag = function () {
@@ -1112,8 +1121,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   var FALL = [
     ['Die Scham ist die Falle.', 'Die Stimme, die flüstert „Du bist unverzeihlich“, will dich von Gottes Liebe trennen. Glaub ihr nicht.'],
     ['Geh sofort zu Christus.', 'Er wendet sich nicht ab. Er steht mit dir im Dreck, schaut dich barmherzig an und vergibt bedingungslos. Versteck dich nicht.'],
-    ['Sag jemandem Bescheid.', 'Ein Rechenschaftspartner oder deine Gemeinschaft, damit du nicht allein damit bist.'],
     ['Was war davor los?', 'Wähle, was zutrifft.'],
+    ['Sag jemandem Bescheid.', 'Ein Rechenschaftspartner oder deine Gemeinschaft, damit du nicht allein damit bist. Auslöser und was dir fehlt gehen mit.'],
     ['Mitgefühl statt Selbstverurteilung.', 'Sag die drei Sätze langsam.']
   ];
   function fallForm() {
@@ -1139,8 +1148,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   S.fall = function () {
     var i = D.fx || 0, f = FALL[i], extra = '';
     if (i === 1) extra = '<img class="jesus" src="jesus.jpg" alt="Christus am Kreuz im Abendlicht" onerror="this.remove()">';
-    if (i === 2) extra = msgBox('fmsg');
-    if (i === 3) extra = fallForm();
+    if (i === 2) extra = fallForm();
+    if (i === 3) extra = msgBox('fmsg');
     if (i === 4) extra = '<div>' + ['Dies ist ein Augenblick des Leidens.', 'Leid gehört zum Leben.', 'Möge ich mir geben, was ich brauche.'].map(function (s) { return '<div class="sentence">' + s + '</div>'; }).join('') + '</div>';
     var last = i === FALL.length - 1;
     return '<div class="stack"><p class="kicker">Wenn ich gefallen bin</p><h2>' + esc(f[0]) + '</h2><p class="lead" style="margin:0">' + esc(f[1]) + '</p>' + extra +
@@ -1225,7 +1234,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     planHome: function () { D = { standalone: true }; go('plan'); },
     breathSkip: function () { afterBreath(); },
     crossNext: function () { D.cx = (D.cx || 0) + 1; render(); },
-    fallNext: function () { if (D.fx === 3) commitPlace(); D.fx = (D.fx || 0) + 1; render(); },
+    fallNext: function () { if (D.fx === 2) commitPlace(); D.fx = (D.fx || 0) + 1; render(); },
     addBub: function () {
       var i = document.getElementById('newbub'), v = i.value.trim().slice(0, 40); if (!v) return;
       var known = (DB.bubbles || []).filter(function (x) { return x.toLowerCase() === v.toLowerCase(); })[0];
@@ -1256,7 +1265,8 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
     copy: function () {
       var t = document.getElementById('msg'), ts = document.getElementById('toast');
       function ok() { ts.textContent = 'Kopiert.'; }
-      try { navigator.clipboard.writeText(t.value).then(ok, function () { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }); } catch (e) { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }
+      var full = t.value + (msgCtx() ? '\n\n' + msgCtx() : '');
+      try { navigator.clipboard.writeText(full).then(ok, function () { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }); } catch (e) { t.select(); ts.textContent = 'Text markiert, jetzt kopieren.'; }
     },
     finish: function () {
       DB.log.push({ t: Date.now(), before: D.strength, after: D.after || null, place: D.place, alone: D.alone === undefined ? null : D.alone, mode: D.mode || null, outcome: 'held', miss: D.miss || [], svn: D.svn === undefined ? null : D.svn, trig: D.trig || [] });

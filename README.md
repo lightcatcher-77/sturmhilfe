@@ -17,3 +17,6 @@ Web-App für den Akutmoment bei einem Urge. Ablauf in drei Phasen (Erkennen, Ver
 - Welle reiten (20 bis 30 Minuten)
 - Zu einem geliebten Menschen, zum Kreuz (Franz von Sales)
 - Wenn ich gefallen bin: Scham, Christus, Rechenschaft, Mitgefühl
+
+## Übersichtsseite für den Rechenschaftspartner
+- `u/0b2fd134a6c639ab/index.html`: Momentaufnahme (noindex), erzeugt mit `tools/build_uebersicht.py` aus `tools/uebersicht_template.html` und zwei Notion-Abfragen (Ansichten „Verlauf“ und „Wie oft pro Gedanke“). Ablauf: Notion lesen, beide Ergebnisse als JSON speichern, Skript ausführen, nach `main` pushen. Eine tägliche geplante Aufgabe macht das um 03:00 Uhr.

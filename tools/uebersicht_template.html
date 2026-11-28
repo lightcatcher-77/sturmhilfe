@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Recovery Zone Übersicht</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--tx:#1f2430;--mu:#6b7080;--ok:#2f8f5b;--bad:#c4473a;--line:#e4e0d6}
+@media(prefers-color-scheme:dark){:root{--bg:#14161c;--card:#1d2028;--tx:#e8e9ee;--mu:#9296a5;--ok:#4cc084;--bad:#e5685b;--line:#2b2f3a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;margin:0 0 2px}h2{font-size:15px;margin:0 0 10px;color:var(--mu);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.sub{color:var(--mu);font-size:14px;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi b{display:block;font-size:30px;line-height:1.1}.kpi span{font-size:13px;color:var(--mu)}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.grid div{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--ok);color:#fff}
+.grid .bad{background:var(--bad)}.grid .none{background:transparent}.grid .hd{background:transparent;color:var(--mu);aspect-ratio:auto}
+.row{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--line);font-size:15px}
+.row:last-child{border:0}.row span:last-child{color:var(--mu);white-space:nowrap}
+.bar{height:6px;background:var(--line);border-radius:3px;margin-top:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--bad)}
+.grid .today{background:transparent;color:var(--tx);border:2px solid var(--tx);font-weight:700}
+details.zi summary{cursor:pointer;font-size:15px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.04em;list-style:none;display:flex;justify-content:space-between;align-items:center}
+details.zi summary::-webkit-details-marker{display:none}
+details.zi summary::after{content:"+";font-size:20px;line-height:1}
+details.zi[open] summary::after{content:"–"}
+.zi h3{font-size:16px;margin:0 0 2px}.zi h3 span{font-weight:400;color:var(--mu);font-size:13px}.zi .sub2{color:var(--mu);font-size:13px;margin:0 0 6px}.zi ul{margin:0 0 14px;padding:0;list-style:none}.zi li{font-size:14px;padding:4px 0;color:var(--mu)}.zi li b{display:block;color:var(--tx)}
+.foot{font-size:12px;color:var(--mu);margin-top:18px}
+</style></head><body><main>
+<h1>Recovery Zone</h1>
+<div class="sub" id="sub"></div>
+<div class="card"><div class="kpis" id="kpis"></div></div>
+<div class="card"><h2>Verlauf</h2><div class="grid" id="grid"></div>
+<div class="foot">Grün = sauberer Tag (alle vier 🟠-Punkte geschafft). Rot = Rückfalltag (mindestens ein ❌ in 🟠). Der Tag mit dem dicken Rahmen ist heute und noch offen.</div></div>
+<details class="card zi"><summary>Erklärung der Zonen und Punkte</summary>
+<p style="margin:12px 0;font-size:14px;color:var(--mu)">Jeder Punkt steht pro Tag auf ✅ Geschafft, ❌ Rückschlag oder Offen. Bei 🟠 und 🟡 heißt ✅: es ist nicht passiert. Bei 🟢 heißt ✅: ich habe es getan.</p>
+<h3>🟠 Enthaltsamkeit <span>4 Punkte</span></h3><p class="sub2">Die Kernzone. Ein ❌ hier macht den Tag zum Rückfalltag.</p>
+<ul><li><b>Bilder</b>Keine erotischen oder sexualisierten Bilder angeschaut.</li><li><b>Edging</b>Mich nicht bis kurz vor den Höhepunkt gebracht und wieder gestoppt.</li><li><b>Pornografie</b>Keine Pornos geschaut, weder Videos noch Seiten.</li><li><b>Masturbation</b>Nicht masturbiert.</li></ul>
+<h3>🟡 Grenzen <span>4 Punkte</span></h3><p class="sub2">Die Vorstufen. Hier fängt es meist an, bevor es in der 🟠 Zone kippt.</p>
+<ul><li><b>Lüstern</b>Lüsternen Blicken und Gedanken nicht nachgegeben.</li><li><b>Scrollen</b>Nicht ziellos durch Feeds und Apps gescrollt.</li><li><b>Fantasien</b>Fantasien nicht weitergesponnen oder ausgemalt.</li><li><b>Chaos in mir</b>Mich von innerer Unruhe, Stress oder Leere nicht treiben lassen.</li></ul>
+<h3>🟢 Selbstfürsorge <span>3 Punkte</span></h3><p class="sub2">Das, was dich trägt. Hier zählt, was du tust.</p>
+<ul><li><b>Zeit mit Gott</b>Mir bewusst Zeit für Gebet, Bibel oder Stille genommen.</li><li><b>Lesen</b>Etwas Gutes gelesen.</li><li><b>Zeit draußen</b>Mich draußen aufgehalten, an der frischen Luft und in Bewegung.</li></ul>
+<div class="foot" style="margin-top:0">Die Tagesquote ist die Summe der geschafften Punkte geteilt durch 11. Ein Tag gilt als sauber, wenn alle vier 🟠-Punkte geschafft sind. Ein Rückfalltag ist ein Tag mit mindestens einem ❌ in der 🟠-Zone.</div></details>
+<div class="card"><h2>Rückschläge pro Bereich</h2><div id="zonen"></div></div>
+<div class="card"><h2>Häufigste Lügen</h2><div id="lies"></div></div>
+<div class="foot">Momentaufnahme, kein Live-Stand. Der heutige Tag (28.11.) ist noch offen und zählt nicht mit.</div>
+</main>
+<script>
+var D=__DATA__;
+var CORE=["Bilder","Edging","Pornografie","Masturbation"];
+var days=Object.keys(D.tage).sort();
+function bad(d){return D.tage[d].some(function(z){return CORE.indexOf(z)>=0})}
+var clean=days.filter(function(d){return !bad(d)}).length;
+var streak=0;for(var i=days.length-1;i>=0&&!bad(days[i]);i--)streak++;
+var urges=0;for(var k in D.urges)urges+=D.urges[k];
+function fmt(d){var p=d.split("-");return p[2]+"."+p[1]+"."}
+document.getElementById("sub").textContent="Heute ist der "+fmt(D.stand)+"2026 · "+days.length+" Tage ausgewertet ("+fmt(days[0])+" bis "+fmt(days[days.length-1])+")";
+document.getElementById("kpis").innerHTML=
+ [[streak,"Tage am Stück sauber"],[clean+"/"+days.length,"saubere Tage"],[urges,"Urges ausgehalten"]]
+ .map(function(x){return '<div class="kpi"><b>'+x[0]+'</b><span>'+x[1]+'</span></div>'}).join("");
+var g=document.getElementById("grid"),h="";
+["Mo","Di","Mi","Do","Fr","Sa","So"].forEach(function(n){h+='<div class="hd">'+n+'</div>'});
+var first=new Date(days[0]+"T12:00:00"),off=(first.getDay()+6)%7;
+for(var j=0;j<off;j++)h+='<div class="none"></div>';
+days.forEach(function(d){h+='<div class="'+(bad(d)?'bad':'')+'">'+parseInt(d.slice(8),10)+'</div>'});
+h+='<div class="today" title="heute, noch offen">'+parseInt(D.stand.slice(8),10)+'</div>';
+g.innerHTML=h;
+var ZE={Bilder:"🟠",Edging:"🟠",Pornografie:"🟠",Masturbation:"🟠","Lüstern":"🟡",Scrollen:"🟡",Fantasien:"🟡","Chaos in mir":"🟡","Zeit mit Gott":"🟢",Lesen:"🟢","Zeit draußen":"🟢"};
+var cnt={};days.forEach(function(d){D.tage[d].forEach(function(z){cnt[z]=(cnt[z]||0)+1})});
+var zs=Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a]}),mx=cnt[zs[0]]||1;
+document.getElementById("zonen").innerHTML=zs.map(function(z){return '<div style="padding:6px 0"><div class="row" style="border:0;padding:0"><span>'+(ZE[z]||'')+' '+z+'</span><span>'+cnt[z]+(cnt[z]==1?' Tag':' Tage')+'</span></div><div class="bar"><i style="width:'+(cnt[z]/mx*100)+'%"></i></div></div>'}).join("");
+document.getElementById("lies").innerHTML=D.gedanken.map(function(x){return '<div class="row"><span></span><span>'+x[1]+' Tage</span></div>'}).join("");
+var rows=document.querySelectorAll("#lies .row");D.gedanken.forEach(function(x,i){rows[i].firstChild.textContent="„"+x[0]+"“"});
+</script></body></html>

@@ -1263,11 +1263,18 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
         navigator.share({ text: t.value }).catch(function (e) { if (!e || e.name !== 'AbortError') ACT.copy(); });
       } catch (e) { ACT.copy(); }
     },
-    sms: function () { ACT.openMsg('sms:&body=' + encodeURIComponent(document.getElementById('msg').value)); },
-    wa: function () { ACT.openMsg('https://wa.me/?text=' + encodeURIComponent(document.getElementById('msg').value)); },
-    openMsg: function (url) {
-      var ts = document.getElementById('toast');
-      try { window.open(url, '_blank'); ts.textContent = 'Falls nichts aufgeht, kopiere die Nachricht.'; } catch (e) { ACT.copy(); }
+    sms: function () { ACT.openMsg('sms:&body=', 'sms:&body='); },
+    wa: function () { ACT.openMsg('https://wa.me/?text=', 'whatsapp://send?text='); },
+    fullMsg: function () { return document.getElementById('msg').value + (typeof msgCtx === 'function' && msgCtx() ? '\n\n' + msgCtx() : ''); },
+    // Erst kopieren (klappt immer), dann die App öffnen: echter Link-Klick, danach ein Versuch über ein verstecktes Frame mit dem App-Schema.
+    openMsg: function (base, scheme) {
+      var ts = document.getElementById('toast'), txt = ACT.fullMsg(), q = encodeURIComponent(txt);
+      try { navigator.clipboard.writeText(txt).then(function () { ts.textContent = 'Nachricht kopiert. Falls die App nicht aufgeht, öffne sie und füge ein.'; }, function () { ts.textContent = 'Falls die App nicht aufgeht, kopiere die Nachricht.'; }); } catch (e) { ts.textContent = 'Falls die App nicht aufgeht, kopiere die Nachricht.'; }
+      try { var a = document.createElement('a'); a.href = base + q; a.target = '_blank'; a.rel = 'noopener'; document.body.appendChild(a); a.click(); a.remove(); } catch (e) {}
+      setTimeout(function () {
+        if (document.visibilityState !== 'visible') return;
+        try { var f = document.createElement('iframe'); f.style.display = 'none'; f.src = scheme + q; document.body.appendChild(f); setTimeout(function () { f.remove(); }, 2000); } catch (e) {}
+      }, 500);
     },
     copy: function () {
       var t = document.getElementById('msg'), ts = document.getElementById('toast');

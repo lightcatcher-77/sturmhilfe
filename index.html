@@ -275,7 +275,7 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
 <script>
 (function () {
   var K = 'sturmhilfe.v1';
-  var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich und frag später nach, wie es mir geht.';
+  var DEFAULT_MSG = 'Ich habe gerade einen starken Urge. Ich bleibe dran und habe dir Bescheid gesagt. Bitte bete für mich 🙏🏼';
   var FALL_MSG = 'Ich bin gefallen. Ich verstecke mich nicht und sage dir deshalb Bescheid. Bitte bete für mich und frag später nach, wie es mir geht.';
   var DB = { why: '', plan: ['Stille Zeit', 'Spazieren gehen, Tageslicht', 'Einen Freund anrufen'], log: [], msg: DEFAULT_MSG, fmsg: FALL_MSG, places: [], bubbles: ['Sicherheit bieten'], trig: [], miss: [], lies: [], truths: {}, cbi: ['', '', '', ''] };
   try { var raw = localStorage.getItem(K); if (raw) DB = Object.assign(DB, JSON.parse(raw)); } catch (e) {}

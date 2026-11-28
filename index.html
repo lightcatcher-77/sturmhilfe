@@ -1062,9 +1062,11 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
   function msgBox(key) {
     key = key || 'msg';
     return '<textarea id="msg" data-key="' + key + '" style="min-height:130px" aria-label="Nachricht an Rechenschaftspartner">' + esc(DB[key] || (key === 'fmsg' ? FALL_MSG : DEFAULT_MSG)) + '</textarea>' +
-      '<div class="row" style="align-items:center">' +
-      (navigator.share ? '<button class="btn small" data-act="share" style="width:auto">Nachricht senden</button>' : '') +
-      '<button class="' + (navigator.share ? 'link muted' : 'btn small') + '" data-act="copy">Nachricht kopieren</button><span class="toast" id="toast" role="status"></span></div>';
+      '<div class="row" style="align-items:center;flex-wrap:wrap">' +
+      (navigator.share ? '<button class="btn small" data-act="share" style="width:auto">Teilen</button>' : '') +
+      '<button class="btn small" data-act="sms" style="width:auto">Nachrichten</button>' +
+      '<button class="btn small" data-act="wa" style="width:auto">WhatsApp</button>' +
+      '<button class="link muted" data-act="copy">Nachricht kopieren</button><span class="toast" id="toast" role="status"></span></div>';
   }
   S.flag = function () {
     return '<div class="stack"><p class="kicker">Respond</p><h2>Gib deinem Rechenschaftspartner Bescheid.</h2>' +
@@ -1260,6 +1262,12 @@ input[type=text] { width: 100%; background: var(--surface); color: var(--fg); bo
       try {
         navigator.share({ text: t.value }).catch(function (e) { if (!e || e.name !== 'AbortError') ACT.copy(); });
       } catch (e) { ACT.copy(); }
+    },
+    sms: function () { ACT.openMsg('sms:&body=' + encodeURIComponent(document.getElementById('msg').value)); },
+    wa: function () { ACT.openMsg('https://wa.me/?text=' + encodeURIComponent(document.getElementById('msg').value)); },
+    openMsg: function (url) {
+      var ts = document.getElementById('toast');
+      try { window.open(url, '_blank'); ts.textContent = 'Falls nichts aufgeht, kopiere die Nachricht.'; } catch (e) { ACT.copy(); }
     },
     copy: function () {
       var t = document.getElementById('msg'), ts = document.getElementById('toast');
